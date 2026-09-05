@@ -3,7 +3,6 @@ import Hero from "@/components/home/Hero";
 import Intro from "@/components/home/Intro";
 import Academics from "@/components/home/Academics";
 import Campus from "@/components/home/Campus";
-import NewsEvents from "@/components/home/NewsEvents";
 import GalleryPreview from "@/components/home/GalleryPreview";
 import AdmissionsCTA from "@/components/home/AdmissionsCTA";
 import Contact from "@/components/home/Contact";
@@ -19,7 +18,6 @@ export default function Home() {
         <Intro />
         <Academics />
         <Campus />
-        <NewsEvents />
         <GalleryPreview />
         <AdmissionsCTA />
         <Contact />

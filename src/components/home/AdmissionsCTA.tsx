@@ -81,7 +81,7 @@ const fallback: AdmissionSettings = {
     "Admission notice",
 
   application_url:
-    "/admissions",
+  "/online-registration",
 
   admission_notice_url:
     "/admission-notice",
@@ -297,8 +297,8 @@ export default function AdmissionsCTA() {
 
                 {/* PRIMARY */}
 
-                <Link
-                  href={admission.application_url ?? fallback.application_url ?? "/admissions"}
+<Link
+  href={admission.application_url ?? fallback.application_url ?? "/online-registration"}
                   style={{
                     backgroundColor:
                       "#FFFDF8",

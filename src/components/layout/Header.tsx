@@ -712,20 +712,32 @@ export default function Header() {
                 className="
                   group
                   flex
-                  w-[315px]
-                  min-w-[315px]
-                  shrink-0
+                  min-w-0
+                  flex-1
+                  shrink
                   items-center
-                  gap-3.5
-                  pr-5
+                  gap-2.5
+                  pr-2
+                  sm:gap-3
+                  sm:pr-3
+                  xl:w-[315px]
+                  xl:min-w-[315px]
+                  xl:flex-none
+                  xl:shrink-0
+                  xl:gap-3.5
+                  xl:pr-5
                 "
               >
                 <div
                   className="
                     relative
                     grid
-                    h-[58px]
-                    w-[58px]
+                    h-11
+                    w-11
+                    sm:h-[52px]
+                    sm:w-[52px]
+                    xl:h-[58px]
+                    xl:w-[58px]
                     shrink-0
                     place-items-center
                     overflow-hidden
@@ -737,7 +749,7 @@ export default function Header() {
                     src={siteSettings.logo_url}
                     alt={`${siteSettings.school_name} logo`}
                     fill
-                    sizes="58px"
+                    sizes="(max-width: 639px) 44px, (max-width: 1279px) 52px, 58px"
                     className="
                       object-contain
                       p-2
@@ -750,12 +762,17 @@ export default function Header() {
 
                   <div
                     className="
+                      truncate
                       whitespace-nowrap
-                      text-[15px]
+                      text-[12px]
                       font-bold
                       leading-none
-                      tracking-[0.105em]
+                      tracking-[0.08em]
                       text-white
+                      sm:text-[14px]
+                      sm:tracking-[0.1em]
+                      xl:text-[15px]
+                      xl:tracking-[0.105em]
                     "
                   >
                     {siteSettings.school_name}
@@ -763,8 +780,10 @@ export default function Header() {
 
                   <div
                     className="
-                      mt-2
+                      mt-1.5
+                      hidden
                       whitespace-nowrap
+                      sm:block
                       text-[8px]
                       font-medium
                       uppercase
@@ -1010,9 +1029,11 @@ export default function Header() {
           data-static-motion
           className="
             fixed
-            inset-x-4
-            top-[124px]
-            z-[90]
+            inset-x-3
+            top-[112px]
+            z-[120]
+            sm:inset-x-4
+            sm:top-[124px]
             max-h-[calc(100vh-145px)]
             overflow-y-auto
             rounded-[26px]

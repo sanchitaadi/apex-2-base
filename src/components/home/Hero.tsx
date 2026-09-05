@@ -933,8 +933,7 @@ export default function Hero() {
           MOBILE SLIDE INDICATOR
       ================================================== */}
 
-      <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5 lg:hidden">
-
+      <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1.5 lg:hidden">
         {safeSlides.map(
           (item, index) => (
             <button
@@ -967,13 +966,15 @@ export default function Hero() {
 <div
   className="
     absolute
-    bottom-6
+    bottom-16
     left-1/2
-    z-30
+    z-[50]
     flex
     -translate-x-1/2
     items-center
-    gap-3
+    gap-2
+    sm:bottom-16
+    sm:gap-3
   "
 >
 
@@ -988,22 +989,24 @@ export default function Hero() {
       delay: 0.8,
     }}
     className="
-      group
-      flex
-      items-center
-      gap-3
-      rounded-full
-      border
-      border-white/15
-      bg-black/10
-      px-4
-      py-2
-      backdrop-blur-md
-      transition
-      duration-300
-      hover:border-white/30
-      hover:bg-white/10
-    "
+  group
+  flex
+  items-center
+  gap-2
+  rounded-full
+  border
+  border-white/25
+  bg-[#102A56]/70
+  px-3
+  py-2
+  backdrop-blur-md
+  transition
+  duration-300
+  hover:border-white/40
+  hover:bg-[#102A56]/85
+  sm:gap-3
+  sm:px-4
+"
   >
     <span
       className="
