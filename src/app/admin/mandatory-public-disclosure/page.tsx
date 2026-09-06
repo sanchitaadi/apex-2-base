@@ -22,30 +22,24 @@ import { supabase } from "@/lib/supabase/browser";
 
 type DisclosureDocument = {
   id: string;
-  title: string;
-  class_name: string | null;
-  category: string;
   description: string | null;
   document_url: string | null;
-  external_url: string | null;
-  document_label: string | null;
-  sort_order: number;
   is_active: boolean;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
 };
 
 type FormState = {
-  title: string;
   description: string;
-  externalUrl: string;
+  documentUrl: string;
 };
 
-const CATEGORY = "mandatory-disclosure";
 const BUCKET = "academic-resources";
 
 const EMPTY_FORM: FormState = {
-  title: "",
   description: "",
-  externalUrl: "",
+  documentUrl: "",
 };
 
 export default function MandatoryPublicDisclosureAdminPage() {
@@ -142,28 +136,28 @@ export default function MandatoryPublicDisclosureAdminPage() {
     return true;
   }
 
+  // =========================================================
+  // LOAD DOCUMENTS
+  // =========================================================
+
   async function loadDocuments() {
     setLoading(true);
-    setError("");
+    clearMessages();
 
     const { data, error: loadError } =
       await supabase
-        .from("academic_documents")
+        .from("mandatory_public_disclosures")
         .select(
           `
             id,
-            title,
-            class_name,
-            category,
             description,
             document_url,
-            external_url,
-            document_label,
+            is_active,
             sort_order,
-            is_active
+            created_at,
+            updated_at
           `
         )
-        .eq("category", CATEGORY)
         .order("sort_order", {
           ascending: true,
         });
@@ -184,20 +178,26 @@ export default function MandatoryPublicDisclosureAdminPage() {
     loadDocuments();
   }, []);
 
+  // =========================================================
+  // ADD DOCUMENT
+  // =========================================================
+
   async function addDocument() {
     clearMessages();
 
-    if (!form.title.trim()) {
-      setError("Please enter a document title.");
+    if (!form.description.trim()) {
+      setError(
+        "Please enter a document description."
+      );
       return;
     }
 
     const file =
       addFileRef.current?.files?.[0] || null;
 
-    if (!file && !form.externalUrl.trim()) {
+    if (!file && !form.documentUrl.trim()) {
       setError(
-        "Please upload a PDF or enter an external URL."
+        "Please upload a PDF or enter a document URL."
       );
       return;
     }
@@ -209,9 +209,14 @@ export default function MandatoryPublicDisclosureAdminPage() {
     setSaving(true);
 
     let uploadedPath: string | null = null;
-    let documentUrl: string | null = null;
+    let finalDocumentUrl =
+      form.documentUrl.trim() || null;
 
     try {
+      // -----------------------------------------------------
+      // UPLOAD PDF
+      // -----------------------------------------------------
+
       if (file) {
         const safeName = file.name
           .replace(/[^a-zA-Z0-9._-]/g, "-")
@@ -243,36 +248,44 @@ export default function MandatoryPublicDisclosureAdminPage() {
             .from(BUCKET)
             .getPublicUrl(uploadedPath);
 
-        documentUrl = publicData.publicUrl;
+        finalDocumentUrl =
+          publicData.publicUrl;
       }
+
+      // -----------------------------------------------------
+      // SORT ORDER
+      // -----------------------------------------------------
 
       const maxOrder =
         documents.length > 0
           ? Math.max(
               ...documents.map(
-                (item) => item.sort_order
+                (item) => item.sort_order || 0
               )
             )
           : 0;
 
+      // -----------------------------------------------------
+      // INSERT INTO CORRECT TABLE
+      // -----------------------------------------------------
+
       const { error: insertError } =
         await supabase
-          .from("academic_documents")
+          .from("mandatory_public_disclosures")
           .insert({
-            title: form.title.trim(),
-            class_name: null,
-            category: CATEGORY,
             description:
-              form.description.trim() || null,
-            document_url: documentUrl,
-            external_url:
-              form.externalUrl.trim() || null,
-            document_label: documentUrl
-              ? "Download PDF"
-              : "Open document",
-            sort_order: maxOrder + 1,
+              form.description.trim(),
+
+            document_url:
+              finalDocumentUrl,
+
             is_active: true,
-            updated_at: new Date().toISOString(),
+
+            sort_order:
+              maxOrder + 1,
+
+            updated_at:
+              new Date().toISOString(),
           });
 
       if (insertError) {
@@ -286,30 +299,39 @@ export default function MandatoryPublicDisclosureAdminPage() {
       }
 
       setMessage(
-        "Disclosure document added successfully."
+        "Mandatory disclosure added successfully."
       );
 
       resetForm();
+
       await loadDocuments();
     } catch (err: any) {
       setError(
         err?.message ||
-          "Could not add disclosure document."
+          "Could not add mandatory disclosure."
       );
     } finally {
       setSaving(false);
     }
   }
 
-  function startEdit(document: DisclosureDocument) {
+  // =========================================================
+  // START EDIT
+  // =========================================================
+
+  function startEdit(
+    document: DisclosureDocument
+  ) {
     clearMessages();
 
     setEditing(document);
 
     setForm({
-      title: document.title || "",
-      description: document.description || "",
-      externalUrl: document.external_url || "",
+      description:
+        document.description || "",
+
+      documentUrl:
+        document.document_url || "",
     });
 
     setSelectedFileName("");
@@ -324,19 +346,29 @@ export default function MandatoryPublicDisclosureAdminPage() {
     });
   }
 
+  // =========================================================
+  // CANCEL EDIT
+  // =========================================================
+
   function cancelEdit() {
     setEditing(null);
     resetForm();
     clearMessages();
   }
 
+  // =========================================================
+  // SAVE EDIT
+  // =========================================================
+
   async function saveEdit() {
     if (!editing) return;
 
     clearMessages();
 
-    if (!form.title.trim()) {
-      setError("Please enter a document title.");
+    if (!form.description.trim()) {
+      setError(
+        "Please enter a document description."
+      );
       return;
     }
 
@@ -353,17 +385,19 @@ export default function MandatoryPublicDisclosureAdminPage() {
     let replacementUrl: string | null = null;
 
     try {
-      /*
-      ============================================
-      UPLOAD REPLACEMENT PDF
-      ============================================
-      */
+      // -----------------------------------------------------
+      // UPLOAD REPLACEMENT PDF
+      // -----------------------------------------------------
 
       if (replacementFile) {
-        const safeName = replacementFile.name
-          .replace(/[^a-zA-Z0-9._-]/g, "-")
-          .replace(/-+/g, "-")
-          .toLowerCase();
+        const safeName =
+          replacementFile.name
+            .replace(
+              /[^a-zA-Z0-9._-]/g,
+              "-"
+            )
+            .replace(/-+/g, "-")
+            .toLowerCase();
 
         replacementPath =
           `mandatory-disclosure/${Date.now()}-${safeName}`;
@@ -399,34 +433,25 @@ export default function MandatoryPublicDisclosureAdminPage() {
       const finalDocumentUrl =
         replacementUrl ||
         editing.document_url ||
+        form.documentUrl.trim() ||
         null;
 
-      const finalExternalUrl =
-        replacementUrl
-          ? null
-          : form.externalUrl.trim() || null;
-
-      /*
-      ============================================
-      UPDATE DATABASE
-      ============================================
-      */
+      // -----------------------------------------------------
+      // UPDATE CORRECT TABLE
+      // -----------------------------------------------------
 
       const { error: updateError } =
         await supabase
-          .from("academic_documents")
+          .from("mandatory_public_disclosures")
           .update({
-            title: form.title.trim(),
-            class_name: null,
-            category: CATEGORY,
             description:
-              form.description.trim() || null,
-            document_url: finalDocumentUrl,
-            external_url: finalExternalUrl,
-            document_label: finalDocumentUrl
-              ? "Download PDF"
-              : "Open document",
-            updated_at: new Date().toISOString(),
+              form.description.trim(),
+
+            document_url:
+              finalDocumentUrl,
+
+            updated_at:
+              new Date().toISOString(),
           })
           .eq("id", editing.id);
 
@@ -440,11 +465,9 @@ export default function MandatoryPublicDisclosureAdminPage() {
         throw updateError;
       }
 
-      /*
-      ============================================
-      DELETE OLD SUPABASE PDF
-      ============================================
-      */
+      // -----------------------------------------------------
+      // DELETE OLD PDF
+      // -----------------------------------------------------
 
       if (
         replacementUrl &&
@@ -456,7 +479,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
       }
 
       setMessage(
-        "Disclosure document updated successfully."
+        "Mandatory disclosure updated successfully."
       );
 
       setEditing(null);
@@ -466,12 +489,16 @@ export default function MandatoryPublicDisclosureAdminPage() {
     } catch (err: any) {
       setError(
         err?.message ||
-          "Could not update disclosure document."
+          "Could not update mandatory disclosure."
       );
     } finally {
       setSaving(false);
     }
   }
+
+  // =========================================================
+  // TOGGLE ACTIVE
+  // =========================================================
 
   async function toggleActive(
     document: DisclosureDocument
@@ -480,10 +507,13 @@ export default function MandatoryPublicDisclosureAdminPage() {
 
     const { error: updateError } =
       await supabase
-        .from("academic_documents")
+        .from("mandatory_public_disclosures")
         .update({
-          is_active: !document.is_active,
-          updated_at: new Date().toISOString(),
+          is_active:
+            !document.is_active,
+
+          updated_at:
+            new Date().toISOString(),
         })
         .eq("id", document.id);
 
@@ -494,21 +524,26 @@ export default function MandatoryPublicDisclosureAdminPage() {
 
     setMessage(
       document.is_active
-        ? "Document hidden from the website."
-        : "Document published on the website."
+        ? "Disclosure hidden from the website."
+        : "Disclosure published on the website."
     );
 
     await loadDocuments();
   }
+
+  // =========================================================
+  // DELETE
+  // =========================================================
 
   async function deleteDocument(
     document: DisclosureDocument
   ) {
     clearMessages();
 
-    const confirmed = window.confirm(
-      `Delete "${document.title}"?\n\nThis will delete the database record and the uploaded PDF when applicable.`
-    );
+    const confirmed =
+      window.confirm(
+        `Delete "${document.description}"?\n\nThis will delete the database record and uploaded PDF when applicable.`
+      );
 
     if (!confirmed) {
       return;
@@ -519,7 +554,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
     try {
       const { error: deleteError } =
         await supabase
-          .from("academic_documents")
+          .from("mandatory_public_disclosures")
           .delete()
           .eq("id", document.id);
 
@@ -533,25 +568,31 @@ export default function MandatoryPublicDisclosureAdminPage() {
         );
       }
 
-      if (editing?.id === document.id) {
+      if (
+        editing?.id === document.id
+      ) {
         setEditing(null);
         resetForm();
       }
 
       setMessage(
-        "Disclosure document deleted successfully."
+        "Mandatory disclosure deleted successfully."
       );
 
       await loadDocuments();
     } catch (err: any) {
       setError(
         err?.message ||
-          "Could not delete disclosure document."
+          "Could not delete mandatory disclosure."
       );
     } finally {
       setSaving(false);
     }
   }
+
+  // =========================================================
+  // MOVE DOCUMENT
+  // =========================================================
 
   async function moveDocument(
     document: DisclosureDocument,
@@ -561,7 +602,8 @@ export default function MandatoryPublicDisclosureAdminPage() {
 
     const index =
       documents.findIndex(
-        (item) => item.id === document.id
+        (item) =>
+          item.id === document.id
       );
 
     if (index === -1) return;
@@ -590,9 +632,15 @@ export default function MandatoryPublicDisclosureAdminPage() {
     const timestamp =
       new Date().toISOString();
 
+    // -------------------------------------------------------
+    // UPDATE FIRST
+    // -------------------------------------------------------
+
     const firstUpdate =
       await supabase
-        .from("academic_documents")
+        .from(
+          "mandatory_public_disclosures"
+        )
         .update({
           sort_order: newOrder,
           updated_at: timestamp,
@@ -606,9 +654,15 @@ export default function MandatoryPublicDisclosureAdminPage() {
       return;
     }
 
+    // -------------------------------------------------------
+    // UPDATE SECOND
+    // -------------------------------------------------------
+
     const secondUpdate =
       await supabase
-        .from("academic_documents")
+        .from(
+          "mandatory_public_disclosures"
+        )
         .update({
           sort_order: oldOrder,
           updated_at: timestamp,
@@ -624,6 +678,10 @@ export default function MandatoryPublicDisclosureAdminPage() {
 
     await loadDocuments();
   }
+
+  // =========================================================
+  // UI
+  // =========================================================
 
   return (
     <main className="min-h-screen bg-[#F4F1EA] px-5 py-8 text-[#10203A] md:px-8">
@@ -654,8 +712,9 @@ export default function MandatoryPublicDisclosureAdminPage() {
             </h1>
 
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[#10203A]/50">
-              Manage official CBSE mandatory disclosure
-              documents and compliance records.
+              Manage the official CBSE mandatory
+              public disclosure document published
+              on the Apex Public School website.
             </p>
           </div>
 
@@ -703,7 +762,6 @@ export default function MandatoryPublicDisclosureAdminPage() {
           }
         >
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
-
             <div className="flex items-start gap-4">
 
               <div
@@ -729,8 +787,8 @@ export default function MandatoryPublicDisclosureAdminPage() {
                   }
                 >
                   {editing
-                    ? "Editing document"
-                    : "Add disclosure document"}
+                    ? "Editing disclosure"
+                    : "Add disclosure"}
                 </p>
 
                 <h2
@@ -741,8 +799,8 @@ export default function MandatoryPublicDisclosureAdminPage() {
                   }
                 >
                   {editing
-                    ? editing.title
-                    : "New disclosure document"}
+                    ? editing.description
+                    : "New mandatory disclosure"}
                 </h2>
 
                 <p
@@ -753,8 +811,8 @@ export default function MandatoryPublicDisclosureAdminPage() {
                   }
                 >
                   {editing
-                    ? "Update the information or replace the current PDF."
-                    : "Upload a PDF or add an external document link."}
+                    ? "Update the disclosure information or replace the PDF."
+                    : "Upload the official PDF document for public display."}
                 </p>
               </div>
             </div>
@@ -772,70 +830,38 @@ export default function MandatoryPublicDisclosureAdminPage() {
             )}
           </div>
 
-          {/* FIELDS */}
+          {/* DESCRIPTION */}
 
-          <div className="mt-7 grid gap-5 md:grid-cols-2">
+          <div className="mt-7">
+            <label
+              className={
+                editing
+                  ? "text-[9px] font-semibold uppercase tracking-[0.2em] text-white/45"
+                  : "text-[9px] font-semibold uppercase tracking-[0.2em] text-[#102A56]/40"
+              }
+            >
+              Document description
+            </label>
 
-            <div>
-              <label
-                className={
-                  editing
-                    ? "text-[9px] font-semibold uppercase tracking-[0.2em] text-white/45"
-                    : "text-[9px] font-semibold uppercase tracking-[0.2em] text-[#102A56]/40"
-                }
-              >
-                Document title
-              </label>
-
-              <input
-                value={form.title}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    title: e.target.value,
-                  })
-                }
-                placeholder="Mandatory Public Disclosure 2026–2027"
-                className={
-                  editing
-                    ? "mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white outline-none placeholder:text-white/20"
-                    : "mt-3 w-full rounded-2xl border border-[#102A56]/10 bg-[#F8F6F1] px-4 py-3.5 text-sm text-[#10203A] outline-none"
-                }
-              />
-            </div>
-
-            <div>
-              <label
-                className={
-                  editing
-                    ? "text-[9px] font-semibold uppercase tracking-[0.2em] text-white/45"
-                    : "text-[9px] font-semibold uppercase tracking-[0.2em] text-[#102A56]/40"
-                }
-              >
-                External URL
-              </label>
-
-              <input
-                value={form.externalUrl}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    externalUrl:
-                      e.target.value,
-                  })
-                }
-                placeholder="https://..."
-                className={
-                  editing
-                    ? "mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white outline-none placeholder:text-white/20"
-                    : "mt-3 w-full rounded-2xl border border-[#102A56]/10 bg-[#F8F6F1] px-4 py-3.5 text-sm text-[#10203A] outline-none"
-                }
-              />
-            </div>
-
+            <input
+              value={form.description}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  description:
+                    e.target.value,
+                })
+              }
+              placeholder="Mandatory Public Disclosure 2026-2027"
+              className={
+                editing
+                  ? "mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white outline-none placeholder:text-white/20"
+                  : "mt-3 w-full rounded-2xl border border-[#102A56]/10 bg-[#F8F6F1] px-4 py-3.5 text-sm text-[#10203A] outline-none"
+              }
+            />
           </div>
 
-          {/* DESCRIPTION */}
+          {/* URL */}
 
           <div className="mt-5">
             <label
@@ -845,26 +871,36 @@ export default function MandatoryPublicDisclosureAdminPage() {
                   : "text-[9px] font-semibold uppercase tracking-[0.2em] text-[#102A56]/40"
               }
             >
-              Description
+              Document URL
             </label>
 
-            <textarea
-              value={form.description}
+            <input
+              value={form.documentUrl}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  description:
+                  documentUrl:
                     e.target.value,
                 })
               }
-              rows={3}
-              placeholder="Description of this disclosure document..."
+              placeholder="https://..."
               className={
                 editing
-                  ? "mt-3 w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm leading-6 text-white outline-none placeholder:text-white/20"
-                  : "mt-3 w-full resize-none rounded-2xl border border-[#102A56]/10 bg-[#F8F6F1] px-4 py-3.5 text-sm leading-6 text-[#10203A] outline-none"
+                  ? "mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white outline-none placeholder:text-white/20"
+                  : "mt-3 w-full rounded-2xl border border-[#102A56]/10 bg-[#F8F6F1] px-4 py-3.5 text-sm text-[#10203A] outline-none"
               }
             />
+
+            <p
+              className={
+                editing
+                  ? "mt-2 text-xs text-white/35"
+                  : "mt-2 text-xs text-[#10203A]/40"
+              }
+            >
+              You can use an existing public PDF URL,
+              or upload a PDF below.
+            </p>
           </div>
 
           {/* PDF */}
@@ -879,7 +915,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
             >
               {editing
                 ? "Replace PDF"
-                : "PDF file"}
+                : "Upload PDF"}
             </label>
 
             <div
@@ -928,8 +964,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
                       : "mt-3 text-xs text-emerald-700"
                   }
                 >
-                  Selected:
-                  {" "}
+                  Selected:{" "}
                   <span className="font-semibold">
                     {selectedFileName}
                   </span>
@@ -943,8 +978,8 @@ export default function MandatoryPublicDisclosureAdminPage() {
                   }
                 >
                   {editing
-                    ? "Leave empty to keep the current PDF. Select a new PDF to replace it."
-                    : "Select a PDF to upload it to Supabase Storage."}
+                    ? "Leave empty to keep the current PDF."
+                    : "Select the official PDF to upload it to Supabase Storage."}
                 </p>
               )}
             </div>
@@ -953,7 +988,6 @@ export default function MandatoryPublicDisclosureAdminPage() {
           {/* BUTTON */}
 
           <div className="mt-7 flex flex-wrap gap-3">
-
             <button
               type="button"
               onClick={
@@ -983,7 +1017,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
                 ? "Saving..."
                 : editing
                   ? "Save changes"
-                  : "Add document"}
+                  : "Add disclosure"}
             </button>
 
             {editing && (
@@ -997,13 +1031,10 @@ export default function MandatoryPublicDisclosureAdminPage() {
                 Cancel
               </button>
             )}
-
           </div>
         </section>
 
-        {/* ==================================================
-            EXISTING DOCUMENTS
-        ================================================== */}
+        {/* EXISTING DOCUMENTS */}
 
         <section className="mt-10">
 
@@ -1035,7 +1066,6 @@ export default function MandatoryPublicDisclosureAdminPage() {
               <p className="mt-5 text-sm text-[#10203A]/45">
                 No disclosure documents found.
               </p>
-
             </div>
           ) : (
             <div className="space-y-4">
@@ -1046,7 +1076,6 @@ export default function MandatoryPublicDisclosureAdminPage() {
                     key={document.id}
                     className="rounded-[2rem] border border-[#102A56]/10 bg-white p-5 md:p-6"
                   >
-
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
 
                       {/* ICON */}
@@ -1071,28 +1100,28 @@ export default function MandatoryPublicDisclosureAdminPage() {
                             </span>
                           )}
 
-                          {!document.document_url &&
-                            document.external_url && (
-                              <span className="rounded-full bg-amber-50 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.17em] text-amber-700">
-                                External
-                              </span>
-                            )}
-
                           {!document.is_active && (
                             <span className="rounded-full bg-red-50 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.17em] text-red-500">
                               Hidden
                             </span>
                           )}
 
+                          {document.is_active && (
+                            <span className="rounded-full bg-blue-50 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.17em] text-blue-700">
+                              Published
+                            </span>
+                          )}
+
                         </div>
 
                         <h3 className="mt-3 text-lg font-semibold text-[#102A56] md:text-xl">
-                          {document.title}
+                          {document.description ||
+                            "Mandatory Public Disclosure"}
                         </h3>
 
-                        {document.description && (
-                          <p className="mt-2 max-w-4xl text-sm leading-6 text-[#10203A]/45">
-                            {document.description}
+                        {document.document_url && (
+                          <p className="mt-2 max-w-4xl truncate text-sm text-[#10203A]/40">
+                            {document.document_url}
                           </p>
                         )}
 
@@ -1102,20 +1131,19 @@ export default function MandatoryPublicDisclosureAdminPage() {
 
                       <div className="flex flex-wrap items-center gap-2">
 
-                        {(document.document_url ||
-                          document.external_url) && (
+                        {document.document_url && (
                           <a
                             href={
-                              document.document_url ||
-                              document.external_url ||
-                              "#"
+                              document.document_url
                             }
                             target="_blank"
-                            rel="noreferrer"
-                            title="Open"
+                            rel="noopener noreferrer"
+                            title="Open document"
                             className="grid h-9 w-9 place-items-center rounded-xl border border-[#102A56]/10 text-[#102A56]"
                           >
-                            <ExternalLink size={14} />
+                            <ExternalLink
+                              size={14}
+                            />
                           </a>
                         )}
 
@@ -1166,7 +1194,9 @@ export default function MandatoryPublicDisclosureAdminPage() {
                           title="Move down"
                           className="grid h-9 w-9 place-items-center rounded-xl border border-[#102A56]/10 text-[#102A56] disabled:opacity-30"
                         >
-                          <ArrowDown size={14} />
+                          <ArrowDown
+                            size={14}
+                          />
                         </button>
 
                         <button
@@ -1180,7 +1210,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
                           title={
                             document.is_active
                               ? "Hide"
-                              : "Show"
+                              : "Publish"
                           }
                           className="grid h-9 w-9 place-items-center rounded-xl border border-[#102A56]/10 text-[#102A56] disabled:opacity-40"
                         >
@@ -1206,9 +1236,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
                         </button>
 
                       </div>
-
                     </div>
-
                   </article>
                 )
               )}

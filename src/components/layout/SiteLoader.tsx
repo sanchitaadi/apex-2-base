@@ -4,414 +4,340 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function SiteLoader() {
-  const [visible, setVisible] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    let frame: number;
+    let current = 0;
 
-    const start = performance.now();
+    const progressTimer = setInterval(() => {
+      current += Math.floor(Math.random() * 8) + 3;
 
-    const updateProgress = (time: number) => {
-      const elapsed = time - start;
-
-      /*
-       * Fast at the beginning, slower near completion.
-       * This feels more premium than a linear fake progress bar.
-       */
-      const next = Math.min(
-        100,
-        Math.round(
-          100 *
-            (1 -
-              Math.exp(-elapsed / 850))
-        )
-      );
-
-      setProgress(next);
-
-      if (next < 100) {
-        frame = requestAnimationFrame(updateProgress);
+      if (current >= 100) {
+        current = 100;
+        clearInterval(progressTimer);
       }
-    };
 
-    frame = requestAnimationFrame(updateProgress);
+      setProgress(current);
+    }, 120);
 
-    const finishTimer = window.setTimeout(() => {
-      setProgress(100);
-
-      window.setTimeout(() => {
-        setVisible(false);
-      }, 450);
-    }, 1100);
+    const loadingTimer = setTimeout(() => {
+      setLoading(false);
+    }, 1900);
 
     return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(finishTimer);
+      clearInterval(progressTimer);
+      clearTimeout(loadingTimer);
     };
   }, []);
 
-  useEffect(() => {
-    if (!visible) {
-      document.body.style.overflow = "";
-      return;
-    }
-
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [visible]);
-
   return (
     <AnimatePresence>
-      {visible && (
+      {loading && (
         <motion.div
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
+            scale: 1.02,
             transition: {
-              duration: 0.65,
+              duration: 0.6,
               ease: [0.22, 1, 0.36, 1],
             },
           }}
-          className="
-            fixed
-            inset-0
-            z-[9999]
-            overflow-hidden
-            bg-[#071A38]
-            text-white
-          "
+          className="fixed inset-0 z-[99999] flex min-h-screen items-center justify-center overflow-hidden bg-[#f7f4ed]"
         >
-          {/* =================================================
-              AMBIENT GLOW
-          ================================================== */}
+          {/* BACKGROUND DECORATION */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <motion.div
+              animate={{
+                scale: [1, 1.15, 1],
+                opacity: [0.12, 0.2, 0.12],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-[#173b70] blur-[100px]"
+            />
 
-          <motion.div
-            animate={{
-              scale: [1, 1.12, 1],
-              opacity: [0.12, 0.2, 0.12],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="
-              pointer-events-none
-              absolute
-              left-1/2
-              top-1/2
-              h-[420px]
-              w-[420px]
-              -translate-x-1/2
-              -translate-y-1/2
-              rounded-full
-              bg-[#8DB9E5]
-              blur-[150px]
-            "
-          />
+            <motion.div
+              animate={{
+                scale: [1.1, 1, 1.1],
+                opacity: [0.08, 0.16, 0.08],
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute -bottom-48 -right-40 h-[600px] w-[600px] rounded-full bg-[#9bb5d6] blur-[120px]"
+            />
 
-          <div
-            className="
-              pointer-events-none
-              absolute
-              inset-0
-              opacity-[0.045]
-              [background-image:linear-gradient(rgba(255,255,255,.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.18)_1px,transparent_1px)]
-              [background-size:70px_70px]
-            "
-          />
+            {/* GRID */}
+            <div
+              className="absolute inset-0 opacity-[0.035]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(#173b70 1px, transparent 1px), linear-gradient(90deg, #173b70 1px, transparent 1px)",
+                backgroundSize: "55px 55px",
+              }}
+            />
+          </div>
 
-          {/* =================================================
-              CENTER SYSTEM
-          ================================================== */}
+          {/* MAIN LOADER */}
+          <div className="relative z-10 flex w-full max-w-md flex-col items-center px-8">
 
-          <div className="absolute inset-0 flex items-center justify-center">
-
-            <div className="relative h-[250px] w-[250px] sm:h-[290px] sm:w-[290px]">
-
-              {/* OUTER ROTATING RING */}
-
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{
-                  duration: 12,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                className="
-                  absolute
-                  inset-0
-                  rounded-full
-                  border
-                  border-white/10
-                "
-              >
-                <span
-                  className="
-                    absolute
-                    left-1/2
-                    top-[-3px]
-                    h-1.5
-                    w-1.5
-                    -translate-x-1/2
-                    rounded-full
-                    bg-[#F5F0E6]
-                    shadow-[0_0_16px_rgba(245,240,230,0.9)]
-                  "
-                />
-              </motion.div>
-
-              {/* SECOND RING */}
-
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                className="
-                  absolute
-                  inset-[28px]
-                  rounded-full
-                  border
-                  border-[#8DB9E5]/20
-                  border-dashed
-                "
-              >
-                <span
-                  className="
-                    absolute
-                    bottom-[-3px]
-                    left-1/2
-                    h-1
-                    w-1
-                    -translate-x-1/2
-                    rounded-full
-                    bg-[#8DB9E5]
-                    shadow-[0_0_15px_rgba(141,185,229,0.95)]
-                  "
-                />
-              </motion.div>
-
-              {/* THIRD RING */}
-
+            {/* LOGO MARK */}
+            <motion.div
+              initial={{ opacity: 0, y: 25, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                duration: 0.7,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="relative mb-8"
+            >
+              {/* Outer glow */}
               <motion.div
                 animate={{
-                  scale: [1, 1.05, 1],
-                  opacity: [0.25, 0.55, 0.25],
+                  scale: [1, 1.15, 1],
+                  opacity: [0.2, 0.35, 0.2],
                 }}
                 transition={{
-                  duration: 2.6,
+                  duration: 2.5,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
-                className="
-                  absolute
-                  inset-[58px]
-                  rounded-full
-                  border
-                  border-white/10
-                "
+                className="absolute inset-[-15px] rounded-[30px] bg-[#173b70]/20 blur-xl"
               />
 
-              {/* CENTER */}
+              {/* Logo container */}
+              <div className="relative flex h-28 w-28 items-center justify-center rounded-[30px] bg-[#173b70] shadow-[0_20px_60px_rgba(23,59,112,0.25)]">
+                {/* School building icon */}
+                <svg
+                  width="58"
+                  height="58"
+                  viewBox="0 0 64 64"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <motion.path
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{
+                      duration: 1.2,
+                      delay: 0.2,
+                    }}
+                    d="M8 27L32 11L56 27"
+                    stroke="white"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
 
-              <div
-                className="
-                  absolute
-                  left-1/2
-                  top-1/2
-                  grid
-                  h-[125px]
-                  w-[125px]
-                  -translate-x-1/2
-                  -translate-y-1/2
-                  place-items-center
-                  rounded-full
-                  border
-                  border-white/10
-                  bg-white/[0.045]
-                  shadow-[0_0_80px_rgba(141,185,229,0.12)]
-                  backdrop-blur-xl
-                "
-              >
+                  <motion.path
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                    d="M14 27V51H50V27"
+                    stroke="white"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
 
-                {/* PULSING CORE */}
+                  <motion.path
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{
+                      delay: 0.9,
+                      duration: 0.4,
+                    }}
+                    style={{ transformOrigin: "center bottom" }}
+                    d="M27 51V36C27 33.2386 29.2386 31 32 31C34.7614 31 37 33.2386 37 36V51"
+                    stroke="white"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
 
+                  <motion.path
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    d="M19 34H21M43 34H45M19 41H21M43 41H45"
+                    stroke="white"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                {/* Rotating ring */}
                 <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  className="absolute inset-[-7px] rounded-[36px] border border-dashed border-[#173b70]/25"
+                />
+              </div>
+            </motion.div>
+
+            {/* SCHOOL NAME */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.6,
+                delay: 0.35,
+              }}
+              className="text-center"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.45em] text-[#8a9ab0]">
+                Welcome to
+              </p>
+
+              <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[#173b70] sm:text-4xl">
+                Apex Public School
+              </h1>
+
+              <p className="mt-3 text-sm text-[#718198]">
+                Excellence • Character • Knowledge
+              </p>
+            </motion.div>
+
+            {/* LOADING AREA */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.6,
+                delay: 0.55,
+              }}
+              className="mt-12 w-full"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#8a9ab0]">
+                  Loading website
+                </span>
+
+                <motion.span
+                  key={progress}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-xs font-semibold text-[#173b70]"
+                >
+                  {progress}%
+                </motion.span>
+              </div>
+
+              {/* PROGRESS BAR */}
+              <div className="relative h-2 overflow-hidden rounded-full bg-[#173b70]/10">
+                <motion.div
+                  initial={{ width: "0%" }}
                   animate={{
-                    scale: [0.85, 1, 0.85],
-                    opacity: [0.55, 1, 0.55],
+                    width: `${progress}%`,
                   }}
                   transition={{
-                    duration: 1.8,
-                    repeat: Infinity,
-                    ease: "easeInOut",
+                    duration: 0.25,
+                    ease: "easeOut",
                   }}
-                  className="
-                    absolute
-                    h-12
-                    w-12
-                    rounded-full
-                    bg-[#F5F0E6]/[0.06]
-                    blur-md
-                  "
+                  className="relative h-full rounded-full bg-[#173b70]"
+                >
+                  {/* Moving shine */}
+                  <motion.div
+                    animate={{
+                      x: ["-100%", "300%"],
+                    }}
+                    transition={{
+                      duration: 1.4,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                  />
+                </motion.div>
+              </div>
+
+              {/* STATUS */}
+              <div className="mt-5 flex items-center justify-center gap-2">
+                <motion.span
+                  animate={{
+                    scale: [1, 1.4, 1],
+                    opacity: [0.5, 1, 0.5],
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                  }}
+                  className="h-1.5 w-1.5 rounded-full bg-[#173b70]"
                 />
 
-                {/* APEX MARK */}
-
-                <div className="relative text-center">
-
-                  <div className="text-[20px] font-bold tracking-[0.18em] text-[#F5F0E6]">
-                    APEX
-                  </div>
-
-                  <div className="mt-1 text-[6px] font-semibold uppercase tracking-[0.28em] text-white/35">
-                    Public School
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* =================================================
-              TOP STATUS
-          ================================================== */}
-
-          <div className="absolute left-6 top-6 sm:left-10 sm:top-9">
-
-            <div className="flex items-center gap-3">
-
-              <span className="h-px w-8 bg-white/20" />
-
-              <span className="text-[8px] font-semibold uppercase tracking-[0.3em] text-white/35">
-                APEX PUBLIC SCHOOL
-              </span>
-
-            </div>
-
-          </div>
-
-          {/* =================================================
-              BOTTOM STATUS
-          ================================================== */}
-
-          <div className="absolute bottom-7 left-6 right-6 sm:bottom-10 sm:left-10 sm:right-10">
-
-            <div className="flex items-end justify-between gap-5">
-
-              <div>
-
-                <p className="text-[8px] font-semibold uppercase tracking-[0.28em] text-white/30">
-                  Answer Duty&apos;s Call
+                <p className="text-xs text-[#718198]">
+                  Preparing your experience...
                 </p>
-
-                <p className="mt-2 text-xs text-white/50">
-                  Preparing your experience
-                </p>
-
               </div>
+            </motion.div>
 
-              <div className="text-right">
+            {/* BOTTOM DETAILS */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                delay: 0.9,
+                duration: 0.7,
+              }}
+              className="mt-12 flex items-center gap-4 text-[9px] font-semibold uppercase tracking-[0.25em] text-[#a1adbc]"
+            >
+              <span>Est. 1985</span>
 
-                <motion.div
-                  key={progress}
-                  initial={{ opacity: 0.5 }}
-                  animate={{ opacity: 1 }}
-                  className="
-                    text-2xl
-                    font-semibold
-                    tracking-[-0.04em]
-                    text-white
-                  "
-                >
-                  {String(progress).padStart(3, "0")}
-                  <span className="text-white/25">
-                    %
-                  </span>
-                </motion.div>
+              <span className="h-1 w-1 rounded-full bg-[#a1adbc]" />
 
-              </div>
+              <span>Delhi</span>
 
-            </div>
+              <span className="h-1 w-1 rounded-full bg-[#a1adbc]" />
 
-            {/* PROGRESS BAR */}
-
-            <div className="mt-4 h-[2px] w-full overflow-hidden rounded-full bg-white/10">
-
-              <motion.div
-                animate={{
-                  width: `${progress}%`,
-                }}
-                transition={{
-                  duration: 0.2,
-                  ease: "easeOut",
-                }}
-                className="
-                  relative
-                  h-full
-                  rounded-full
-                  bg-[#F5F0E6]
-                  shadow-[0_0_18px_rgba(245,240,230,0.55)]
-                "
-              >
-
-                <div className="absolute right-0 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)]" />
-
-              </motion.div>
-
-            </div>
-
-            <div className="mt-3 flex justify-between">
-
-              <span className="text-[7px] uppercase tracking-[0.22em] text-white/20">
-                Initializing
-              </span>
-
-              <span className="text-[7px] uppercase tracking-[0.22em] text-white/20">
-                Delhi · 1985
-              </span>
-
-            </div>
-
+              <span>CBSE</span>
+            </motion.div>
           </div>
 
-          {/* =================================================
-              SCAN LINE
-          ================================================== */}
-
+          {/* TOP CORNER ELEMENT */}
           <motion.div
-            animate={{
-              y: ["-100vh", "100vh"],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-            className="
-              pointer-events-none
-              absolute
-              left-0
-              right-0
-              top-0
-              h-px
-              bg-gradient-to-r
-              from-transparent
-              via-white/20
-              to-transparent
-            "
-          />
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.8 }}
+            className="absolute right-6 top-6 hidden items-center gap-2 rounded-full border border-[#173b70]/10 bg-white/60 px-4 py-2 backdrop-blur-md sm:flex"
+          >
+            <span className="relative flex h-2 w-2">
+              <motion.span
+                animate={{ scale: [1, 1.8, 1], opacity: [1, 0, 1] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                }}
+                className="absolute inline-flex h-full w-full rounded-full bg-[#173b70]"
+              />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#173b70]" />
+            </span>
 
+            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#718198]">
+              Online
+            </span>
+          </motion.div>
+
+          {/* BOTTOM DECORATIVE LINE */}
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{
+              duration: 1.2,
+              delay: 0.4,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="absolute bottom-0 left-0 h-1 w-full origin-left bg-[#173b70]"
+          />
         </motion.div>
       )}
     </AnimatePresence>
