@@ -5,6 +5,7 @@ import {
   Trophy,
   ArrowUpRight,
   Sparkles,
+  Building2,
 } from "lucide-react";
 
 const actions = [
@@ -20,7 +21,7 @@ const actions = [
     sublabel: "Academic Results",
     href: "/cbse-results",
     side: "right",
-    icon: Trophy,
+    icon: Building2,
   },
 ];
 
@@ -185,14 +186,14 @@ export default function FloatingActions() {
                   size={10}
                   strokeWidth={1.5}
                   className={`
-                    opacity-35
+                    opacity-35s
                     transition-all
                     duration-500
                     group-hover:opacity-100
                     ${
                       isLeft
                         ? "text-[#A9D8FF]"
-                        : "text-[#102A56]"
+                        : "text-[#079769]"
                     }
                   `}
                 />
@@ -208,7 +209,7 @@ export default function FloatingActions() {
                     ${
                       isLeft
                         ? "bg-[#8DC7FF] shadow-[0_0_10px_#8DC7FF]"
-                        : "bg-[#102A56] shadow-[0_0_8px_rgba(16,42,86,0.45)]"
+                        : "bg-[#1956bf] shadow-[0_0_8px_rgba(16,42,86,0.45)]"
                     }
                   `}
                 />

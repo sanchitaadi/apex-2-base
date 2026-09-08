@@ -4,6 +4,7 @@ import "./globals.css";
 import FloatingActions from "@/components/layout/FloatingActions";
 import GlobalMotion from "@/components/shared/GlobalMotion";
 import SiteLoader from "@/components/layout/SiteLoader";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Apex Public School",
@@ -23,10 +24,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SiteLoader />
-        <GlobalMotion />
-        {children}
-        <FloatingActions />
+        <ThemeProvider>
+          <SiteLoader />
+          <GlobalMotion />
+
+          {children}
+
+          <FloatingActions />
+        </ThemeProvider>
       </body>
     </html>
   );

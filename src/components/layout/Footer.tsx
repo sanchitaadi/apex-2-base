@@ -20,9 +20,7 @@ import { supabase } from "@/lib/supabase/browser";
 
 export default function Footer() {
   const [siteSettings, setSiteSettings] =
-    useState<SiteSettings>(
-      DEFAULT_SITE_SETTINGS
-    );
+    useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
 
   useEffect(() => {
     let active = true;
@@ -121,7 +119,7 @@ export default function Footer() {
       links: [
         {
           label: "Admissions",
-          href: "/admissions",
+          href: "/online-registration",
         },
         {
           label: "Fee Structure",
@@ -140,8 +138,12 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-[#102A56] text-white">
-
+    <footer
+      style={{
+        backgroundColor: "var(--cms-footer)",
+        color: "var(--cms-white)",
+      }}
+    >
       <div
         className="
           mx-auto
@@ -153,7 +155,6 @@ export default function Footer() {
           lg:px-14
         "
       >
-
         {/* =================================================
             MAIN FOOTER
         ================================================== */}
@@ -181,15 +182,17 @@ export default function Footer() {
                   place-items-center
                   overflow-hidden
                   rounded-2xl
-                  bg-[#F5F0E6]
                 "
+                style={{
+                  backgroundColor: "var(--cms-background)",
+                }}
               >
                 <Image
                   src={siteSettings.logo_url}
                   alt={`${siteSettings.school_name} logo`}
                   fill
                   sizes="64px"
-                  className="object-contain p-2 brightness-0"
+                  className="object-contain p-2"
                 />
               </div>
 
@@ -200,8 +203,10 @@ export default function Footer() {
                     font-bold
                     uppercase
                     tracking-[0.12em]
-                    !text-white
                   "
+                  style={{
+                    color: "var(--cms-white)",
+                  }}
                 >
                   {siteSettings.school_name}
                 </div>
@@ -212,8 +217,11 @@ export default function Footer() {
                     text-[8px]
                     uppercase
                     tracking-[0.28em]
-                    !text-white/45
                   "
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 45%, transparent)",
+                  }}
                 >
                   {siteSettings.tagline}
                 </div>
@@ -228,8 +236,11 @@ export default function Footer() {
                 max-w-md
                 text-sm
                 leading-7
-                !text-white/50
               "
+              style={{
+                color:
+                  "color-mix(in srgb, var(--cms-white) 50%, transparent)",
+              }}
             >
               {siteSettings.footer_description}
             </p>
@@ -250,20 +261,28 @@ export default function Footer() {
                   items-start
                   gap-3
                   text-sm
-                  !text-white/55
                   transition
-                  hover:!text-white
                 "
+                style={{
+                  color:
+                    "color-mix(in srgb, var(--cms-white) 55%, transparent)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color =
+                    "var(--cms-white)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color =
+                    "color-mix(in srgb, var(--cms-white) 55%, transparent)";
+                }}
               >
                 <MapPin
                   size={17}
-                  className="
-                    mt-0.5
-                    shrink-0
-                    !text-white/40
-                    transition
-                    group-hover:!text-white
-                  "
+                  className="mt-0.5 shrink-0 transition"
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 40%, transparent)",
+                  }}
                 />
 
                 <span className="leading-6">
@@ -281,19 +300,28 @@ export default function Footer() {
                   items-center
                   gap-3
                   text-sm
-                  !text-white/55
                   transition
-                  hover:!text-white
                 "
+                style={{
+                  color:
+                    "color-mix(in srgb, var(--cms-white) 55%, transparent)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color =
+                    "var(--cms-white)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color =
+                    "color-mix(in srgb, var(--cms-white) 55%, transparent)";
+                }}
               >
                 <Phone
                   size={16}
-                  className="
-                    shrink-0
-                    !text-white/40
-                    transition
-                    group-hover:!text-white
-                  "
+                  className="shrink-0 transition"
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 40%, transparent)",
+                  }}
                 />
 
                 {siteSettings.phone}
@@ -310,24 +338,32 @@ export default function Footer() {
                   gap-3
                   break-all
                   text-sm
-                  !text-white/55
                   transition
-                  hover:!text-white
                 "
+                style={{
+                  color:
+                    "color-mix(in srgb, var(--cms-white) 55%, transparent)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color =
+                    "var(--cms-white)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color =
+                    "color-mix(in srgb, var(--cms-white) 55%, transparent)";
+                }}
               >
                 <Mail
                   size={16}
-                  className="
-                    shrink-0
-                    !text-white/40
-                    transition
-                    group-hover:!text-white
-                  "
+                  className="shrink-0 transition"
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 40%, transparent)",
+                  }}
                 />
 
                 {siteSettings.email}
               </a>
-
             </div>
           </div>
 
@@ -344,7 +380,6 @@ export default function Footer() {
               sm:grid-cols-4
             "
           >
-
             {footerGroups.map((group) => (
               <div key={group.title}>
 
@@ -354,14 +389,16 @@ export default function Footer() {
                     font-semibold
                     uppercase
                     tracking-[0.24em]
-                    !text-white/30
                   "
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 30%, transparent)",
+                  }}
                 >
                   {group.title}
                 </p>
 
                 <div className="mt-5 space-y-4">
-
                   {group.links.map((item) => (
                     <Link
                       key={item.label}
@@ -372,24 +409,38 @@ export default function Footer() {
                         items-center
                         gap-1
                         text-sm
-                        !text-white/65
                         transition
-                        hover:!text-white
                       "
+                      style={{
+                        color:
+                          "color-mix(in srgb, var(--cms-white) 65%, transparent)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color =
+                          "var(--cms-white)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color =
+                          "color-mix(in srgb, var(--cms-white) 65%, transparent)";
+                      }}
                     >
                       <span>
                         {item.label}
                       </span>
 
-                      <ArrowUpRight size={12} className="text-white/25 transition group-hover:text-white" />
+                      <ArrowUpRight
+                        size={12}
+                        className="transition"
+                        style={{
+                          color:
+                            "color-mix(in srgb, var(--cms-white) 25%, transparent)",
+                        }}
+                      />
                     </Link>
                   ))}
-
                 </div>
-
               </div>
             ))}
-
           </div>
         </div>
 
@@ -401,11 +452,13 @@ export default function Footer() {
           className="
             mt-16
             border-t
-            border-white/10
             pt-6
           "
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--cms-white) 10%, transparent)",
+          }}
         >
-
           <div
             className="
               flex
@@ -414,17 +467,20 @@ export default function Footer() {
               text-[9px]
               uppercase
               tracking-[0.16em]
-              !text-white/30
               md:flex-row
               md:items-center
               md:justify-between
             "
+            style={{
+              color:
+                "color-mix(in srgb, var(--cms-white) 30%, transparent)",
+            }}
           >
 
             {/* COPYRIGHT */}
 
             <div>
-              Â© {new Date().getFullYear()}{" "}
+              © {new Date().getFullYear()}{" "}
               {siteSettings.school_name}
             </div>
 
@@ -434,30 +490,45 @@ export default function Footer() {
 
               <Link
                 href="/mandatory-disclosure"
-                className="
-                  transition
-                  hover:!text-white
-                "
+                className="transition"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color =
+                    "var(--cms-white)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color =
+                    "color-mix(in srgb, var(--cms-white) 30%, transparent)";
+                }}
               >
                 Mandatory Disclosure
               </Link>
 
               <Link
                 href="/privacy"
-                className="
-                  transition
-                  hover:!text-white
-                "
+                className="transition"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color =
+                    "var(--cms-white)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color =
+                    "color-mix(in srgb, var(--cms-white) 30%, transparent)";
+                }}
               >
                 Privacy
               </Link>
 
               <Link
                 href="/contact"
-                className="
-                  transition
-                  hover:!text-white
-                "
+                className="transition"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color =
+                    "var(--cms-white)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color =
+                    "color-mix(in srgb, var(--cms-white) 30%, transparent)";
+                }}
               >
                 Contact
               </Link>
@@ -475,46 +546,65 @@ export default function Footer() {
                   gap-2
                   rounded-full
                   border
-                  border-white/15
-                  bg-white/[0.035]
                   px-3.5
                   py-2
-                  !text-white/60
                   transition-all
                   duration-300
                   hover:-translate-y-0.5
-                  hover:border-white/25
-                  hover:bg-white/10
-                  hover:!text-white
                 "
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--cms-white) 15%, transparent)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--cms-white) 3.5%, transparent)",
+                  color:
+                    "color-mix(in srgb, var(--cms-white) 60%, transparent)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor =
+                    "color-mix(in srgb, var(--cms-white) 25%, transparent)";
+
+                  e.currentTarget.style.backgroundColor =
+                    "color-mix(in srgb, var(--cms-white) 10%, transparent)";
+
+                  e.currentTarget.style.color =
+                    "var(--cms-white)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor =
+                    "color-mix(in srgb, var(--cms-white) 15%, transparent)";
+
+                  e.currentTarget.style.backgroundColor =
+                    "color-mix(in srgb, var(--cms-white) 3.5%, transparent)";
+
+                  e.currentTarget.style.color =
+                    "color-mix(in srgb, var(--cms-white) 60%, transparent)";
+                }}
               >
                 <ShieldCheck
                   size={11}
-                  className="
-                    !text-white/45
-                    transition
-                    group-hover:!text-white
-                  "
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 45%, transparent)",
+                  }}
                 />
 
-                <span className="!text-white/60 group-hover:!text-white">
+                <span>
                   Admin Login
                 </span>
 
                 <ArrowUpRight
                   size={11}
-                  className="
-                    !text-white/35
-                    transition-transform
-                    duration-300
-                    group-hover:translate-x-0.5
-                    group-hover:-translate-y-0.5
-                    group-hover:!text-white
-                  "
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 35%, transparent)",
+                  }}
                 />
               </Link>
 
-              {/* ORIGINAL WEBSITE */}
+              {/* =================================================
+                  ORIGINAL WEBSITE
+              ================================================== */}
 
               <a
                 href={siteSettings.website_url}
@@ -526,8 +616,15 @@ export default function Footer() {
                   items-center
                   gap-1
                   transition
-                  hover:!text-white
                 "
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color =
+                    "var(--cms-white)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color =
+                    "color-mix(in srgb, var(--cms-white) 30%, transparent)";
+                }}
               >
                 Original Website
 
@@ -540,11 +637,9 @@ export default function Footer() {
                   "
                 />
               </a>
-
             </div>
           </div>
         </div>
-
       </div>
     </footer>
   );

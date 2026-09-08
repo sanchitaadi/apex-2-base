@@ -9,11 +9,6 @@ import {
 
 import Link from "next/link";
 import {
-  usePathname,
-  useRouter,
-} from "next/navigation";
-
-import {
   Activity,
   Award,
   BookOpen,
@@ -37,6 +32,8 @@ import {
   Video,
   X,
 } from "lucide-react";
+
+import { usePathname, useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase/browser";
 
@@ -100,7 +97,6 @@ const sections = [
   {
     title: "About Apex",
     items: [
-    
       {
         label: "About Pages",
         href: "/admin/about2",
@@ -177,7 +173,6 @@ const sections = [
         href: "/admin/cbse-results",
         icon: Trophy,
       },
-    
     ],
   },
 
@@ -225,7 +220,6 @@ const sections = [
         href: "/admin/notices",
         icon: FileText,
       },
-      
       {
         label: "Activities",
         href: "/admin/activities",
@@ -300,6 +294,11 @@ const sections = [
         icon: Building2,
       },
       {
+        label: "THEME",
+        href: "/admin/theme",
+        icon: ImageIcon,
+      },
+      {
         label: "Users",
         href: "/admin/users",
         icon: Shield,
@@ -312,8 +311,7 @@ const sections = [
    TAB SESSION KEY
 ============================================================ */
 
-const TAB_SESSION_KEY =
-  "apex_cms_tab_authenticated";
+const TAB_SESSION_KEY = "apex_cms_tab_authenticated";
 
 /* ============================================================
    ADMIN LAYOUT
@@ -336,8 +334,7 @@ export default function AdminLayout({
 
   const authCheckStarted = useRef(false);
 
-  const isLoginPage =
-    pathname === "/admin/login";
+  const isLoginPage = pathname === "/admin/login";
 
   /* ============================================================
      AUTH + TAB SECURITY
@@ -368,17 +365,15 @@ export default function AdminLayout({
         ------------------------------------------------------ */
 
         const tabSession =
-          sessionStorage.getItem(
-            TAB_SESSION_KEY
-          );
+          sessionStorage.getItem(TAB_SESSION_KEY);
 
-if (tabSession !== "true") {
-  if (mounted) {
-    router.replace("/admin/login");
-  }
+        if (tabSession !== "true") {
+          if (mounted) {
+            router.replace("/admin/login");
+          }
 
-  return;
-}
+          return;
+        }
 
         /* ------------------------------------------------------
            STEP 2
@@ -393,9 +388,7 @@ if (tabSession !== "true") {
         if (!mounted) return;
 
         if (userError || !user) {
-          sessionStorage.removeItem(
-            TAB_SESSION_KEY
-          );
+          sessionStorage.removeItem(TAB_SESSION_KEY);
 
           router.replace("/admin/login");
           return;
@@ -423,14 +416,9 @@ if (tabSession !== "true") {
           adminError ||
           !admin ||
           !admin.is_active ||
-          ![
-            "admin",
-            "super_admin",
-          ].includes(admin.role)
+          !["admin", "super_admin"].includes(admin.role)
         ) {
-          sessionStorage.removeItem(
-            TAB_SESSION_KEY
-          );
+          sessionStorage.removeItem(TAB_SESSION_KEY);
 
           await supabase.auth.signOut();
 
@@ -458,9 +446,7 @@ if (tabSession !== "true") {
           error
         );
 
-        sessionStorage.removeItem(
-          TAB_SESSION_KEY
-        );
+        sessionStorage.removeItem(TAB_SESSION_KEY);
 
         await supabase.auth.signOut();
 
@@ -486,21 +472,20 @@ if (tabSession !== "true") {
       data: {
         subscription,
       },
-    } =
-      supabase.auth.onAuthStateChange(
-        (event, session) => {
-          if (
-            event === "SIGNED_OUT" ||
-            !session?.user
-          ) {
-            sessionStorage.removeItem(
-              TAB_SESSION_KEY
-            );
+    } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (
+          event === "SIGNED_OUT" ||
+          !session?.user
+        ) {
+          sessionStorage.removeItem(
+            TAB_SESSION_KEY
+          );
 
-            router.replace("/admin/login");
-          }
+          router.replace("/admin/login");
         }
-      );
+      }
+    );
 
     return () => {
       subscription.unsubscribe();
@@ -538,20 +523,65 @@ if (tabSession !== "true") {
 
   if (checking) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#071A38] text-white">
+      <main
+        className="
+          grid
+          min-h-screen
+          place-items-center
+        "
+        style={{
+          background: "var(--cms-primary-dark)",
+          color: "var(--cms-white)",
+        }}
+      >
         <div className="flex flex-col items-center">
-          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F5F0E6]">
+          <div
+            className="
+              grid
+              h-14
+              w-14
+              place-items-center
+              rounded-2xl
+            "
+            style={{
+              background: "var(--cms-background)",
+            }}
+          >
             <Shield
               size={22}
-              className="!text-[#102A56]"
+              style={{
+                color: "var(--cms-primary)",
+              }}
             />
           </div>
 
-          <div className="mt-5 text-sm font-semibold tracking-wide text-white">
+          <div
+            className="
+              mt-5
+              text-sm
+              font-semibold
+              tracking-wide
+            "
+            style={{
+              color: "var(--cms-white)",
+            }}
+          >
             APEX CMS
           </div>
 
-          <div className="mt-2 text-center text-[9px] uppercase tracking-[0.22em] text-white/30">
+          <div
+            className="
+              mt-2
+              text-center
+              text-[9px]
+              uppercase
+              tracking-[0.22em]
+            "
+            style={{
+              color:
+                "color-mix(in srgb, var(--cms-white) 30%, transparent)",
+            }}
+          >
             Verifying administrator access
           </div>
         </div>
@@ -564,7 +594,17 @@ if (tabSession !== "true") {
   ============================================================ */
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA] text-[#10203A]">
+    <div
+      className="
+        min-h-screen
+        transition-colors
+        duration-300
+      "
+      style={{
+        background: "var(--cms-background)",
+        color: "var(--cms-text)",
+      }}
+    >
       {/* ========================================================
           MOBILE OVERLAY
       ======================================================== */}
@@ -576,7 +616,16 @@ if (tabSession !== "true") {
           onClick={() =>
             setMobileOpen(false)
           }
-          className="fixed inset-0 z-[90] bg-black/40 lg:hidden"
+          className="
+            fixed
+            inset-0
+            z-[90]
+            lg:hidden
+          "
+          style={{
+            background:
+              "color-mix(in srgb, var(--cms-primary-dark) 40%, transparent)",
+          }}
         />
       )}
 
@@ -593,10 +642,6 @@ if (tabSession !== "true") {
           flex
           flex-col
           border-r
-          border-white/10
-          bg-[#071A38]
-          text-white
-          shadow-[10px_0_50px_rgba(4,12,27,0.12)]
           transition-all
           duration-300
           ${
@@ -610,31 +655,94 @@ if (tabSession !== "true") {
               : "-translate-x-full lg:translate-x-0"
           }
         `}
+        style={{
+          background: "var(--cms-primary-dark)",
+          color: "var(--cms-white)",
+          borderColor:
+            "color-mix(in srgb, var(--cms-white) 10%, transparent)",
+          boxShadow:
+            "10px 0 50px color-mix(in srgb, var(--cms-primary-dark) 12%, transparent)",
+        }}
       >
         {/* BRAND */}
 
-        <div className="flex h-[72px] shrink-0 items-center border-b border-white/10 px-4">
+        <div
+          className="
+            flex
+            h-[72px]
+            shrink-0
+            items-center
+            border-b
+            px-4
+          "
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--cms-white) 10%, transparent)",
+          }}
+        >
           <Link
             href="/admin"
-            className="flex min-w-0 flex-1 items-center gap-3"
+            className="
+              flex
+              min-w-0
+              flex-1
+              items-center
+              gap-3
+            "
             onClick={() =>
               setMobileOpen(false)
             }
           >
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#F5F0E6]">
+            <div
+              className="
+                grid
+                h-10
+                w-10
+                shrink-0
+                place-items-center
+                rounded-xl
+              "
+              style={{
+                background: "var(--cms-background)",
+              }}
+            >
               <Shield
                 size={18}
-                className="!text-[#102A56]"
+                style={{
+                  color: "var(--cms-primary)",
+                }}
               />
             </div>
 
             {!collapsed && (
               <div className="min-w-0">
-                <div className="truncate text-sm font-bold tracking-[0.12em] !text-white">
+                <div
+                  className="
+                    truncate
+                    text-sm
+                    font-bold
+                    tracking-[0.12em]
+                  "
+                  style={{
+                    color: "var(--cms-white)",
+                  }}
+                >
                   APEX CMS
                 </div>
 
-                <div className="mt-1 truncate text-[7px] uppercase tracking-[0.22em] !text-white/30">
+                <div
+                  className="
+                    mt-1
+                    truncate
+                    text-[7px]
+                    uppercase
+                    tracking-[0.22em]
+                  "
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 30%, transparent)",
+                  }}
+                >
                   Apex Public School
                 </div>
               </div>
@@ -654,16 +762,20 @@ if (tabSession !== "true") {
               w-9
               place-items-center
               rounded-full
-              bg-white/[0.06]
-              !text-white
               transition
-              hover:bg-white/[0.10]
               lg:hidden
             "
+            style={{
+              background:
+                "color-mix(in srgb, var(--cms-white) 6%, transparent)",
+              color: "var(--cms-white)",
+            }}
           >
             <X
               size={16}
-              className="!text-white"
+              style={{
+                color: "var(--cms-white)",
+              }}
             />
           </button>
         </div>
@@ -677,7 +789,20 @@ if (tabSession !== "true") {
               className="mb-6"
             >
               {!collapsed && (
-                <div className="mb-2 px-3 text-[8px] font-semibold uppercase tracking-[0.24em] !text-white/25">
+                <div
+                  className="
+                    mb-2
+                    px-3
+                    text-[8px]
+                    font-semibold
+                    uppercase
+                    tracking-[0.24em]
+                  "
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-white) 25%, transparent)",
+                  }}
+                >
                   {section.title}
                 </div>
               )}
@@ -708,7 +833,7 @@ if (tabSession !== "true") {
                             ? item.label
                             : undefined
                         }
-                        className={`
+                        className="
                           group
                           flex
                           items-center
@@ -719,29 +844,50 @@ if (tabSession !== "true") {
                           text-sm
                           transition
                           duration-200
-                          ${
-                            active
-                              ? "bg-white/[0.10] !text-white"
-                              : "!text-white/50 hover:bg-white/[0.06] hover:!text-white"
+                        "
+                        style={{
+                          background: active
+                            ? "color-mix(in srgb, var(--cms-white) 10%, transparent)"
+                            : "transparent",
+                          color: active
+                            ? "var(--cms-white)"
+                            : "color-mix(in srgb, var(--cms-white) 50%, transparent)",
+                        }}
+                        onMouseEnter={(event) => {
+                          if (!active) {
+                            event.currentTarget.style.background =
+                              "color-mix(in srgb, var(--cms-white) 6%, transparent)";
+
+                            event.currentTarget.style.color =
+                              "var(--cms-white)";
                           }
-                        `}
+                        }}
+                        onMouseLeave={(event) => {
+                          if (!active) {
+                            event.currentTarget.style.background =
+                              "transparent";
+
+                            event.currentTarget.style.color =
+                              "color-mix(in srgb, var(--cms-white) 50%, transparent)";
+                          }
+                        }}
                       >
                         <Icon
                           size={16}
-                          className={
-                            active
-                              ? "!text-[#F5F0E6]"
-                              : "!text-white/35 group-hover:!text-white/70"
-                          }
+                          style={{
+                            color: active
+                              ? "var(--cms-background)"
+                              : "color-mix(in srgb, var(--cms-white) 35%, transparent)",
+                          }}
                         />
 
                         {!collapsed && (
                           <span
-                            className={
-                              active
-                                ? "!text-white"
-                                : "!text-white/50 group-hover:!text-white"
-                            }
+                            style={{
+                              color: active
+                                ? "var(--cms-white)"
+                                : "inherit",
+                            }}
                           >
                             {item.label}
                           </span>
@@ -757,22 +903,85 @@ if (tabSession !== "true") {
 
         {/* USER AREA */}
 
-        <div className="shrink-0 border-t border-white/10 p-3">
+        <div
+          className="
+            shrink-0
+            border-t
+            p-3
+          "
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--cms-white) 10%, transparent)",
+          }}
+        >
           {!collapsed && (
-            <div className="mb-3 rounded-xl bg-white/[0.04] px-3 py-3">
-              <div className="truncate text-xs font-medium !text-white/75">
+            <div
+              className="
+                mb-3
+                rounded-xl
+                px-3
+                py-3
+              "
+              style={{
+                background:
+                  "color-mix(in srgb, var(--cms-white) 4%, transparent)",
+              }}
+            >
+              <div
+                className="
+                  truncate
+                  text-xs
+                  font-medium
+                "
+                style={{
+                  color:
+                    "color-mix(in srgb, var(--cms-white) 75%, transparent)",
+                }}
+              >
                 {userEmail}
               </div>
 
-              <div className="mt-1 text-[8px] uppercase tracking-[0.18em] !text-white/25">
+              <div
+                className="
+                  mt-1
+                  text-[8px]
+                  uppercase
+                  tracking-[0.18em]
+                "
+                style={{
+                  color:
+                    "color-mix(in srgb, var(--cms-white) 25%, transparent)",
+                }}
+              >
                 {userRole ===
                 "super_admin"
                   ? "Super administrator"
                   : "Administrator"}
               </div>
 
-              <div className="mt-2 flex items-center gap-1.5 text-[8px] uppercase tracking-[0.15em] !text-emerald-300/70">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <div
+                className="
+                  mt-2
+                  flex
+                  items-center
+                  gap-1.5
+                  text-[8px]
+                  uppercase
+                  tracking-[0.15em]
+                "
+                style={{
+                  color: "#86efac",
+                }}
+              >
+                <span
+                  className="
+                    h-1.5
+                    w-1.5
+                    rounded-full
+                    bg-emerald-400
+                  "
+                />
+
                 Tab session active
               </div>
             </div>
@@ -790,20 +999,38 @@ if (tabSession !== "true") {
               px-3
               py-2.5
               text-sm
-              !text-white/40
               transition
               duration-200
-              hover:bg-red-300/[0.05]
-              hover:!text-red-200
             "
+            style={{
+              color:
+                "color-mix(in srgb, var(--cms-white) 40%, transparent)",
+            }}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.background =
+                "color-mix(in srgb, #fca5a5 5%, transparent)";
+
+              event.currentTarget.style.color =
+                "#fecaca";
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.background =
+                "transparent";
+
+              event.currentTarget.style.color =
+                "color-mix(in srgb, var(--cms-white) 40%, transparent)";
+            }}
           >
             <LogOut
               size={16}
-              className="!text-white/40"
+              style={{
+                color:
+                  "color-mix(in srgb, var(--cms-white) 40%, transparent)",
+              }}
             />
 
             {!collapsed && (
-              <span className="!text-white/40">
+              <span>
                 Sign out
               </span>
             )}
@@ -834,22 +1061,29 @@ if (tabSession !== "true") {
             place-items-center
             rounded-full
             border
-            border-[#102A56]/10
-            bg-[#F5F0E6]
-            !text-[#102A56]
             shadow-md
             lg:grid
           "
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--cms-primary) 10%, transparent)",
+            background: "var(--cms-background)",
+            color: "var(--cms-primary)",
+          }}
         >
           {collapsed ? (
             <ChevronRight
               size={14}
-              className="!text-[#102A56]"
+              style={{
+                color: "var(--cms-primary)",
+              }}
             />
           ) : (
             <ChevronLeft
               size={14}
-              className="!text-[#102A56]"
+              style={{
+                color: "var(--cms-primary)",
+              }}
             />
           )}
         </button>
@@ -883,12 +1117,16 @@ if (tabSession !== "true") {
             items-center
             justify-between
             border-b
-            border-[#102A56]/10
-            bg-[#F4F1EA]/95
             px-5
             backdrop-blur-xl
             md:px-8
           "
+          style={{
+            background:
+              "color-mix(in srgb, var(--cms-background) 95%, transparent)",
+            borderColor:
+              "color-mix(in srgb, var(--cms-primary) 10%, transparent)",
+          }}
         >
           <div className="flex items-center gap-3">
             <button
@@ -904,68 +1142,159 @@ if (tabSession !== "true") {
                 place-items-center
                 rounded-xl
                 border
-                border-[#102A56]/10
-                bg-white
-                !text-[#102A56]
                 lg:hidden
               "
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--cms-primary) 10%, transparent)",
+                background:
+                  "var(--cms-white)",
+                color:
+                  "var(--cms-primary)",
+              }}
             >
               <Menu
                 size={18}
-                className="!text-[#102A56]"
+                style={{
+                  color:
+                    "var(--cms-primary)",
+                }}
               />
             </button>
 
             <div>
-              <div className="text-xs font-semibold !text-[#102A56]">
+              <div
+                className="
+                  text-xs
+                  font-semibold
+                "
+                style={{
+                  color:
+                    "var(--cms-primary)",
+                }}
+              >
                 Apex Public School
               </div>
 
-              <div className="mt-1 text-[8px] uppercase tracking-[0.2em] !text-[#102A56]/35">
+              <div
+                className="
+                  mt-1
+                  text-[8px]
+                  uppercase
+                  tracking-[0.2em]
+                "
+                style={{
+                  color:
+                    "color-mix(in srgb, var(--cms-primary) 35%, transparent)",
+                }}
+              >
                 Content Management System
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden rounded-full border border-[#102A56]/10 bg-white px-3 py-2 text-[9px] font-medium uppercase tracking-[0.15em] !text-[#102A56]/45 sm:block">
+            <div
+              className="
+                hidden
+                rounded-full
+                border
+                px-3
+                py-2
+                text-[9px]
+                font-medium
+                uppercase
+                tracking-[0.15em]
+                sm:block
+              "
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--cms-primary) 10%, transparent)",
+                background:
+                  "var(--cms-white)",
+                color:
+                  "color-mix(in srgb, var(--cms-primary) 45%, transparent)",
+              }}
+            >
               {userRole ===
               "super_admin"
                 ? "Super Admin"
                 : "Admin Panel"}
             </div>
 
+            {/* ==================================================
+                VIEW WEBSITE
+            ================================================== */}
+
             <Link
               href="/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="
+                cms-view-website
                 hidden
                 items-center
                 gap-2
                 rounded-full
                 border
-                border-[#102A56]/10
-                bg-white
                 px-4
                 py-2.5
                 text-xs
-                font-medium
-                !text-[#102A56]
+                font-semibold
                 transition
                 duration-300
-                hover:-translate-y-0.5
-                hover:bg-[#102A56]
                 md:flex
               "
+              style={{
+                background:
+                  "var(--cms-button)",
+                color:
+                  "var(--cms-button-text)",
+                borderColor:
+                  "color-mix(in srgb, var(--cms-button) 20%, transparent)",
+              }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.background =
+                  "var(--cms-button-hover)";
+
+                event.currentTarget.style.color =
+                  "var(--cms-button-text)";
+
+                event.currentTarget.style.transform =
+                  "translateY(-2px)";
+
+                event.currentTarget.style.boxShadow =
+                  "0 12px 30px color-mix(in srgb, var(--cms-primary) 20%, transparent)";
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background =
+                  "var(--cms-button)";
+
+                event.currentTarget.style.color =
+                  "var(--cms-button-text)";
+
+                event.currentTarget.style.transform =
+                  "translateY(0)";
+
+                event.currentTarget.style.boxShadow =
+                  "none";
+              }}
             >
-              <span className="!text-[#102A56]">
+              <span
+                style={{
+                  color:
+                    "var(--cms-button-text)",
+                }}
+              >
                 View website
               </span>
 
               <ChevronRight
                 size={14}
-                className="!text-[#102A56]"
+                style={{
+                  color:
+                    "var(--cms-button-text)",
+                }}
               />
             </Link>
           </div>
@@ -973,7 +1302,13 @@ if (tabSession !== "true") {
 
         {/* PAGE */}
 
-        <main className="min-h-[calc(100vh-72px)] p-5 md:p-8">
+        <main
+          className="
+            min-h-[calc(100vh-72px)]
+            p-5
+            md:p-8
+          "
+        >
           {children}
         </main>
       </div>

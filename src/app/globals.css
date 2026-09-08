@@ -1,23 +1,184 @@
 @import "tailwindcss";
 
 /* =========================================================
+   CMS THEME SYSTEM
+   Values are controlled from Supabase /admin/theme
+   ========================================================= */
+
+:root {
+  --cms-primary: #102a56;
+  --cms-primary-dark: #0a1d3b;
+  --cms-primary-mid: #1b3d73;
+  --cms-secondary: #dce7f5;
+  --cms-background: #f5f0e6;
+  --cms-background-deep: #ebe3d3;
+  --cms-white: #fffdf8;
+  --cms-text: #10203a;
+  --cms-muted: #687589;
+  --cms-accent: #d4a72c;
+  --cms-button: #102a56;
+  --cms-button-text: #ffffff;
+  --cms-button-hover: #1b3d73;
+  --cms-header: #ffffff;
+  --cms-footer: #102a56;
+  --cms-loader: #102a56;
+  --cms-loader-accent: #d4a72c;
+
+  /* Independent large-section and card controls */
+  --cms-section: #102a56;
+  --cms-section-dark: #0a1d3b;
+  --cms-card: #102a56;
+  --cms-card-text: #ffffff;
+  --cms-card-border: #1b3d73;
+
+  /* Make existing Apex utility classes theme-aware */
+  --apex-navy: var(--cms-primary);
+  --apex-navy-dark: var(--cms-primary-dark);
+  --apex-navy-mid: var(--cms-primary-mid);
+  --apex-blue-soft: var(--cms-secondary);
+  --apex-cream: var(--cms-background);
+  --apex-cream-deep: var(--cms-background-deep);
+  --apex-white: var(--cms-white);
+  --apex-ink: var(--cms-text);
+  --apex-muted: var(--cms-muted);
+  --background: var(--cms-background);
+  --foreground: var(--cms-text);
+}
+
+/* =========================================================
+   CMS THEME — HARD-CODED APEX COLOUR BRIDGE
+   This catches existing Tailwind arbitrary colour classes
+   without requiring every page to be rewritten.
+   ========================================================= */
+
+/* Primary backgrounds */
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#102a56]"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#102A56]"] {
+  background-color: var(--cms-primary) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#0a1d3b]"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#0A1D3B]"] {
+  background-color: var(--cms-primary-dark) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#1b3d73]"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#1B3D73]"] {
+  background-color: var(--cms-primary-mid) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#dce7f5]"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#DCE7F5]"] {
+  background-color: var(--cms-secondary) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#f5f0e6]"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#F5F0E6]"] {
+  background-color: var(--cms-background) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#ebe3d3]"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#EBE3D3]"] {
+  background-color: var(--cms-background-deep) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#fffdf8]"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#FFFDF8]"] {
+  background-color: var(--cms-white) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#d4a72c]"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#D4A72C]"] {
+  background-color: var(--cms-accent) !important;
+}
+
+/* Opacity variants */
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#102a56]/"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#102A56]/"] {
+  background-color: color-mix(in srgb, var(--cms-primary) 90%, transparent) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#0a1d3b]/"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#0A1D3B]/"] {
+  background-color: color-mix(in srgb, var(--cms-primary-dark) 90%, transparent) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="bg-[#1b3d73]/"], body:not(:has(a[href="/admin/theme"])) [class*="bg-[#1B3D73]/"] {
+  background-color: color-mix(in srgb, var(--cms-primary-mid) 90%, transparent) !important;
+}
+
+/* Text */
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#102a56]"], body:not(:has(a[href="/admin/theme"])) [class*="text-[#102A56]"] { color: var(--cms-primary) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#0a1d3b]"], body:not(:has(a[href="/admin/theme"])) [class*="text-[#0A1D3B]"] { color: var(--cms-primary-dark) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#1b3d73]"], body:not(:has(a[href="/admin/theme"])) [class*="text-[#1B3D73]"] { color: var(--cms-primary-mid) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#dce7f5]"], body:not(:has(a[href="/admin/theme"])) [class*="text-[#DCE7F5]"] { color: var(--cms-secondary) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#f5f0e6]"], body:not(:has(a[href="/admin/theme"])) [class*="text-[#F5F0E6]"] { color: var(--cms-background) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#ebe3d3]"], body:not(:has(a[href="/admin/theme"])) [class*="text-[#EBE3D3]"] { color: var(--cms-background-deep) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#10203a]"], body:not(:has(a[href="/admin/theme"])) [class*="text-[#10203A]"] { color: var(--cms-text) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#687589]"] { color: var(--cms-muted) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="text-[#d4a72c]"], body:not(:has(a[href="/admin/theme"])) [class*="text-[#D4A72C]"] { color: var(--cms-accent) !important; }
+
+/* Borders */
+body:not(:has(a[href="/admin/theme"])) [class*="border-[#102a56]"], body:not(:has(a[href="/admin/theme"])) [class*="border-[#102A56]"] { border-color: var(--cms-primary) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="border-[#0a1d3b]"], body:not(:has(a[href="/admin/theme"])) [class*="border-[#0A1D3B]"] { border-color: var(--cms-primary-dark) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="border-[#1b3d73]"], body:not(:has(a[href="/admin/theme"])) [class*="border-[#1B3D73]"] { border-color: var(--cms-primary-mid) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="border-[#dce7f5]"], body:not(:has(a[href="/admin/theme"])) [class*="border-[#DCE7F5]"] { border-color: var(--cms-secondary) !important; }
+body:not(:has(a[href="/admin/theme"])) [class*="border-[#d4a72c]"], body:not(:has(a[href="/admin/theme"])) [class*="border-[#D4A72C]"] { border-color: var(--cms-accent) !important; }
+
+/* Border opacity variants */
+body:not(:has(a[href="/admin/theme"])) [class*="border-[#102a56]/"], body:not(:has(a[href="/admin/theme"])) [class*="border-[#102A56]/"] {
+  border-color: color-mix(in srgb, var(--cms-primary) 25%, transparent) !important;
+}
+body:not(:has(a[href="/admin/theme"])) [class*="border-[#dce7f5]/"], body:not(:has(a[href="/admin/theme"])) [class*="border-[#DCE7F5]/"] {
+  border-color: color-mix(in srgb, var(--cms-secondary) 25%, transparent) !important;
+}
+
+/* Theme-aware reusable classes */
+.cms-primary-bg { background-color: var(--cms-primary) !important; }
+.cms-primary-dark-bg { background-color: var(--cms-primary-dark) !important; }
+.cms-primary-mid-bg { background-color: var(--cms-primary-mid) !important; }
+.cms-secondary-bg { background-color: var(--cms-secondary) !important; }
+.cms-background { background-color: var(--cms-background) !important; }
+.cms-background-deep { background-color: var(--cms-background-deep) !important; }
+.cms-white-bg { background-color: var(--cms-white) !important; }
+.cms-text { color: var(--cms-text) !important; }
+.cms-muted { color: var(--cms-muted) !important; }
+.cms-primary { color: var(--cms-primary) !important; }
+.cms-accent { color: var(--cms-accent) !important; }
+.cms-accent-bg { background-color: var(--cms-accent) !important; }
+.cms-button { background-color: var(--cms-button) !important; color: var(--cms-button-text) !important; }
+.cms-button:hover { background-color: var(--cms-button-hover) !important; }
+
+/* Buttons using old Apex colours */
+body:not(:has(a[href="/admin/theme"])) button[class*="bg-[#102a56]"],
+body:not(:has(a[href="/admin/theme"])) button[class*="bg-[#102A56]"],
+body:not(:has(a[href="/admin/theme"])) a[class*="bg-[#102a56]"],
+body:not(:has(a[href="/admin/theme"])) a[class*="bg-[#102A56]"] {
+  background-color: var(--cms-button) !important;
+  color: var(--cms-button-text) !important;
+}
+body:not(:has(a[href="/admin/theme"])) button[class*="bg-[#f5f0e6]"],
+body:not(:has(a[href="/admin/theme"])) button[class*="bg-[#F5F0E6]"],
+body:not(:has(a[href="/admin/theme"])) a[class*="bg-[#f5f0e6]"],
+body:not(:has(a[href="/admin/theme"])) a[class*="bg-[#F5F0E6]"] {
+  background-color: var(--cms-button) !important;
+  color: var(--cms-button-text) !important;
+}
+
+/* Existing Apex dark surfaces */
+.apex-navy, .apex-navy-dark, .apex-cream, .apex-white {
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
+}
+
+/* Body and root surfaces */
+html { background: var(--cms-background) !important; }
+body { background: var(--cms-background) !important; color: var(--cms-text) !important; }
+
+/* Footer and header helpers */
+.apex-footer { background-color: var(--cms-footer) !important; }
+.apex-header { background-color: var(--cms-header) !important; }
+.apex-loader { background-color: var(--cms-loader) !important; }
+.apex-loader-accent { background-color: var(--cms-loader-accent) !important; }
+
+/* =========================================================
    APEX PUBLIC SCHOOL 2.0
    Global Theme + Futuristic Motion System
    ========================================================= */
 
-:root {
-  /* Apex Colors */
-  --apex-navy: #102a56;
-  --apex-navy-dark: #0a1d3b;
-  --apex-navy-mid: #1b3d73;
-  --apex-blue-soft: #dce7f5;
+ :root {
+  /* Keep all existing Apex variables connected to the CMS theme */
+  --apex-navy: var(--cms-primary);
+  --apex-navy-dark: var(--cms-primary-dark);
+  --apex-navy-mid: var(--cms-primary-mid);
+  --apex-blue-soft: var(--cms-secondary);
 
-  --apex-cream: #f5f0e6;
-  --apex-cream-deep: #ebe3d3;
-  --apex-white: #fffdf8;
+  --apex-cream: var(--cms-background);
+  --apex-cream-deep: var(--cms-background-deep);
+  --apex-white: var(--cms-white);
 
-  --apex-ink: #10203a;
-  --apex-muted: #687589;
+  --apex-ink: var(--cms-text);
+  --apex-muted: var(--cms-muted);
 
   /* Motion */
   --apex-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -25,8 +186,8 @@
   --apex-my: 50vh;
 
   /* Base */
-  --background: var(--apex-cream);
-  --foreground: var(--apex-ink);
+  --background: var(--cms-background);
+  --foreground: var(--cms-text);
 }
 
 /* =========================================================
@@ -1120,4 +1281,92 @@ footer a:hover {
   .apex-motion-grid {
     display: none !important;
   }
+}
+
+/* =========================================================
+   FINAL CMS OVERRIDES
+   Public website only.
+   The admin CMS keeps its own light dashboard surfaces.
+   ========================================================= */
+
+/* Legacy hard-coded large sections on the public website */
+body:not(:has(a[href="/admin/theme"])) section[class*="bg-[#102a56]"],
+body:not(:has(a[href="/admin/theme"])) section[class*="bg-[#102A56]"],
+body:not(:has(a[href="/admin/theme"])) main[class*="bg-[#102a56]"],
+body:not(:has(a[href="/admin/theme"])) main[class*="bg-[#102A56]"],
+body:not(:has(a[href="/admin/theme"])) article[class*="bg-[#102a56]"],
+body:not(:has(a[href="/admin/theme"])) article[class*="bg-[#102A56]"] {
+  background-color: var(--cms-primary) !important;
+}
+
+body:not(:has(a[href="/admin/theme"])) section[class*="bg-[#0a1d3b]"],
+body:not(:has(a[href="/admin/theme"])) section[class*="bg-[#0A1D3B]"],
+body:not(:has(a[href="/admin/theme"])) main[class*="bg-[#0a1d3b]"],
+body:not(:has(a[href="/admin/theme"])) main[class*="bg-[#0A1D3B]"] {
+  background-color: var(--cms-primary-dark) !important;
+}
+
+/* Explicit theme controls for components that have been migrated */
+.cms-section-bg {
+  background-color: var(--cms-section) !important;
+}
+
+.cms-section-dark-bg {
+  background-color: var(--cms-section-dark) !important;
+}
+
+.cms-card {
+  background-color: var(--cms-card) !important;
+  color: var(--cms-card-text) !important;
+  border-color: var(--cms-card-border) !important;
+}
+
+.cms-card-text {
+  color: var(--cms-card-text) !important;
+}
+
+.cms-card-border {
+  border-color: var(--cms-card-border) !important;
+}
+
+.apex-section {
+  background-color: var(--cms-section) !important;
+}
+
+.apex-section-dark {
+  background-color: var(--cms-section-dark) !important;
+}
+
+.apex-card {
+  background-color: var(--cms-card) !important;
+  color: var(--cms-card-text) !important;
+  border-color: var(--cms-card-border) !important;
+}
+
+/* Existing Apex utility classes automatically follow the CMS theme */
+.apex-navy {
+  background-color: var(--cms-primary) !important;
+  color: var(--cms-white) !important;
+}
+
+.apex-navy-dark {
+  background-color: var(--cms-primary-dark) !important;
+  color: var(--cms-white) !important;
+}
+
+.apex-cream {
+  background-color: var(--cms-background) !important;
+  color: var(--cms-text) !important;
+}
+
+.apex-white {
+  background-color: var(--cms-white) !important;
+  color: var(--cms-text) !important;
+}
+
+/* Smooth theme transition */
+body, header, footer, section, article, main, button, a {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 220ms;
+  transition-timing-function: ease;
 }

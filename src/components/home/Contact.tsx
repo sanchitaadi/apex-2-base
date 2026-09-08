@@ -29,11 +29,11 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="
-        scroll-mt-36
-        bg-[#FFFDF8]
-        text-[#10203A]
-      "
+      className="scroll-mt-36"
+      style={{
+        backgroundColor: "var(--cms-background)",
+        color: "var(--cms-text)",
+      }}
     >
       <div
         className="
@@ -47,13 +47,9 @@ export default function Contact() {
           lg:py-36
         "
       >
-        {/* =================================================
-            HEADER
-        ================================================== */}
-
+        {/* HEADER */}
         <Reveal>
           <div className="grid gap-12 lg:grid-cols-[1fr_.7fr] lg:items-end">
-
             <div>
               <p
                 className="
@@ -61,8 +57,11 @@ export default function Contact() {
                   font-semibold
                   uppercase
                   tracking-[0.3em]
-                  !text-[#102A56]/45
                 "
+                style={{
+                  color:
+                    "color-mix(in srgb, var(--cms-primary) 55%, transparent)",
+                }}
               >
                 Get in touch
               </p>
@@ -75,14 +74,21 @@ export default function Contact() {
                   font-semibold
                   leading-[0.9]
                   tracking-[-0.06em]
-                  !text-[#102A56]
                   md:text-7xl
                   lg:text-[6vw]
                 "
+                style={{
+                  color: "var(--cms-primary)",
+                }}
               >
                 Come visit
                 <br />
-                <span className="!text-[#102A56]/30">
+                <span
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-primary) 30%, transparent)",
+                  }}
+                >
                   Apex.
                 </span>
               </h2>
@@ -93,51 +99,51 @@ export default function Contact() {
                 max-w-md
                 text-sm
                 leading-7
-                !text-[#10203A]/60
                 md:text-base
               "
+              style={{
+                color:
+                  "color-mix(in srgb, var(--cms-text) 60%, transparent)",
+              }}
             >
               Have a question about admissions, academics, school activities
               or anything else? Get in touch with Apex Public School.
             </p>
-
           </div>
         </Reveal>
 
-        {/* =================================================
-            CONTACT CARDS
-        ================================================== */}
-
+        {/* CONTACT CARDS */}
         <div className="mt-14 grid gap-4 lg:grid-cols-2">
 
-          {/* =================================================
-              CAMPUS
-          ================================================== */}
-
+          {/* CAMPUS CARD */}
           <Reveal>
             <div
               className="
                 rounded-[2rem]
-                bg-[#102A56]
                 p-7
-                !text-white
                 shadow-[0_18px_55px_rgba(16,42,86,0.12)]
                 md:p-10
               "
+              style={{
+                backgroundColor: "var(--cms-section)",
+                color: "var(--cms-section-text)",
+              }}
             >
               <div
                 className="
                   text-[10px]
                   uppercase
                   tracking-[0.28em]
-                  !text-white/40
                 "
+                style={{
+                  color:
+                    "color-mix(in srgb, var(--cms-section-text) 40%, transparent)",
+                }}
               >
                 School campus
               </div>
 
               <div className="mt-12 flex gap-4">
-
                 <div
                   className="
                     grid
@@ -147,21 +153,24 @@ export default function Contact() {
                     place-items-center
                     rounded-full
                     border
-                    border-white/10
-                    bg-white/[0.04]
-                    !text-white
                   "
+                  style={{
+                    borderColor:
+                      "color-mix(in srgb, var(--cms-section-text) 10%, transparent)",
+                    backgroundColor:
+                      "color-mix(in srgb, var(--cms-section-text) 4%, transparent)",
+                    color: "var(--cms-section-text)",
+                  }}
                 >
                   <MapPin size={17} />
                 </div>
 
                 <div>
                   <p
-                    className="
-                      text-lg
-                      font-semibold
-                      !text-white
-                    "
+                    className="text-lg font-semibold"
+                    style={{
+                      color: "var(--cms-section-text)",
+                    }}
                   >
                     Apex Public School
                   </p>
@@ -172,30 +181,25 @@ export default function Contact() {
                       max-w-md
                       text-sm
                       leading-7
-                      !text-white/60
                     "
+                    style={{
+                      color:
+                        "color-mix(in srgb, var(--cms-section-text) 60%, transparent)",
+                    }}
                   >
                     Apex Road, B-Block, Sant Nagar,
                     <br />
                     Burari, Delhi – 110084
                   </p>
                 </div>
-
               </div>
 
-              {/* =================================================
-                  FIXED MAP BUTTON
-              ================================================== */}
-
+              {/* MAP BUTTON */}
               <a
                 href="https://www.google.com/maps/search/?api=1&query=Apex+Public+School+Burari+Delhi"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Open Apex Public School in Google Maps"
-                style={{
-                  backgroundColor: "#F5F0E6",
-                  color: "#102A56",
-                }}
                 className="
                   group
                   mt-9
@@ -209,27 +213,27 @@ export default function Contact() {
                   font-semibold
                   shadow-[0_8px_24px_rgba(0,0,0,0.16)]
                   ring-1
-                  ring-white/10
                   transition-all
                   duration-300
                   hover:-translate-y-1
-                  hover:bg-white
                   hover:shadow-[0_14px_32px_rgba(0,0,0,0.22)]
                 "
+                style={{
+                  backgroundColor: "var(--cms-button)",
+                  color: "var(--cms-button-text)",
+                  borderColor:
+                    "color-mix(in srgb, var(--cms-section-text) 10%, transparent)",
+                }}
               >
                 <span
                   style={{
-                    color: "#102A56",
+                    color: "var(--cms-button-text)",
                   }}
-                  className="!text-[#102A56]"
                 >
                   Open in Maps
                 </span>
 
                 <span
-                  style={{
-                    backgroundColor: "#102A56",
-                  }}
                   className="
                     flex
                     h-7
@@ -243,45 +247,44 @@ export default function Contact() {
                     group-hover:-translate-y-0.5
                     group-hover:translate-x-0.5
                   "
+                  style={{
+                    backgroundColor: "var(--cms-primary)",
+                  }}
                 >
                   <ArrowUpRight
                     size={14}
                     strokeWidth={2.4}
                     style={{
-                      color: "#F5F0E6",
+                      color: "var(--cms-button-text)",
                     }}
-                    className="!text-[#F5F0E6]"
                   />
                 </span>
               </a>
             </div>
           </Reveal>
 
-          {/* =================================================
-              PHONE + EMAIL
-          ================================================== */}
-
+          {/* PHONE + EMAIL */}
           <Reveal>
             <div className="grid gap-4 sm:grid-cols-2">
 
-              {/* PHONE */}
-
+              {/* PHONE CARD */}
               <a
                 href="tel:09990061747"
                 className="
                   group
                   rounded-[2rem]
                   border
-                  border-[#102A56]/10
-                  bg-[#F5F0E6]
                   p-7
                   transition-all
                   duration-300
                   hover:-translate-y-1
-                  hover:bg-white
-                  hover:shadow-[0_14px_35px_rgba(16,42,86,0.10)]
                   md:p-8
                 "
+                style={{
+                  backgroundColor: "var(--cms-card)",
+                  color: "var(--cms-card-text)",
+                  borderColor: "var(--cms-card-border)",
+                }}
               >
                 <div
                   className="
@@ -291,17 +294,19 @@ export default function Contact() {
                     place-items-center
                     rounded-full
                     border
-                    border-[#102A56]/10
-                    !text-[#102A56]
                     transition
                     duration-300
-                    group-hover:bg-[#102A56]
-                    group-hover:!text-white
+                    group-hover:bg-[var(--cms-primary)]
+                    group-hover:text-white
                   "
+                  style={{
+                    borderColor: "var(--cms-card-border)",
+                    color: "var(--cms-primary)",
+                  }}
                 >
                   <Phone
                     size={17}
-                    className="!text-[#102A56] group-hover:!text-white"
+                    className="transition-colors duration-300 group-hover:text-white"
                   />
                 </div>
 
@@ -311,8 +316,11 @@ export default function Contact() {
                     text-[9px]
                     uppercase
                     tracking-[0.25em]
-                    !text-[#102A56]/45
                   "
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-card-text) 45%, transparent)",
+                  }}
                 >
                   Phone
                 </p>
@@ -323,8 +331,10 @@ export default function Contact() {
                     text-xl
                     font-semibold
                     tracking-tight
-                    !text-[#102A56]
                   "
+                  style={{
+                    color: "var(--cms-card-text)",
+                  }}
                 >
                   09990061747
                 </p>
@@ -337,8 +347,10 @@ export default function Contact() {
                     gap-2
                     text-xs
                     font-semibold
-                    !text-[#102A56]
                   "
+                  style={{
+                    color: "var(--cms-card-text)",
+                  }}
                 >
                   Call the school
 
@@ -354,24 +366,24 @@ export default function Contact() {
                 </span>
               </a>
 
-              {/* EMAIL */}
-
+              {/* EMAIL CARD */}
               <a
                 href="mailto:contacts.apexschool@gmail.com"
                 className="
                   group
                   rounded-[2rem]
                   border
-                  border-[#102A56]/10
-                  bg-[#F5F0E6]
                   p-7
                   transition-all
                   duration-300
                   hover:-translate-y-1
-                  hover:bg-white
-                  hover:shadow-[0_14px_35px_rgba(16,42,86,0.10)]
                   md:p-8
                 "
+                style={{
+                  backgroundColor: "var(--cms-card)",
+                  color: "var(--cms-card-text)",
+                  borderColor: "var(--cms-card-border)",
+                }}
               >
                 <div
                   className="
@@ -381,17 +393,19 @@ export default function Contact() {
                     place-items-center
                     rounded-full
                     border
-                    border-[#102A56]/10
-                    !text-[#102A56]
                     transition
                     duration-300
-                    group-hover:bg-[#102A56]
-                    group-hover:!text-white
+                    group-hover:bg-[var(--cms-primary)]
+                    group-hover:text-white
                   "
+                  style={{
+                    borderColor: "var(--cms-card-border)",
+                    color: "var(--cms-primary)",
+                  }}
                 >
                   <Mail
                     size={17}
-                    className="!text-[#102A56] group-hover:!text-white"
+                    className="transition-colors duration-300 group-hover:text-white"
                   />
                 </div>
 
@@ -401,8 +415,11 @@ export default function Contact() {
                     text-[9px]
                     uppercase
                     tracking-[0.25em]
-                    !text-[#102A56]/45
                   "
+                  style={{
+                    color:
+                      "color-mix(in srgb, var(--cms-card-text) 45%, transparent)",
+                  }}
                 >
                   Email
                 </p>
@@ -413,8 +430,10 @@ export default function Contact() {
                     break-all
                     text-sm
                     font-semibold
-                    !text-[#102A56]
                   "
+                  style={{
+                    color: "var(--cms-card-text)",
+                  }}
                 >
                   contacts.apexschool@gmail.com
                 </p>
@@ -427,8 +446,10 @@ export default function Contact() {
                     gap-2
                     text-xs
                     font-semibold
-                    !text-[#102A56]
                   "
+                  style={{
+                    color: "var(--cms-card-text)",
+                  }}
                 >
                   Send an email
 
@@ -446,9 +467,7 @@ export default function Contact() {
 
             </div>
           </Reveal>
-
         </div>
-
       </div>
     </section>
   );

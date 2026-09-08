@@ -8,7 +8,9 @@ export default function GlobalMotion() {
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    if (reduceMotion) return;
+    if (reduceMotion) {
+      return;
+    }
 
     const selectors = [
       "main > section",
@@ -33,28 +35,37 @@ export default function GlobalMotion() {
         )
       )
     ).filter((element) => {
-      // Don't interfere with the floating buttons
-      if (element.closest("[data-static-motion]")) {
+      /*
+       * Never animate floating/static UI.
+       */
+      if (
+        element.closest("[data-static-motion]") ||
+        element.closest("[data-floating-action]")
+      ) {
         return false;
       }
 
-      // Don't animate absolutely positioned decorative elements
       const style = window.getComputedStyle(element);
 
-      if (style.position === "absolute") {
+      /*
+       * Decorative positioned elements should stay untouched.
+       */
+      if (
+        style.position === "absolute" ||
+        style.position === "fixed"
+      ) {
         return false;
       }
 
       return true;
     });
 
+    /*
+     * Add animation classes.
+     */
     elements.forEach((element, index) => {
       element.classList.add("apex-auto-motion");
 
-      /*
-       * Stagger animation.
-       * Nearby elements appear one after another.
-       */
       const delay = Math.min(index % 6, 5) * 70;
 
       element.style.setProperty(
@@ -63,19 +74,24 @@ export default function GlobalMotion() {
       );
     });
 
+    /*
+     * Reveal elements when they enter the viewport.
+     */
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
 
-          entry.target.classList.add("apex-auto-visible");
+          const element = entry.target as HTMLElement;
 
-          observer.unobserve(entry.target);
+          element.classList.add("apex-auto-visible");
+
+          observer.unobserve(element);
         });
       },
       {
         threshold: 0.08,
-        rootMargin: "0px 0px -60px 0px",
+        rootMargin: "0px 0px -50px 0px",
       }
     );
 
@@ -104,6 +120,19 @@ export default function GlobalMotion() {
       { passive: true }
     );
 
+    /*
+     * Initial mouse position.
+     */
+    document.documentElement.style.setProperty(
+      "--apex-mx",
+      `${window.innerWidth / 2}px`
+    );
+
+    document.documentElement.style.setProperty(
+      "--apex-my",
+      `${window.innerHeight / 2}px`
+    );
+
     return () => {
       observer.disconnect();
 
@@ -116,11 +145,13 @@ export default function GlobalMotion() {
 
   return (
     <>
+      {/* Mouse-following ambient glow */}
       <div
         className="apex-motion-light"
         aria-hidden="true"
       />
 
+      {/* Very subtle background grid */}
       <div
         className="apex-motion-grid"
         aria-hidden="true"
