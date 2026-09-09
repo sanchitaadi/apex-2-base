@@ -5,7 +5,6 @@ import {
   Trophy,
   ArrowUpRight,
   Sparkles,
-  Building2,
 } from "lucide-react";
 
 const actions = [
@@ -21,7 +20,7 @@ const actions = [
     sublabel: "Academic Results",
     href: "/cbse-results",
     side: "right",
-    icon: Building2,
+    icon: Trophy,
   },
 ];
 
@@ -31,7 +30,6 @@ export default function FloatingActions() {
       {actions.map((item) => {
         const Icon = item.icon;
         const isLeft = item.side === "left";
-
         const isExternal = item.href.startsWith("http");
 
         return (
@@ -41,14 +39,15 @@ export default function FloatingActions() {
             aria-label={item.label}
             target={isExternal ? "_blank" : undefined}
             rel={isExternal ? "noopener noreferrer" : undefined}
+            data-static-motion="true"
+            data-floating-action="true"
             className={`
               group
               fixed
               top-1/2
-              z-[90]
-              hidden
+              z-[9999]
+              block
               -translate-y-1/2
-              md:block
               ${isLeft ? "left-0" : "right-0"}
             `}
           >
@@ -56,8 +55,12 @@ export default function FloatingActions() {
               className={`
                 relative
                 flex
-                h-[190px]
-                w-[58px]
+                h-[170px]
+                w-[48px]
+                sm:h-[180px]
+                sm:w-[54px]
+                md:h-[190px]
+                md:w-[58px]
                 flex-col
                 items-center
                 justify-between
@@ -72,29 +75,37 @@ export default function FloatingActions() {
                 ${
                   isLeft
                     ? `
-                      rounded-r-[20px]
+                      rounded-r-[18px]
+                      sm:rounded-r-[20px]
                       border-l-0
                       border-white/10
                       bg-[#102A56]/95
                       text-[#F5F0E6]
-                      shadow-[8px_0_35px_rgba(10,29,59,0.28),0_0_25px_rgba(90,150,220,0.14)]
-                      group-hover:w-[66px]
-                      group-hover:shadow-[10px_0_45px_rgba(10,29,59,0.38),0_0_40px_rgba(90,150,220,0.26)]
+                      shadow-[6px_0_25px_rgba(10,29,59,0.28),0_0_20px_rgba(90,150,220,0.14)]
+                      group-hover:w-[56px]
+                      sm:group-hover:w-[62px]
+                      md:group-hover:w-[66px]
+                      group-hover:shadow-[8px_0_35px_rgba(10,29,59,0.38),0_0_35px_rgba(90,150,220,0.26)]
                     `
                     : `
-                      rounded-l-[20px]
+                      rounded-l-[18px]
+                      sm:rounded-l-[20px]
                       border-r-0
                       border-[#102A56]/10
                       bg-[#F5F0E6]/95
                       text-[#102A56]
-                      shadow-[-8px_0_35px_rgba(16,42,86,0.16),0_0_25px_rgba(255,255,255,0.55)]
-                      group-hover:w-[66px]
-                      group-hover:shadow-[-10px_0_45px_rgba(16,42,86,0.22),0_0_40px_rgba(255,255,255,0.8)]
+                      shadow-[-6px_0_25px_rgba(16,42,86,0.16),0_0_20px_rgba(255,255,255,0.55)]
+                      group-hover:w-[56px]
+                      sm:group-hover:w-[62px]
+                      md:group-hover:w-[66px]
+                      group-hover:shadow-[-8px_0_35px_rgba(16,42,86,0.22),0_0_35px_rgba(255,255,255,0.8)]
                     `
                 }
               `}
             >
-              {/* Ambient glow */}
+              {/* =====================================================
+                  AMBIENT GLOW
+              ====================================================== */}
               <span
                 className={`
                   pointer-events-none
@@ -107,6 +118,7 @@ export default function FloatingActions() {
                   transition-opacity
                   duration-500
                   group-hover:opacity-100
+
                   ${
                     isLeft
                       ? "bg-[#5C96CE]/20"
@@ -115,7 +127,9 @@ export default function FloatingActions() {
                 `}
               />
 
-              {/* Moving light */}
+              {/* =====================================================
+                  MOVING LIGHT SWEEP
+              ====================================================== */}
               <span
                 className="
                   pointer-events-none
@@ -131,17 +145,22 @@ export default function FloatingActions() {
                   blur-sm
                   transition-all
                   duration-1000
+                  ease-out
                   group-hover:top-[110%]
                 "
               />
 
-              {/* Top icon */}
+              {/* =====================================================
+                  TOP ICON
+              ====================================================== */}
               <div
                 className={`
                   relative
                   grid
-                  h-9
-                  w-9
+                  h-8
+                  w-8
+                  sm:h-9
+                  sm:w-9
                   shrink-0
                   place-items-center
                   rounded-xl
@@ -149,6 +168,7 @@ export default function FloatingActions() {
                   transition-all
                   duration-500
                   group-hover:scale-110
+
                   ${
                     isLeft
                       ? "border-white/10 bg-white/[0.07]"
@@ -157,19 +177,25 @@ export default function FloatingActions() {
                 `}
               >
                 <Icon
-                  size={17}
+                  size={16}
+                  className="sm:h-[17px] sm:w-[17px]"
                   strokeWidth={1.8}
                 />
               </div>
 
-              {/* Vertical text */}
+              {/* =====================================================
+                  VERTICAL TEXT
+              ====================================================== */}
               <div className="flex flex-1 items-center justify-center">
                 <div
                   className="
                     whitespace-nowrap
-                    text-[11px]
+                    text-[9px]
+                    sm:text-[10px]
+                    md:text-[11px]
                     font-semibold
-                    tracking-[0.09em]
+                    tracking-[0.08em]
+                    sm:tracking-[0.09em]
                   "
                   style={{
                     writingMode: "vertical-rl",
@@ -180,24 +206,32 @@ export default function FloatingActions() {
                 </div>
               </div>
 
-              {/* Bottom details */}
-              <div className="flex flex-col items-center gap-2">
+              {/* =====================================================
+                  BOTTOM DETAILS
+              ====================================================== */}
+              <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+                {/* Sparkle */}
                 <Sparkles
-                  size={10}
-                  strokeWidth={1.5}
+                  size={9}
                   className={`
-                    opacity-35s
+                    sm:h-[10px]
+                    sm:w-[10px]
+                    opacity-40
                     transition-all
                     duration-500
                     group-hover:opacity-100
+                    group-hover:scale-110
+
                     ${
                       isLeft
                         ? "text-[#A9D8FF]"
                         : "text-[#079769]"
                     }
                   `}
+                  strokeWidth={1.5}
                 />
 
+                {/* Status dot */}
                 <span
                   className={`
                     h-1.5
@@ -206,43 +240,72 @@ export default function FloatingActions() {
                     transition-all
                     duration-500
                     group-hover:scale-125
+
                     ${
                       isLeft
                         ? "bg-[#8DC7FF] shadow-[0_0_10px_#8DC7FF]"
-                        : "bg-[#1956bf] shadow-[0_0_8px_rgba(16,42,86,0.45)]"
+                        : "bg-[#1956BF] shadow-[0_0_8px_rgba(16,42,86,0.45)]"
                     }
                   `}
                 />
 
+                {/* Arrow */}
                 <ArrowUpRight
-                  size={13}
-                  strokeWidth={1.7}
+                  size={11}
                   className="
-                    opacity-35
+                    sm:h-[13px]
+                    sm:w-[13px]
+                    opacity-40
                     transition-all
                     duration-500
                     group-hover:-translate-y-0.5
                     group-hover:translate-x-0.5
                     group-hover:opacity-100
                   "
+                  strokeWidth={1.7}
                 />
               </div>
 
-              {/* Edge light */}
+              {/* =====================================================
+                  EDGE LIGHT
+              ====================================================== */}
               <span
                 className={`
                   absolute
-                  top-5
-                  bottom-5
+                  top-4
+                  bottom-4
                   w-px
                   scale-y-0
                   transition-transform
                   duration-500
                   group-hover:scale-y-100
+
                   ${
                     isLeft
                       ? "right-0 bg-gradient-to-b from-transparent via-[#8DC7FF] to-transparent"
                       : "left-0 bg-gradient-to-b from-transparent via-[#102A56]/40 to-transparent"
+                  }
+                `}
+              />
+
+              {/* =====================================================
+                  INNER BORDER GLOW
+              ====================================================== */}
+              <span
+                className={`
+                  pointer-events-none
+                  absolute
+                  inset-0
+                  rounded-[inherit]
+                  opacity-0
+                  transition-opacity
+                  duration-500
+                  group-hover:opacity-100
+
+                  ${
+                    isLeft
+                      ? "shadow-[inset_-1px_0_0_rgba(141,199,255,0.35)]"
+                      : "shadow-[inset_1px_0_0_rgba(16,42,86,0.16)]"
                   }
                 `}
               />

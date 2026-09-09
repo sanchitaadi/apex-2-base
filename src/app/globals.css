@@ -1370,3 +1370,40 @@ body, header, footer, section, article, main, button, a {
   transition-duration: 220ms;
   transition-timing-function: ease;
 }
+/* =========================================================
+   FLOATING ACTIONS — MOBILE VISIBILITY FIX
+   Keep the existing desktop design unchanged.
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .apex-floating-action {
+    position: fixed !important;
+    top: 50% !important;
+    bottom: auto !important;
+
+    z-index: 99999 !important;
+
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    pointer-events: auto !important;
+  }
+
+  .apex-floating-left {
+    left: 0 !important;
+    right: auto !important;
+  }
+
+  .apex-floating-right {
+    right: 0 !important;
+    left: auto !important;
+  }
+}
+
+/* Never let GlobalMotion hide the floating buttons */
+[data-floating-action="true"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
