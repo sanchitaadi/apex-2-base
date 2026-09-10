@@ -9,7 +9,9 @@ import {
   Activity,
   ArrowRight,
   Bell,
+  Book,
   BookOpen,
+  Building2,
   CalendarDays,
   FileText,
   GalleryHorizontal,
@@ -22,6 +24,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase/browser";
+import Image from "next/image";
 
 type CountCard = {
   label: string;
@@ -50,10 +53,10 @@ export default function AdminDashboard() {
       icon: Users,
     },
     {
-      label: "Events",
+      label: "Admissions",
       count: 0,
-      href: "/admin/events",
-      icon: CalendarDays,
+      href: "/admin/admissions",
+      icon: Book,
     },
     {
       label: "Gallery",
@@ -68,10 +71,10 @@ export default function AdminDashboard() {
       icon: Activity,
     },
     {
-      label: "Achievements",
+      label: "Syllabus & datesheet",
       count: 0,
-      href: "/admin/achievements",
-      icon: Trophy,
+      href: "/admin/academic-resources",
+      icon: Building2,
     },
   ]);
 
