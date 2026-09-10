@@ -800,25 +800,29 @@ export default function Header() {
           hero heading from going underneath the navigation.
       ====================================================== */}
 
-      <header
-        data-static-motion
-        className="
-          sticky
-          top-9
-          z-[100]
-        "
-      >
+<header
+  data-static-motion
+  className="
+    sticky
+    top-9
+    z-[100]
+    -mb-[115px]
+  "
+  style={{
+    background: "transparent",
+  }}
+>
         <div
-          className="
-            mx-auto
-            max-w-[1600px]
-            px-3
-            pt-3
-            sm:px-4
-            sm:pt-4
-            md:px-8
-          "
-        >
+    className="
+      mx-auto
+      max-w-[1600px]
+      px-3
+      pt-3
+      sm:px-4
+      sm:pt-4
+      md:px-8
+    "
+  >
           <div
             className="
               rounded-[20px]
