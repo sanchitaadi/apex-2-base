@@ -41,7 +41,7 @@ const fallbackSlides: HeroSlide[] = [
     image_url:
       "https://apexpublicschool.in/wp-content/uploads/2023/01/WhatsApp-Image-2023-01-02-at-1.06.01-PM-22.jpeg",
     primary_button_text: "Admissions 2026–27",
-    primary_button_url: "/admissions",
+    primary_button_url: "/online-registrations",
     secondary_button_text: "Discover Apex",
     secondary_button_url: "/about",
     sort_order: 0,

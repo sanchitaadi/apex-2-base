@@ -179,13 +179,17 @@ function DesktopDropdown({
         onClick={onToggle}
         className={`
           flex
-          h-11
+          h-10
+          xl:h-11
           shrink-0
           items-center
-          gap-1.5
+          gap-1
+          xl:gap-1.5
           rounded-full
-          px-2.5
-          text-[13px]
+          px-2
+          xl:px-2.5
+          text-[12px]
+          xl:text-[13px]
           font-medium
           leading-none
           transition-all
@@ -207,7 +211,7 @@ function DesktopDropdown({
         </span>
 
         <ChevronDown
-          size={12}
+          size={11}
           strokeWidth={1.8}
           className={`
             shrink-0
@@ -262,7 +266,9 @@ function DesktopDropdown({
               key={child.id}
               href={child.href}
               target={
-                child.open_in_new_tab ? "_blank" : undefined
+                child.open_in_new_tab
+                  ? "_blank"
+                  : undefined
               }
               rel={
                 child.open_in_new_tab
@@ -382,7 +388,9 @@ function MobileSection({
               key={child.id}
               href={child.href}
               target={
-                child.open_in_new_tab ? "_blank" : undefined
+                child.open_in_new_tab
+                  ? "_blank"
+                  : undefined
               }
               rel={
                 child.open_in_new_tab
@@ -424,7 +432,9 @@ export default function Header() {
   const pathname = usePathname();
 
   const [siteSettings, setSiteSettings] =
-    useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
+    useState<SiteSettings>(
+      DEFAULT_SITE_SETTINGS
+    );
 
   const [navigation, setNavigation] =
     useState<NavigationItem[]>([]);
@@ -507,11 +517,20 @@ export default function Header() {
           error
         );
 
-        setNavigation(fallbackNavigation);
-      } else if (!data || data.length === 0) {
-        setNavigation(fallbackNavigation);
+        setNavigation(
+          fallbackNavigation
+        );
+      } else if (
+        !data ||
+        data.length === 0
+      ) {
+        setNavigation(
+          fallbackNavigation
+        );
       } else {
-        setNavigation(data as NavigationItem[]);
+        setNavigation(
+          data as NavigationItem[]
+        );
       }
 
       setLoadingNavigation(false);
@@ -531,7 +550,8 @@ export default function Header() {
   const rootItems = useMemo(() => {
     return sortItems(
       navigation.filter(
-        (item) => item.parent_id === null
+        (item) =>
+          item.parent_id === null
       )
     );
   }, [navigation]);
@@ -540,10 +560,13 @@ export default function Header() {
      CHILDREN
   ======================================================= */
 
-  function getChildren(parentId: string) {
+  function getChildren(
+    parentId: string
+  ) {
     return sortItems(
       navigation.filter(
-        (item) => item.parent_id === parentId
+        (item) =>
+          item.parent_id === parentId
       )
     );
   }
@@ -573,11 +596,15 @@ export default function Header() {
 
   function toggleMenu(id: string) {
     setOpenMenu((current) =>
-      current === id ? null : id
+      current === id
+        ? null
+        : id
     );
   }
 
-  function toggleMobileSection(id: string) {
+  function toggleMobileSection(
+    id: string
+  ) {
     setMobileSections((current) =>
       current.includes(id)
         ? current.filter(
@@ -592,6 +619,74 @@ export default function Header() {
     setMobileOpen(false);
     setMobileSections([]);
   }
+
+  /* =======================================================
+     CLOSE DESKTOP DROPDOWN WHEN CLICKING OUTSIDE
+  ======================================================= */
+
+  useEffect(() => {
+    function handlePointerDown(
+      event: PointerEvent
+    ) {
+      const target =
+        event.target as HTMLElement;
+
+      if (
+        !target.closest(
+          "[data-header-dropdown]"
+        )
+      ) {
+        setOpenMenu(null);
+      }
+    }
+
+    document.addEventListener(
+      "pointerdown",
+      handlePointerDown
+    );
+
+    return () => {
+      document.removeEventListener(
+        "pointerdown",
+        handlePointerDown
+      );
+    };
+  }, []);
+
+  /* =======================================================
+     CLOSE MOBILE MENU ON DESKTOP
+  ======================================================= */
+
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth >= 1280) {
+        setMobileOpen(false);
+        setMobileSections([]);
+      }
+    }
+
+    window.addEventListener(
+      "resize",
+      handleResize
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        handleResize
+      );
+    };
+  }, []);
+
+  /* =======================================================
+     CLOSE MOBILE MENU WHEN ROUTE CHANGES
+  ======================================================= */
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setOpenMenu(null);
+    setMobileSections([]);
+  }, [pathname]);
 
   /* =======================================================
      RENDER
@@ -612,8 +707,10 @@ export default function Header() {
           z-[110]
         "
         style={{
-          backgroundColor: "var(--cms-primary)",
-          color: "var(--cms-secondary)",
+          backgroundColor:
+            "var(--cms-primary)",
+          color:
+            "var(--cms-secondary)",
         }}
       >
         <div
@@ -624,13 +721,18 @@ export default function Header() {
             max-w-[1600px]
             items-center
             justify-between
-            px-5
+            px-4
+            sm:px-5
             md:px-8
           "
         >
           <div className="hidden items-center gap-4 sm:flex">
             <span
-              className="text-[10px] tracking-[0.13em]"
+              className="
+                text-[9px]
+                tracking-[0.13em]
+                md:text-[10px]
+              "
               style={{
                 color:
                   "color-mix(in srgb, var(--cms-secondary) 75%, transparent)",
@@ -649,7 +751,11 @@ export default function Header() {
             </span>
 
             <span
-              className="text-[10px] tracking-[0.13em]"
+              className="
+                text-[9px]
+                tracking-[0.13em]
+                md:text-[10px]
+              "
               style={{
                 color:
                   "color-mix(in srgb, var(--cms-secondary) 75%, transparent)",
@@ -666,9 +772,10 @@ export default function Header() {
               flex
               items-center
               gap-2
-              text-[10px]
+              text-[9px]
               tracking-[0.12em]
               transition
+              sm:text-[10px]
             "
             style={{
               color:
@@ -684,13 +791,19 @@ export default function Header() {
 
       {/* =====================================================
           MAIN HEADER
+
+          IMPORTANT FIX:
+          Changed from fixed -> sticky.
+
+          This means the header remains visible while scrolling
+          but also occupies real document space, preventing the
+          hero heading from going underneath the navigation.
       ====================================================== */}
 
       <header
         data-static-motion
         className="
-          fixed
-          inset-x-0
+          sticky
           top-9
           z-[100]
         "
@@ -699,14 +812,17 @@ export default function Header() {
           className="
             mx-auto
             max-w-[1600px]
-            px-4
-            pt-4
+            px-3
+            pt-3
+            sm:px-4
+            sm:pt-4
             md:px-8
           "
         >
           <div
             className="
-              rounded-[24px]
+              rounded-[20px]
+              sm:rounded-[24px]
               border
               shadow-[0_22px_70px_rgba(5,20,45,0.26)]
               backdrop-blur-xl
@@ -721,9 +837,12 @@ export default function Header() {
             <div
               className="
                 flex
-                min-h-[88px]
+                min-h-[74px]
                 items-center
-                px-5
+                px-4
+                sm:min-h-[82px]
+                sm:px-5
+                md:min-h-[88px]
                 md:px-6
               "
             >
@@ -741,16 +860,17 @@ export default function Header() {
                   flex-1
                   shrink
                   items-center
-                  gap-2.5
+                  gap-2
                   pr-2
                   sm:gap-3
                   sm:pr-3
-                  xl:w-[315px]
-                  xl:min-w-[315px]
+                  xl:w-[285px]
+                  xl:min-w-[285px]
                   xl:flex-none
-                  xl:shrink-0
                   xl:gap-3.5
                   xl:pr-5
+                  2xl:w-[315px]
+                  2xl:min-w-[315px]
                 "
               >
                 {/* =================================================
@@ -761,16 +881,16 @@ export default function Header() {
                   className="
                     relative
                     grid
-                    h-11
-                    w-11
+                    h-10
+                    w-10
                     shrink-0
                     place-items-center
                     overflow-hidden
                     rounded-xl
-                    sm:h-[52px]
-                    sm:w-[52px]
-                    xl:h-[58px]
-                    xl:w-[58px]
+                    sm:h-[50px]
+                    sm:w-[50px]
+                    xl:h-[56px]
+                    xl:w-[56px]
                   "
                   style={{
                     backgroundColor:
@@ -778,14 +898,17 @@ export default function Header() {
                   }}
                 >
                   <Image
-                    src={siteSettings.logo_url}
+                    src={
+                      siteSettings.logo_url ||
+                      "/logo.png"
+                    }
                     alt={`${siteSettings.school_name} logo`}
                     fill
                     priority
                     sizes="
-                      (max-width: 639px) 44px,
-                      (max-width: 1279px) 52px,
-                      58px
+                      (max-width: 639px) 40px,
+                      (max-width: 1279px) 50px,
+                      56px
                     "
                     className="
                       object-contain
@@ -804,14 +927,15 @@ export default function Header() {
                     className="
                       truncate
                       whitespace-nowrap
-                      text-[12px]
+                      text-[11px]
                       font-bold
                       leading-none
-                      tracking-[0.08em]
-                      sm:text-[14px]
-                      sm:tracking-[0.1em]
-                      xl:text-[15px]
-                      xl:tracking-[0.105em]
+                      tracking-[0.07em]
+                      sm:text-[13px]
+                      sm:tracking-[0.09em]
+                      xl:text-[14px]
+                      xl:tracking-[0.1em]
+                      2xl:text-[15px]
                     "
                     style={{
                       color:
@@ -826,12 +950,14 @@ export default function Header() {
                       mt-1.5
                       hidden
                       whitespace-nowrap
-                      text-[8px]
+                      text-[7px]
                       font-medium
                       uppercase
                       leading-none
-                      tracking-[0.28em]
+                      tracking-[0.24em]
                       sm:block
+                      xl:text-[8px]
+                      xl:tracking-[0.28em]
                     "
                     style={{
                       color:
@@ -854,6 +980,7 @@ export default function Header() {
                   flex-1
                   items-center
                   justify-center
+                  gap-0
                   overflow-visible
                   xl:flex
                 "
@@ -870,27 +997,43 @@ export default function Header() {
                 ) : (
                   rootItems.map((item) => {
                     const children =
-                      getChildren(item.id);
+                      getChildren(
+                        item.id
+                      );
 
-                    if (children.length > 0) {
+                    if (
+                      children.length >
+                      0
+                    ) {
                       return (
-                        <DesktopDropdown
+                        <div
                           key={item.id}
-                          item={item}
-                          children={children}
-                          open={
-                            openMenu === item.id
-                          }
-                          onToggle={() =>
-                            toggleMenu(item.id)
-                          }
-                          active={children.some(
-                            (child) =>
-                              isActive(
-                                child.href
+                          data-header-dropdown
+                        >
+                          <DesktopDropdown
+                            item={item}
+                            children={
+                              children
+                            }
+                            open={
+                              openMenu ===
+                              item.id
+                            }
+                            onToggle={() =>
+                              toggleMenu(
+                                item.id
                               )
-                          )}
-                        />
+                            }
+                            active={children.some(
+                              (
+                                child
+                              ) =>
+                                isActive(
+                                  child.href
+                                )
+                            )}
+                          />
+                        </div>
                       );
                     }
 
@@ -910,13 +1053,16 @@ export default function Header() {
                         }
                         className="
                           flex
-                          h-11
+                          h-10
+                          xl:h-11
                           shrink-0
                           items-center
                           whitespace-nowrap
                           rounded-full
-                          px-2.5
-                          text-[13px]
+                          px-2
+                          xl:px-2.5
+                          text-[12px]
+                          xl:text-[13px]
                           font-medium
                           leading-none
                           transition-all
@@ -928,7 +1074,6 @@ export default function Header() {
                           )
                             ? "var(--cms-white)"
                             : "var(--cms-secondary)",
-
                           backgroundColor:
                             isActive(
                               item.href
@@ -974,14 +1119,18 @@ export default function Header() {
               <div
                 className="
                   hidden
-                  w-[180px]
-                  min-w-[180px]
+                  w-[165px]
+                  min-w-[165px]
                   shrink-0
                   items-center
                   justify-end
-                  gap-3
-                  pl-3
+                  gap-2
+                  pl-2
                   xl:flex
+                  2xl:w-[180px]
+                  2xl:min-w-[180px]
+                  2xl:gap-3
+                  2xl:pl-3
                 "
               >
                 {/* PHONE */}
@@ -991,8 +1140,8 @@ export default function Header() {
                   aria-label={`Call ${siteSettings.school_name}`}
                   className="
                     grid
-                    h-11
-                    w-11
+                    h-10
+                    w-10
                     shrink-0
                     place-items-center
                     rounded-full
@@ -1000,6 +1149,8 @@ export default function Header() {
                     transition-all
                     duration-300
                     hover:-translate-y-0.5
+                    2xl:h-11
+                    2xl:w-11
                   "
                   style={{
                     borderColor:
@@ -1030,7 +1181,7 @@ export default function Header() {
                       "color-mix(in srgb, var(--cms-secondary) 80%, transparent)";
                   }}
                 >
-                  <Phone size={16} />
+                  <Phone size={15} />
                 </a>
 
                 {/* DESKTOP ADMISSIONS */}
@@ -1040,19 +1191,22 @@ export default function Header() {
                   className="
                     group
                     inline-flex
-                    h-11
+                    h-10
                     shrink-0
                     items-center
                     gap-1.5
                     whitespace-nowrap
                     rounded-full
-                    px-4
-                    text-[13px]
+                    px-3.5
+                    text-[12px]
                     font-semibold
                     leading-none
                     transition-all
                     duration-300
                     hover:-translate-y-0.5
+                    2xl:h-11
+                    2xl:px-4
+                    2xl:text-[13px]
                   "
                   style={{
                     backgroundColor:
@@ -1079,7 +1233,7 @@ export default function Header() {
                   </span>
 
                   <ArrowUpRight
-                    size={14}
+                    size={13}
                     className="
                       transition-transform
                       duration-300
@@ -1114,12 +1268,14 @@ export default function Header() {
                 className="
                   ml-auto
                   grid
-                  h-11
-                  w-11
+                  h-10
+                  w-10
                   shrink-0
                   place-items-center
                   rounded-full
                   xl:hidden
+                  sm:h-11
+                  sm:w-11
                 "
                 style={{
                   backgroundColor:
@@ -1149,17 +1305,18 @@ export default function Header() {
           className="
             fixed
             inset-x-3
-            top-[112px]
+            top-[108px]
             z-[120]
-            max-h-[calc(100vh-145px)]
+            max-h-[calc(100vh-135px)]
             overflow-y-auto
-            rounded-[26px]
+            rounded-[24px]
             border
             p-4
             shadow-2xl
             backdrop-blur-xl
             sm:inset-x-4
-            sm:top-[124px]
+            sm:top-[120px]
+            sm:rounded-[26px]
             xl:hidden
           "
           style={{
@@ -1173,12 +1330,16 @@ export default function Header() {
             const children =
               getChildren(item.id);
 
-            if (children.length > 0) {
+            if (
+              children.length > 0
+            ) {
               return (
                 <MobileSection
                   key={item.id}
                   item={item}
-                  children={children}
+                  children={
+                    children
+                  }
                   open={mobileSections.includes(
                     item.id
                   )}
@@ -1187,7 +1348,9 @@ export default function Header() {
                       item.id
                     )
                   }
-                  onClose={closeMenus}
+                  onClose={
+                    closeMenus
+                  }
                 />
               );
             }
@@ -1206,7 +1369,9 @@ export default function Header() {
                     ? "noreferrer"
                     : undefined
                 }
-                onClick={closeMenus}
+                onClick={
+                  closeMenus
+                }
                 className="
                   flex
                   items-center
@@ -1236,7 +1401,13 @@ export default function Header() {
                     "var(--cms-secondary)";
                 }}
               >
-                <span>{item.label}</span>
+                <span>
+                  {item.label}
+                </span>
+
+                <ArrowUpRight
+                  size={13}
+                />
               </Link>
             );
           })}
@@ -1250,7 +1421,9 @@ export default function Header() {
 
             <a
               href={`tel:${siteSettings.phone}`}
-              onClick={closeMenus}
+              onClick={
+                closeMenus
+              }
               className="
                 flex
                 items-center
@@ -1278,7 +1451,9 @@ export default function Header() {
 
             <Link
               href="/online-registration"
-              onClick={closeMenus}
+              onClick={
+                closeMenus
+              }
               className="
                 flex
                 items-center
