@@ -4,6 +4,7 @@ import "./globals.css";
 import FloatingActions from "@/components/layout/FloatingActions";
 import GlobalMotion from "@/components/shared/GlobalMotion";
 import SiteLoader from "@/components/layout/SiteLoader";
+import SiteChrome from "@/components/layout/SiteChrome";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 export const metadata: Metadata = {
@@ -28,7 +29,9 @@ export default function RootLayout({
           <SiteLoader />
           <GlobalMotion />
 
-          {children}
+          <SiteChrome>
+            {children}
+          </SiteChrome>
 
           <FloatingActions />
         </ThemeProvider>

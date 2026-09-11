@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -51,7 +51,7 @@ type HeadMistressPage = {
 const officialDefaults: Required<Omit<HeadMistressPage, "id">> = {
   slug: "head-mistress",
   menu_label: "Head Mistress",
-  eyebrow: "Head Mistressâ€™s Message",
+  eyebrow: "Head Mistress’s Message",
   title: "A shared vision for excellence",
   person_name: "Mrs. Kiran Chadha",
   person_role: "Headmistress",
@@ -63,15 +63,15 @@ Reading forms the foundation of education and opens up a world of endless possib
 
 Effective communication is an invaluable skill that transcends academic boundaries. Through interactive classroom activities we will empower our students to express themselves with confidence and articulate their thoughts effectively. We believe that proficient communication skills will prepare our students for success in all aspects of life. We are committed to instilling in our students the importance of cleanliness as a habit.
 
-Regular cleanliness drives and educating students about personal hygiene practices will be an integral part of our school year. The saying â€œYou are what you eatâ€ holds immense truth. Nutrition plays a vital role in the physical and cognitive development of our students. We are dedicated to promote healthy eating habits and educating our students about the importance of a balanced diet.
+Regular cleanliness drives and educating students about personal hygiene practices will be an integral part of our school year. The saying “You are what you eat” holds immense truth. Nutrition plays a vital role in the physical and cognitive development of our students. We are dedicated to promote healthy eating habits and educating our students about the importance of a balanced diet.
 
-I am confident that together, as a strong and supportive Apex community, we will achieve these goals and provide our students with a well-rounded education. I encourage parents to actively participate in their childâ€™s educational journey, collaborate with our dedicated teachers, and join hands in fostering a positive and enriching environment. Thank you for choosing Apex Public School as your partner in shaping your childâ€™s future.
+I am confident that together, as a strong and supportive Apex community, we will achieve these goals and provide our students with a well-rounded education. I encourage parents to actively participate in their child’s educational journey, collaborate with our dedicated teachers, and join hands in fostering a positive and enriching environment. Thank you for choosing Apex Public School as your partner in shaping your child’s future.
 
 Let us embark on this academic year with enthusiasm, commitment, and a shared vision for excellence.
 
 Wishing you a successful and fulfilling year ahead!
 
-Answer Dutyâ€™s Call
+Answer Duty’s Call
 
 Mrs. Kiran Chadha
 (Headmistress)`,
@@ -156,7 +156,6 @@ export default function HeadMistressPublicPage() {
     <main className="min-h-screen overflow-hidden bg-[#F5F0E6] text-[#10203A]">
       <section className="relative overflow-hidden bg-[#102A56] text-white">
         <div className="pointer-events-none absolute -right-52 -top-52 h-[700px] w-[700px] rounded-full bg-[#8DB9E5]/10 blur-[150px]" />
-        <div className="pointer-events-none absolute -left-60 bottom-[-360px] h-[700px] w-[700px] rounded-full bg-[#F5F0E6]/5 blur-[150px]" />
 
         <div className="relative mx-auto max-w-[1500px] px-6 pb-24 pt-32 md:px-10 md:pb-32 lg:px-14 lg:pt-36">
           <Link
@@ -265,7 +264,7 @@ export default function HeadMistressPublicPage() {
               <div className="mt-9 space-y-6 text-sm leading-8 text-[#10203A]/65 md:text-base">
                 {messageParagraphs.map((paragraph, index) => {
                   const signature =
-                    paragraph.includes("Answer Dutyâ€™s Call") ||
+                    paragraph.includes("Answer Duty’s Call") ||
                     paragraph.includes("Mrs. Kiran Chadha");
 
                   return (
@@ -351,7 +350,7 @@ export default function HeadMistressPublicPage() {
 
           {loading && (
             <p className="mt-4 text-[9px] uppercase tracking-[0.2em] text-[#102A56]/25">
-              Loading latest published contentâ€¦
+              Loading latest published content…
             </p>
           )}
         </div>

@@ -14,8 +14,6 @@ import {
   Users,
 } from "lucide-react";
 
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { supabase } from "@/lib/supabase/browser";
 
 type AboutContent = {
@@ -457,7 +455,7 @@ export default function AboutPage() {
 
   return (
     <>
-      <Header />
+
 
       <main className="overflow-hidden bg-[#F5F0E6] text-[#10203A]">
 
@@ -1156,37 +1154,34 @@ export default function AboutPage() {
     about.cta_button_url ||
     fallback.cta_button_url!
   }
-  className="
-    group
-    inline-flex
-    items-center
-    gap-3
-    rounded-full
-    bg-[#F5F0E6]
-    px-6
-    py-4
-    text-sm
-    font-semibold
-    !text-[#102A56]
-    transition
-    duration-300
-    hover:-translate-y-0.5
-    hover:bg-white
-  "
+  className="group inline-flex items-center gap-3 rounded-full px-6 py-4 text-sm font-semibold transition duration-300 hover:-translate-y-0.5 hover:bg-white"
+  style={{
+    backgroundColor: "#F5F0E6",
+    color: "#102A56",
+    opacity: 1,
+    visibility: "visible",
+  }}
 >
-  <span className="!text-[#102A56]">
+  <span
+    style={{
+      color: "#102A56",
+      opacity: 1,
+      visibility: "visible",
+    }}
+  >
     {about.cta_button_label ||
-      fallback.cta_button_label}
+      fallback.cta_button_label ||
+      "Explore Academics"}
   </span>
 
   <ArrowRight
     size={15}
-    className="
-      !text-[#102A56]
-      transition-transform
-      duration-300
-      group-hover:translate-x-1
-    "
+    style={{
+      color: "#102A56",
+      opacity: 1,
+      visibility: "visible",
+    }}
+    className="transition-transform duration-300 group-hover:translate-x-1"
   />
 </Link>
 
@@ -1201,7 +1196,6 @@ export default function AboutPage() {
 
       </main>
 
-      <Footer />
 
       {loading && (
         <div className="pointer-events-none fixed bottom-5 right-5 z-[200] rounded-full border border-white/10 bg-[#102A56]/90 px-4 py-2 text-[9px] uppercase tracking-[0.18em] text-white/45 shadow-xl backdrop-blur-md">

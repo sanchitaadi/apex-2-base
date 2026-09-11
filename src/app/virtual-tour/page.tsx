@@ -268,8 +268,6 @@ export default function VirtualTourPage() {
       <section className="relative min-h-[760px] overflow-hidden bg-[#071A38] text-white lg:min-h-screen">
         <div className="pointer-events-none absolute -right-48 -top-48 h-[700px] w-[700px] rounded-full bg-[#6ea8df]/10 blur-[150px]" />
 
-        <div className="pointer-events-none absolute -left-48 bottom-[-300px] h-[650px] w-[650px] rounded-full bg-[#F5F0E6]/[0.035] blur-[150px]" />
-
         <div
           className="
             pointer-events-none
@@ -325,7 +323,7 @@ export default function VirtualTourPage() {
                   items-center
                   gap-3
                   rounded-full
-                  bg-[#F5F0E6]
+                  bg-[rgb(245,240,230)]
                   px-6
                   py-4
                   text-sm

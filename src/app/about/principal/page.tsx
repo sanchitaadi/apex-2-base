@@ -249,8 +249,6 @@ export default async function PrincipalPage() {
 
         <div className="pointer-events-none absolute -right-48 -top-48 h-[650px] w-[650px] rounded-full bg-[#8DB9E5]/10 blur-[140px]" />
 
-        <div className="pointer-events-none absolute -left-48 bottom-[-280px] h-[620px] w-[620px] rounded-full bg-[#F5F0E6]/[0.05] blur-[140px]" />
-
         <div className="relative mx-auto max-w-[1500px] px-6 pb-24 pt-36 md:px-10 md:pb-32 lg:px-14 lg:pt-40">
 
           <Link

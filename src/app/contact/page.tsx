@@ -250,8 +250,6 @@ export default function ContactPage() {
 
         <div className="pointer-events-none absolute -right-48 -top-48 h-[700px] w-[700px] rounded-full bg-[#76AFE7]/10 blur-[150px]" />
 
-        <div className="pointer-events-none absolute -left-52 bottom-[-300px] h-[650px] w-[650px] rounded-full bg-[#F5F0E6]/[0.035] blur-[150px]" />
-
         {/* Technical grid */}
 
         <div
@@ -843,7 +841,7 @@ export default function ContactPage() {
 
                 {/* RIGHT MAP */}
 
-                <div className="group relative min-h-[380px] overflow-hidden bg-[#102A56]">
+                <div className="group relative min-h-[380px] overflow-hidden bg-[#E9E2D5]">
                   <iframe
                     title={`${siteSettings.school_name} Location`}
                     src={mapEmbedUrl}
@@ -853,8 +851,6 @@ export default function ContactPage() {
                       h-full
                       w-full
                       border-0
-                      grayscale-[0.05]
-                      contrast-[0.98]
                       transition-transform
                       duration-700
                       group-hover:scale-[1.015]
@@ -865,7 +861,7 @@ export default function ContactPage() {
 
                   {/* Overlay */}
 
-                  <div className="pointer-events-none absolute inset-0 bg-[#102A56]/[0.06]" />
+                  <div className="pointer-events-none absolute inset-0 bg-transparent" />
 
                   {/* Badge */}
 

@@ -159,6 +159,11 @@ const sections = [
         icon: BookOpen,
       },
       {
+        label: "Uniform-Books",
+        href: "/admin/uniform-books",
+        icon: BookOpen,
+      },
+      {
         label: "Academic Coordinators",
         href: "/admin/academic-coordinators",
         icon: GraduationCap,
