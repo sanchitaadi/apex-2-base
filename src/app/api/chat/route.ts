@@ -326,7 +326,7 @@ ${JSON.stringify(schoolInformation, null, 2)}
 
       instructions: systemPrompt,
 
-      input: messagesToProcess,
+      input: message,
 
       max_output_tokens: 700,
     });
@@ -350,5 +350,7 @@ ${JSON.stringify(schoolInformation, null, 2)}
     );
   }
 }
+
+
 
 

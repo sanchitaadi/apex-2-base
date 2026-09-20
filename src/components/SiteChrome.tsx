@@ -2,9 +2,9 @@
 
 import { usePathname } from "next/navigation";
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import FloatingActions from "@/components/FloatingActions";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import FloatingActions from "@/components/layout/FloatingActions";
 
 export default function SiteChrome() {
   const pathname = usePathname();
@@ -27,3 +27,4 @@ export default function SiteChrome() {
     </>
   );
 }
+
