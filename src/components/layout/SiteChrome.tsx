@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
@@ -15,7 +15,12 @@ export default function SiteChrome({
     pathname === "/admin" ||
     pathname.startsWith("/admin/");
 
-  if (isAdmin) {
+  const isDemo =
+    pathname === "/demo" ||
+    pathname.startsWith("/demo/");
+
+  // Admin and design demos provide their own layout.
+  if (isAdmin || isDemo) {
     return <>{children}</>;
   }
 

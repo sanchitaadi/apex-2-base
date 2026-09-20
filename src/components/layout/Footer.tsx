@@ -1,4 +1,5 @@
 ﻿"use client";
+import { usePathname } from "next/navigation";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -19,6 +20,12 @@ import {
 import { supabase } from "@/lib/supabase/browser";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname === "/demo" || pathname.startsWith("/demo/")) {
+    return null;
+  }
+
   const [siteSettings, setSiteSettings] =
     useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
 

@@ -12,9 +12,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-
 import { supabase } from "@/lib/supabase/browser";
 
 type Notice = {
@@ -133,7 +130,7 @@ export default function NoticesPage() {
 
   return (
     <>
-      <Header />
+  
 
       <main className="overflow-hidden bg-[#F5F0E6] text-[#10203A]">
 
@@ -512,7 +509,6 @@ export default function NoticesPage() {
 
       </main>
 
-      <Footer />
     </>
   );
 }

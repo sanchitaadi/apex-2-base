@@ -1,4 +1,5 @@
 "use client";
+import { usePathname } from "next/navigation";
 
 import {
   CreditCard,
@@ -25,6 +26,13 @@ const actions = [
 ];
 
 export default function FloatingActions() {
+  const pathname = usePathname();
+
+  // Hide floating actions on all design demo pages
+  if (pathname === "/demo" || pathname.startsWith("/demo/")) {
+    return null;
+  }
+
   return (
     <>
       {actions.map((item) => {
