@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -273,6 +273,8 @@ export default function MandatoryPublicDisclosureAdminPage() {
         await supabase
           .from("mandatory_public_disclosures")
           .insert({
+            title: form.description.trim(),
+
             description:
               form.description.trim(),
 
@@ -1250,3 +1252,5 @@ export default function MandatoryPublicDisclosureAdminPage() {
     </main>
   );
 }
+
+
