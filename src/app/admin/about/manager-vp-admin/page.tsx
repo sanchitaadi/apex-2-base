@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
@@ -41,13 +41,13 @@ type ManagerPage = {
 const defaultData: ManagerPage = {
   slug: "manager-vp-admin",
   menu_label: "Manager / VP Admin",
-  title: "Manager / VP – Admin",
+  title: "Manager / VP â€“ Admin",
   eyebrow: "School Administration",
   person_name: "Mr. Arvind Kumar Tejyan",
-  person_role: "Manager / VP – Admin",
+  person_role: "Manager / VP â€“ Admin",
 
   content:
-    "Mr. Arvind Kumar Tejyan serves as Manager / Vice Principal – Administration at Apex Public School. The school’s official School Management Committee records state that he was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).",
+    "Mr. Arvind Kumar Tejyan serves as Manager / Vice Principal â€“ Administration at Apex Public School. The schoolâ€™s official School Management Committee records state that he was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).",
 
   image_url: "",
 
@@ -64,7 +64,7 @@ const defaultData: ManagerPage = {
     "The official Apex Public School School Management Committee records state that Mr. Arvind Kumar Tejyan was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).",
 
   leadership_text_2:
-    "The school's official faculty listing also identifies him as Manager and VP – Admin.",
+    "The school's official faculty listing also identifies him as Manager and VP â€“ Admin.",
 
   phone_number: "09990061747",
   phone_button_label: "Contact school",
@@ -226,7 +226,7 @@ export default function AdminManagerVPAdminPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setMessage("Please select an image file.");
+      setMessage("Please select a valid image file.");
       return;
     }
 
@@ -242,14 +242,24 @@ export default function AdminManagerVPAdminPage() {
       const extension =
         file.name.split(".").pop()?.toLowerCase() || "jpg";
 
-      const path = `manager-vp-admin/${Date.now()}.${extension}`;
+      const fileName =
+        `manager-${Date.now()}-${crypto.randomUUID()}.${extension}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("about")
-        .upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      const storagePath =
+        `manager-vp-admin/${fileName}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from("about")
+          .upload(
+            storagePath,
+            file,
+            {
+              cacheControl: "31536000",
+              contentType: file.type,
+              upsert: false,
+            }
+          );
 
       if (uploadError) {
         throw uploadError;
@@ -259,12 +269,53 @@ export default function AdminManagerVPAdminPage() {
         data: publicData,
       } = supabase.storage
         .from("about")
-        .getPublicUrl(path);
+        .getPublicUrl(storagePath);
 
-      setField("image_url", publicData.publicUrl);
-      setMessage("Image uploaded. Save the page to publish it.");
+      const imageUrl =
+        publicData.publicUrl;
+
+      if (!imageUrl) {
+        throw new Error(
+          "Image uploaded but a public URL could not be generated."
+        );
+      }
+
+      setField(
+        "image_url",
+        imageUrl
+      );
+
+      const { error: databaseError } =
+        await supabase
+          .from("about_pages")
+          .update({
+            image_url: imageUrl,
+            updated_at:
+              new Date().toISOString(),
+          })
+          .eq(
+            "slug",
+            "manager-vp-admin"
+          );
+
+      if (databaseError) {
+        await supabase.storage
+          .from("about")
+          .remove([storagePath]);
+
+        throw databaseError;
+      }
+
+      setMessage(
+        "Manager image uploaded and published successfully."
+      );
+
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Manager image upload failed:",
+        error
+      );
+
       setMessage(
         error instanceof Error
           ? error.message
@@ -272,9 +323,9 @@ export default function AdminManagerVPAdminPage() {
       );
     } finally {
       setUploading(false);
+      event.target.value = "";
     }
   };
-
   const save = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -375,7 +426,7 @@ export default function AdminManagerVPAdminPage() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[#10203A]/60">
-              Manage the Manager / VP – Admin leadership page,
+              Manage the Manager / VP â€“ Admin leadership page,
               profile, image, leadership information and contact
               buttons.
             </p>
