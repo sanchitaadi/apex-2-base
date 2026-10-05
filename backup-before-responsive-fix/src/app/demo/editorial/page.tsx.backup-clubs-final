@@ -1,0 +1,1486 @@
+﻿"use client";
+
+import { useState } from "react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Menu,
+  X,
+  BookOpen,
+  Trophy,
+  Users,
+  FlaskConical,
+  Palette,
+  Dumbbell,
+  GraduationCap,
+  ChevronDown,
+  CalendarDays,
+} from "lucide-react";
+
+const photos = [
+  "https://apexpublicschool.in/wp-content/uploads/2020/05/IMG_0413-scaled.jpg",
+  "https://apexpublicschool.in/wp-content/uploads/2023/01/WhatsApp-Image-2023-01-02-at-1.06.01-PM-22.jpeg",
+  "https://apexpublicschool.in/wp-content/uploads/2023/01/WhatsApp-Image-2023-01-02-at-1.06.01-PM-28.jpeg",
+];
+
+const faqs = [
+  {
+    q: "How can I apply for admission?",
+    a: "Visit the admissions section or contact the school office for current admission information.",
+  },
+  {
+    q: "What does the Apex learning experience include?",
+    a: "The school experience combines academics with sports, arts, activities, collaboration and opportunities for personal growth.",
+  },
+  {
+    q: "Does Apex have extracurricular activities?",
+    a: "Students can participate in sports, arts, clubs, competitions, events and other activities.",
+  },
+  {
+    q: "How can I contact the school?",
+    a: "Please visit the contact section of the main school website for the latest contact information.",
+  },
+];
+
+export default function EditorialDemoPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  return (
+    <main className="min-h-screen overflow-x-hidden bg-[#f5f0e6] text-[#171412]">
+
+      <style jsx global>{`
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          margin: 0;
+          background: #f5f0e6;
+        }
+
+        .serif {
+          font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .sans {
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .paper {
+          background-color: #f5f0e6;
+          background-image:
+            radial-gradient(
+              rgba(30, 20, 15, 0.04) 0.7px,
+              transparent 0.7px
+            );
+          background-size: 7px 7px;
+        }
+
+        .dark-paper {
+          background-color: #171412;
+          background-image:
+            radial-gradient(
+              rgba(255, 255, 255, 0.025) 0.7px,
+              transparent 0.7px
+            );
+          background-size: 8px 8px;
+        }
+
+        .headline {
+          letter-spacing: -0.065em;
+          line-height: 0.88;
+        }
+
+        .cutout {
+          box-shadow: 0 15px 30px rgba(30, 20, 15, 0.14);
+        }
+
+        .photo {
+          filter: grayscale(90%) contrast(1.06);
+          transition: 0.4s ease;
+        }
+
+        .photo:hover {
+          filter: grayscale(25%) contrast(1.02);
+        }
+      `}</style>
+
+      {/* =====================================================
+          TOP BAR
+      ===================================================== */}
+
+      <div className="bg-[#701d2a] px-5 py-2 text-[#f5f0e6]">
+        <div className="mx-auto flex max-w-[1450px] items-center justify-between">
+          <span className="sans text-[8px] font-bold uppercase tracking-[0.22em]">
+            Apex Public School
+          </span>
+
+          <span className="hidden text-[8px] font-bold uppercase tracking-[0.22em] sm:block">
+            Education • Character • Future
+          </span>
+
+          <span className="sans text-[8px] font-bold uppercase tracking-[0.22em]">
+            2026 Edition
+          </span>
+        </div>
+      </div>
+
+      {/* =====================================================
+          NAVBAR
+      ===================================================== */}
+
+      <header className="sticky top-0 z-50 border-b border-[#171412]/20 bg-[#f5f0e6]/95 backdrop-blur">
+        <div className="mx-auto max-w-[1450px] px-5">
+
+          <div className="flex h-[76px] items-center justify-between">
+
+            <a href="#" className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center bg-[#171412] text-xl font-black text-[#f5f0e6]">
+                A
+              </div>
+
+              <div>
+                <p className="serif text-[19px] font-black leading-none">
+                  APEX
+                </p>
+
+                <p className="sans mt-1 text-[7px] font-bold uppercase tracking-[0.28em]">
+                  Public School
+                </p>
+              </div>
+            </a>
+
+            <nav className="hidden items-center gap-7 lg:flex">
+              <a href="#about" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                About
+              </a>
+
+              <a href="#academics" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                Academics
+              </a>
+
+              <a href="#campus" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                Campus
+              </a>
+
+              <a href="#student-life" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                Student Life
+              </a>
+
+              <a href="#gallery" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                Gallery
+              </a>
+
+              <a
+                href="#admissions"
+                className="bg-[#701d2a] px-5 py-3 text-[9px] font-bold uppercase tracking-[0.17em] text-white hover:bg-[#171412]"
+              >
+                Admissions
+              </a>
+            </nav>
+
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex h-10 w-10 items-center justify-center border border-[#171412] lg:hidden"
+            >
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+
+          </div>
+
+          {menuOpen && (
+            <div className="border-t border-[#171412]/20 py-5 lg:hidden">
+              <div className="grid gap-4">
+                {[
+                  ["About", "#about"],
+                  ["Academics", "#academics"],
+                  ["Campus", "#campus"],
+                  ["Student Life", "#student-life"],
+                  ["Gallery", "#gallery"],
+                  ["Admissions", "#admissions"],
+                ].map(([name, href]) => (
+                  <a
+                    key={name}
+                    href={href}
+                    onClick={() => setMenuOpen(false)}
+                    className="sans text-[10px] font-bold uppercase tracking-[0.18em]"
+                  >
+                    {name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </header>
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
+
+      <section
+        id="about"
+        className="paper relative min-h-[calc(100svh-104px)] overflow-hidden"
+      >
+
+        {/* NEWSPAPER CUTOUT 1 */}
+
+        <div className="cutout absolute left-[3%] top-[13%] z-0 hidden w-[170px] -rotate-6 bg-[#e8dfd0] p-4 lg:block">
+          <p className="sans border-b border-[#171412]/20 pb-2 text-[7px] font-black uppercase tracking-[0.2em]">
+            Campus News
+          </p>
+
+          <p className="serif mt-3 text-2xl font-black leading-[0.9]">
+            A NEW
+            <br />
+            GENERATION
+            <br />
+            OF THINKERS
+          </p>
+
+          <div className="mt-4 space-y-2">
+            <div className="h-1 bg-black/15" />
+            <div className="h-1 bg-black/15" />
+            <div className="h-1 w-3/4 bg-black/15" />
+          </div>
+        </div>
+
+        {/* NEWSPAPER CUTOUT 2 */}
+
+        <div className="cutout absolute right-[4%] top-[17%] z-0 hidden w-[175px] rotate-6 bg-white/70 p-4 lg:block">
+          <p className="sans text-[7px] font-black uppercase tracking-[0.2em]">
+            Special Edition
+          </p>
+
+          <p className="serif mt-4 text-3xl font-black leading-[0.82]">
+            LEARNING
+            <br />
+            WITHOUT
+            <br />
+            LIMITS
+          </p>
+
+          <div className="mt-4 h-1 bg-[#701d2a]" />
+
+          <p className="mt-3 text-[7px] leading-3 text-black/55">
+            Ideas, curiosity and confidence come together at Apex.
+          </p>
+        </div>
+
+        {/* HERO CONTENT */}
+
+        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-104px)] max-w-[1450px] items-center px-5 py-8 lg:py-10">
+
+          <div className="grid w-full items-center gap-9 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+
+            {/* LEFT */}
+
+            <div className="max-w-[720px]">
+
+              <div className="mb-5 flex flex-wrap items-center gap-3">
+                <span className="bg-[#701d2a] px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.18em] text-white">
+                  School Edition
+                </span>
+
+                <span className="sans text-[8px] font-bold uppercase tracking-[0.17em] text-black/50">
+                  Delhi • India
+                </span>
+              </div>
+
+              <h1 className="headline serif text-[17vw] font-black uppercase sm:text-[100px] lg:text-[118px] xl:text-[135px]">
+                Where
+                <br />
+                <span className="text-[#701d2a]">
+                  Futures
+                </span>
+                <br />
+                Begin.
+              </h1>
+
+              <div className="mt-6 max-w-[650px] border-t-2 border-[#171412] pt-5">
+
+                <p className="serif max-w-[600px] text-base leading-6 text-black/75 sm:text-lg sm:leading-7">
+                  Welcome to Apex Public School — a place where students learn
+                  with curiosity, grow with confidence and discover their
+                  potential.
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+
+                  <a
+                    href="#admissions"
+                    className="inline-flex items-center gap-3 bg-[#701d2a] px-5 py-3 text-[9px] font-black uppercase tracking-[0.18em] text-white hover:bg-[#171412]"
+                  >
+                    Explore Admissions
+                    <ArrowRight size={14} />
+                  </a>
+
+                  <a
+                    href="#academics"
+                    className="inline-flex items-center gap-3 border border-[#171412] px-5 py-3 text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#171412] hover:text-white"
+                  >
+                    Discover Apex
+                    <ArrowUpRight size={14} />
+                  </a>
+
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT */}
+
+            <div className="relative mx-auto w-full max-w-[600px]">
+
+              <div className="absolute -right-3 -top-4 z-20 rotate-6 bg-[#d5a75e] px-4 py-2 text-center shadow-lg">
+                <p className="text-[7px] font-black uppercase tracking-[0.15em]">
+                  Special
+                </p>
+
+                <p className="serif text-lg font-black leading-none">
+                  Edition
+                </p>
+              </div>
+
+              <div className="border-2 border-[#171412] bg-[#171412] p-2 shadow-[13px_13px_0px_#701d2a]">
+
+                <img
+                  src={photos[0]}
+                  alt="Apex Public School"
+                  className="photo h-[330px] w-full object-cover sm:h-[410px] lg:h-[450px]"
+                />
+
+                <div className="absolute bottom-5 left-5 bg-[#f5f0e6] px-4 py-3">
+                  <p className="sans text-[7px] font-black uppercase tracking-[0.15em]">
+                    Figure 01
+                  </p>
+
+                  <p className="serif mt-1 text-sm font-bold">
+                    Life at Apex
+                  </p>
+                </div>
+
+              </div>
+
+              <div className="mt-5 flex justify-between border-y border-[#171412]/30 py-3">
+                <span className="sans text-[7px] font-bold uppercase tracking-[0.15em]">
+                  Apex Public School
+                </span>
+
+                <span className="sans text-[7px] font-bold uppercase tracking-[0.15em]">
+                  The Apex Chronicle
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          INTRO
+      ===================================================== */}
+
+      <section className="bg-[#171412] text-[#f5f0e6]">
+        <div className="mx-auto max-w-[1450px] px-5 py-16">
+
+          <div className="grid gap-8 lg:grid-cols-[180px_1fr_300px] lg:items-center">
+
+            <div>
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#d5a75e]">
+                Our Story
+              </p>
+
+              <p className="serif mt-3 text-3xl font-black">
+                01
+              </p>
+            </div>
+
+            <h2 className="serif text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">
+              More than a school.
+              <br />
+              <span className="text-[#d5a75e]">
+                A place to become.
+              </span>
+            </h2>
+
+            <p className="text-sm leading-6 text-white/50">
+              A community built around learning, relationships, experiences
+              and the confidence to take on what comes next.
+            </p>
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          SCHOOL AT A GLANCE
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+        <div className="mx-auto max-w-[1450px] px-5 py-16">
+
+          <div className="mb-10 flex items-center gap-4">
+            <span className="h-px flex-1 bg-black/25" />
+            <span className="sans text-[8px] font-black uppercase tracking-[0.25em]">
+              School At A Glance
+            </span>
+            <span className="h-px flex-1 bg-black/25" />
+          </div>
+
+          <div className="grid border-y-2 border-[#171412] md:grid-cols-3 lg:grid-cols-6">
+
+            {[
+              ["01", "Academic", "Excellence"],
+              ["02", "Student", "Community"],
+              ["03", "Creative", "Learning"],
+              ["04", "Sports", "Development"],
+              ["05", "Future", "Skills"],
+              ["06", "Strong", "Values"],
+            ].map(([number, first, second], index) => (
+              <div
+                key={number}
+                className={`p-6 ${
+                  index < 5
+                    ? "border-b md:border-r md:border-b-0"
+                    : ""
+                } border-black`}
+              >
+
+                <p className="sans text-[8px] font-black text-[#701d2a]">
+                  {number}
+                </p>
+
+                <p className="serif mt-8 text-xl font-black">
+                  {first}
+                </p>
+
+                <p className="serif text-xl font-black">
+                  {second}
+                </p>
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          ACADEMICS
+      ===================================================== */}
+
+      <section id="academics" className="paper border-b border-black/20">
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12 flex flex-col justify-between gap-6 border-b-4 border-[#171412] pb-5 md:flex-row md:items-end">
+
+            <div>
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+                Academic Desk
+              </p>
+
+              <h2 className="headline serif mt-3 text-6xl font-black uppercase sm:text-8xl">
+                Learning
+                <br />
+                <span className="text-[#701d2a]">
+                  Matters.
+                </span>
+              </h2>
+            </div>
+
+            <p className="max-w-sm text-sm leading-6 text-black/55">
+              Strong foundations, meaningful questions and opportunities to
+              explore help students build confidence in what they learn.
+            </p>
+
+          </div>
+
+          <div className="grid border-y-2 border-[#171412] md:grid-cols-2 lg:grid-cols-4">
+
+            {[
+              [BookOpen, "Strong Foundations", "Building concepts that last beyond the classroom."],
+              [FlaskConical, "Innovation", "Experimentation, research and discovery."],
+              [Users, "Collaboration", "Learning through teamwork and shared ideas."],
+              [GraduationCap, "Future Ready", "Preparing students for opportunities ahead."],
+            ].map(([Icon, title, text], index) => {
+              const ItemIcon = Icon as typeof BookOpen;
+
+              return (
+                <div
+                  key={title as string}
+                  className={`p-7 ${
+                    index < 3
+                      ? "border-b md:border-r md:border-b-0"
+                      : ""
+                  } border-black`}
+                >
+
+                  <ItemIcon size={27} strokeWidth={1.5} />
+
+                  <p className="sans mt-9 text-[8px] font-black uppercase tracking-[0.2em] text-[#701d2a]">
+                    0{index + 1}
+                  </p>
+
+                  <h3 className="serif mt-2 text-2xl font-black">
+                    {title as string}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-6 text-black/55">
+                    {text as string}
+                  </p>
+
+                  <ArrowUpRight className="mt-7" size={16} />
+
+                </div>
+              );
+            })}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          ACADEMIC JOURNEY
+      ===================================================== */}
+
+      <section className="paper relative overflow-hidden border-b border-black/20">
+
+        <div className="cutout absolute right-[5%] top-[12%] hidden w-[165px] rotate-6 bg-[#e7ddce] p-4 lg:block">
+          <p className="sans text-[7px] font-black uppercase tracking-[0.2em]">
+            Education Desk
+          </p>
+
+          <p className="serif mt-3 text-2xl font-black leading-[0.85]">
+            FROM
+            <br />
+            CURIOUS
+            <br />
+            TO
+            <br />
+            CONFIDENT
+          </p>
+        </div>
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+            Academic Journey
+          </p>
+
+          <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+            Every
+            <br />
+            Stage.
+            <br />
+            Every
+            <br />
+            Step.
+          </h2>
+
+          <div className="mt-14 grid border-y-2 border-[#171412] md:grid-cols-3">
+
+            {[
+              ["01", "Primary School", "Strong foundations through curiosity, exploration and joyful learning."],
+              ["02", "Middle School", "Developing independence, collaboration, critical thinking and confidence."],
+              ["03", "Senior School", "Preparing students for higher education and future opportunities."],
+            ].map(([number, title, text], index) => (
+              <div
+                key={title}
+                className={`p-8 ${
+                  index < 2
+                    ? "border-b md:border-r md:border-b-0"
+                    : ""
+                } border-black`}
+              >
+
+                <span className="sans text-[9px] font-black text-[#701d2a]">
+                  {number}
+                </span>
+
+                <h3 className="serif mt-8 text-3xl font-black">
+                  {title}
+                </h3>
+
+                <p className="mt-4 text-sm leading-6 text-black/55">
+                  {text}
+                </p>
+
+                <div className="mt-8 h-px bg-black/25" />
+
+                <p className="sans mt-3 text-[8px] font-black uppercase tracking-[0.16em]">
+                  Discover More →
+                </p>
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          PRINCIPAL
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
+
+            <div>
+              <div className="cutout -rotate-3 bg-[#e5dbca] p-6">
+
+                <p className="sans text-[8px] font-black uppercase tracking-[0.2em]">
+                  From The Principal
+                </p>
+
+                <div className="mt-4 h-px bg-black/20" />
+
+                <p className="serif mt-4 text-4xl font-black leading-[0.85]">
+                  Every
+                  <br />
+                  child has
+                  <br />
+                  potential.
+                </p>
+
+              </div>
+            </div>
+
+            <div>
+
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+                Principal's Message
+              </p>
+
+              <h2 className="serif mt-4 text-4xl font-black leading-tight sm:text-5xl">
+                “Our purpose is to help every student discover what they can
+                become.”
+              </h2>
+
+              <p className="mt-7 max-w-3xl text-sm leading-7 text-black/60">
+                At Apex Public School, education is viewed as a journey of
+                discovery. Students are encouraged to learn with curiosity,
+                participate with confidence and develop the character needed
+                for the future.
+              </p>
+
+              <div className="mt-8 flex items-center gap-4">
+
+                <div className="h-12 w-12 bg-[#171412]" />
+
+                <div>
+                  <p className="sans text-[9px] font-black uppercase tracking-[0.16em]">
+                    School Leadership
+                  </p>
+
+                  <p className="mt-1 text-xs text-black/50">
+                    Apex Public School
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          CAMPUS
+      ===================================================== */}
+
+      <section id="campus" className="dark-paper text-[#f5f0e6]">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12 grid gap-6 lg:grid-cols-[1fr_350px] lg:items-end">
+
+            <div>
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#d5a75e]">
+                Campus Report
+              </p>
+
+              <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+                A Place
+                <br />
+                <span className="text-[#d5a75e]">
+                  To Belong.
+                </span>
+              </h2>
+            </div>
+
+            <p className="text-sm leading-6 text-white/50">
+              A campus should do more than hold classrooms. It should create
+              spaces where students meet, create, play and discover.
+            </p>
+
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
+
+            <div>
+
+              <div className="border border-white/20 p-2">
+                <img
+                  src={photos[1]}
+                  alt="Apex campus"
+                  className="photo h-[480px] w-full object-cover"
+                />
+              </div>
+
+              <div className="mt-3 flex justify-between text-[8px] font-bold uppercase tracking-[0.16em] text-white/40">
+                <span>Campus File • 01</span>
+                <span>Apex Public School</span>
+              </div>
+
+            </div>
+
+            <div className="grid gap-5">
+
+              {[
+                ["Learning Spaces", "Designed to support focused learning and collaboration."],
+                ["Creative Spaces", "Room for art, expression, experimentation and ideas."],
+                ["Community Spaces", "Places where students connect, participate and belong."],
+              ].map(([title, text], index) => (
+                <div
+                  key={title}
+                  className="border border-white/20 p-6"
+                >
+
+                  <p className="sans text-[8px] font-black uppercase tracking-[0.2em] text-[#d5a75e]">
+                    0{index + 1}
+                  </p>
+
+                  <h3 className="serif mt-5 text-3xl font-black">
+                    {title}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-6 text-white/50">
+                    {text}
+                  </p>
+
+                </div>
+              ))}
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          INNOVATION
+      ===================================================== */}
+
+      <section className="dark-paper border-t border-white/10 text-[#f5f0e6]">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="grid gap-12 lg:grid-cols-[1fr_0.8fr] lg:items-center">
+
+            <div>
+
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#d5a75e]">
+                Innovation File
+              </p>
+
+              <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+                Think.
+                <br />
+                Make.
+                <br />
+                <span className="text-[#d5a75e]">
+                  Create.
+                </span>
+              </h2>
+
+              <p className="mt-8 max-w-xl text-sm leading-7 text-white/50">
+                Innovation begins with curiosity. Students are encouraged to
+                experiment, collaborate and turn ideas into meaningful
+                projects.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                {["STEM", "Technology", "Research", "Projects"].map((tag) => (
+                  <span
+                    key={tag}
+                    className="border border-white/20 px-4 py-2 text-[8px] font-bold uppercase tracking-[0.16em]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+            </div>
+
+            <div className="border border-white/20 p-3">
+              <img
+                src={photos[2]}
+                alt="Apex innovation"
+                className="photo h-[390px] w-full object-cover"
+              />
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          STUDENT LIFE
+      ===================================================== */}
+
+      <section id="student-life" className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12">
+            <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+              Student Life
+            </p>
+
+            <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+              Beyond The
+              <br />
+              Classroom.
+            </h2>
+          </div>
+
+          <div className="grid border-y-2 border-[#171412] md:grid-cols-2 lg:grid-cols-4">
+
+            {[
+              [Dumbbell, "Sports", "Discipline, teamwork and healthy competition."],
+              [Palette, "Arts & Culture", "Creativity through art, music and performance."],
+              [Users, "Clubs", "Discovering interests and building friendships."],
+              [Trophy, "Achievements", "Celebrating effort, participation and excellence."],
+            ].map(([Icon, title, text], index) => {
+              const ItemIcon = Icon as typeof Dumbbell;
+
+              return (
+                <div
+                  key={title as string}
+                  className={`p-7 ${
+                    index < 3
+                      ? "border-b md:border-r md:border-b-0"
+                      : ""
+                  } border-black`}
+                >
+
+                  <ItemIcon size={25} strokeWidth={1.5} />
+
+                  <h3 className="serif mt-8 text-3xl font-black">
+                    {title as string}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-6 text-black/55">
+                    {text as string}
+                  </p>
+
+                </div>
+              );
+            })}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          ARTS + SPORTS
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="grid gap-8 md:grid-cols-2">
+
+            <article className="border-2 border-[#171412] p-8">
+
+              <Palette size={28} strokeWidth={1.5} />
+
+              <p className="sans mt-8 text-[8px] font-black uppercase tracking-[0.2em] text-[#701d2a]">
+                Culture
+              </p>
+
+              <h2 className="serif mt-3 text-5xl font-black">
+                Arts &
+                <br />
+                Creativity
+              </h2>
+
+              <p className="mt-5 text-sm leading-6 text-black/55">
+                Music, visual arts, performance and creative expression give
+                students space to discover their voice.
+              </p>
+
+              <div className="mt-8 border-t border-black/20 pt-4">
+                <span className="sans text-[8px] font-black uppercase tracking-[0.17em]">
+                  Explore Creative Life →
+                </span>
+              </div>
+
+            </article>
+
+            <article className="bg-[#701d2a] p-8 text-[#f5f0e6]">
+
+              <Dumbbell size={28} strokeWidth={1.5} />
+
+              <p className="sans mt-8 text-[8px] font-black uppercase tracking-[0.2em] text-white/55">
+                Athletics
+              </p>
+
+              <h2 className="serif mt-3 text-5xl font-black">
+                Sports &
+                <br />
+                Wellbeing
+              </h2>
+
+              <p className="mt-5 text-sm leading-6 text-white/55">
+                Sports teach discipline, teamwork, resilience and the value of
+                healthy competition.
+              </p>
+
+              <div className="mt-8 border-t border-white/20 pt-4">
+                <span className="sans text-[8px] font-black uppercase tracking-[0.17em]">
+                  Discover Athletics →
+                </span>
+              </div>
+
+            </article>
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          CLUBS
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+
+            <div>
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+                Student Activities
+              </p>
+
+              <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+                Find
+                <br />
+                Your
+                <br />
+                Thing.
+              </h2>
+            </div>
+
+            <p className="max-w-sm text-sm leading-6 text-black/55">
+              Clubs and activities give students opportunities to explore
+              interests beyond the regular curriculum.
+            </p>
+
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+            {[
+              ["Debate", "Ideas & Expression"],
+              ["Science Club", "Experiment & Discover"],
+              ["Literary Club", "Read & Write"],
+              ["Art Club", "Create & Imagine"],
+              ["Sports Club", "Compete & Grow"],
+              ["Technology", "Build & Explore"],
+              ["Cultural Club", "Celebrate & Connect"],
+              ["Leadership", "Lead & Serve"],
+            ].map(([title, subtitle], index) => (
+              <div
+                key={title}
+                className="group border border-black/25 p-6 transition hover:-translate-y-1 hover:bg-[#171412] hover:text-[#f5f0e6]"
+              >
+
+                <p className="sans text-[8px] font-black text-[#701d2a] group-hover:text-[#d5a75e]">
+                  0{index + 1}
+                </p>
+
+                <h3 className="serif mt-8 text-2xl font-black">
+                  {title}
+                </h3>
+
+                <p className="mt-2 text-[9px] uppercase tracking-[0.1em] opacity-50">
+                  {subtitle}
+                </p>
+
+                <ArrowUpRight className="mt-8" size={16} />
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          EVENTS
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12 flex items-end justify-between border-b-4 border-[#171412] pb-5">
+
+            <div>
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+                School Calendar
+              </p>
+
+              <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+                What's
+                <br />
+                Happening
+              </h2>
+            </div>
+
+            <CalendarDays className="hidden sm:block" size={35} />
+
+          </div>
+
+          <div className="border-t border-[#171412]">
+
+            {[
+              ["12", "SEP", "Student Orientation", "Main Auditorium"],
+              ["18", "SEP", "Sports Meet", "Sports Ground"],
+              ["26", "SEP", "Cultural Showcase", "School Auditorium"],
+              ["04", "OCT", "Science Exhibition", "Innovation Wing"],
+              ["16", "OCT", "Community Celebration", "School Campus"],
+            ].map(([date, month, title, location]) => (
+              <div
+                key={title}
+                className="grid gap-5 border-b border-black/20 py-6 md:grid-cols-[110px_1fr_250px] md:items-center"
+              >
+
+                <div className="flex items-center gap-3">
+                  <span className="serif text-4xl font-black">
+                    {date}
+                  </span>
+
+                  <span className="sans text-[8px] font-black uppercase text-[#701d2a]">
+                    {month}
+                  </span>
+                </div>
+
+                <h3 className="serif text-2xl font-black">
+                  {title}
+                </h3>
+
+                <p className="sans text-[9px] font-bold uppercase tracking-[0.12em] text-black/45">
+                  {location}
+                </p>
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          GALLERY
+      ===================================================== */}
+
+      <section id="gallery" className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12 flex flex-col justify-between gap-5 border-b-4 border-[#171412] pb-5 md:flex-row md:items-end">
+
+            <div>
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+                Photo Desk
+              </p>
+
+              <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+                Around
+                <br />
+                Apex
+              </h2>
+            </div>
+
+            <p className="max-w-sm text-sm text-black/55">
+              A glimpse into the people, places and moments that make school
+              life memorable.
+            </p>
+
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-12">
+
+            <div className="md:col-span-7">
+
+              <div className="border border-[#171412] bg-[#171412] p-2">
+                <img
+                  src={photos[0]}
+                  alt="Apex Public School"
+                  className="photo h-[500px] w-full object-cover"
+                />
+              </div>
+
+              <p className="sans mt-3 text-[8px] font-bold uppercase tracking-[0.16em]">
+                Figure 01 — The Apex Community
+              </p>
+
+            </div>
+
+            <div className="md:col-span-5">
+
+              <div className="border border-[#171412] bg-[#171412] p-2">
+                <img
+                  src={photos[1]}
+                  alt="Apex students"
+                  className="photo h-[300px] w-full object-cover"
+                />
+              </div>
+
+              <p className="sans mt-3 text-[8px] font-bold uppercase tracking-[0.16em]">
+                Figure 02 — Learning Together
+              </p>
+
+              <div className="mt-8 border border-[#171412] bg-[#171412] p-2">
+                <img
+                  src={photos[2]}
+                  alt="Apex school life"
+                  className="photo h-[300px] w-full object-cover"
+                />
+              </div>
+
+              <p className="sans mt-3 text-[8px] font-bold uppercase tracking-[0.16em]">
+                Figure 03 — School Life
+              </p>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          TESTIMONIALS
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12">
+
+            <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+              Community Voices
+            </p>
+
+            <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+              What They
+              <br />
+              Say.
+            </h2>
+
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+
+            {[
+              ["Student Voice", "A place where I can learn, participate and discover things I did not know I enjoyed."],
+              ["Parent Voice", "The school experience goes beyond academics and gives children opportunities to grow."],
+              ["Community Voice", "A strong school community creates experiences students carry with them."],
+            ].map(([role, quote], index) => (
+              <div
+                key={role}
+                className={`p-7 ${
+                  index === 1
+                    ? "bg-[#701d2a] text-[#f5f0e6]"
+                    : "border border-black/25"
+                }`}
+              >
+
+                <p className="sans text-[8px] font-black uppercase tracking-[0.2em] opacity-60">
+                  {role}
+                </p>
+
+                <p className="serif mt-8 text-2xl font-black leading-tight">
+                  “{quote}”
+                </p>
+
+                <div className="mt-8 h-px bg-current opacity-20" />
+
+                <p className="sans mt-3 text-[8px] font-black uppercase tracking-[0.15em] opacity-50">
+                  Apex Community
+                </p>
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          ADMISSIONS
+      ===================================================== */}
+
+      <section
+        id="admissions"
+        className="dark-paper px-5 py-20 text-[#f5f0e6]"
+      >
+
+        <div className="mx-auto max-w-[1300px]">
+
+          <div className="border-2 border-white/40 p-2">
+
+            <div className="border border-white/20 px-6 py-14 text-center sm:px-12">
+
+              <p className="sans text-[8px] font-black uppercase tracking-[0.3em] text-[#d5a75e]">
+                Special Admission Bulletin
+              </p>
+
+              <h2 className="headline serif mt-7 text-6xl font-black uppercase sm:text-8xl lg:text-[115px]">
+                Begin
+                <br />
+                Your
+                <br />
+                Story.
+              </h2>
+
+              <p className="mx-auto mt-8 max-w-xl text-sm leading-6 text-white/50">
+                Discover a school experience where learning, creativity,
+                character and community come together.
+              </p>
+
+              <a
+                href="/admissions"
+                className="mt-8 inline-flex items-center gap-3 bg-[#d5a75e] px-7 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-[#171412] hover:bg-white"
+              >
+                Explore Admissions
+                <ArrowRight size={15} />
+              </a>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          FAQ
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1050px] px-5 py-20">
+
+          <div className="mb-12 text-center">
+
+            <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+              Readers Ask
+            </p>
+
+            <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+              FAQ
+            </h2>
+
+          </div>
+
+          <div className="border-t-2 border-[#171412]">
+
+            {faqs.map((faq, index) => {
+              const isOpen = openFaq === index;
+
+              return (
+                <div
+                  key={faq.q}
+                  className="border-b border-black/20"
+                >
+
+                  <button
+                    onClick={() =>
+                      setOpenFaq(isOpen ? null : index)
+                    }
+                    className="flex w-full items-center justify-between gap-5 py-6 text-left"
+                  >
+
+                    <div className="flex items-center gap-5">
+
+                      <span className="sans text-[8px] font-black text-[#701d2a]">
+                        0{index + 1}
+                      </span>
+
+                      <span className="serif text-xl font-black sm:text-2xl">
+                        {faq.q}
+                      </span>
+
+                    </div>
+
+                    <ChevronDown
+                      size={18}
+                      className={`shrink-0 transition-transform ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                    />
+
+                  </button>
+
+                  {isOpen && (
+                    <div className="pb-6 pl-10 pr-10">
+                      <p className="text-sm leading-6 text-black/55">
+                        {faq.a}
+                      </p>
+                    </div>
+                  )}
+
+                </div>
+              );
+            })}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          FINAL CTA
+      ===================================================== */}
+
+      <section className="paper relative overflow-hidden px-5 py-24">
+
+        <div className="cutout absolute left-[5%] top-[20%] hidden w-[165px] -rotate-6 bg-[#e7ddce] p-4 lg:block">
+
+          <p className="sans text-[7px] font-black uppercase tracking-[0.2em]">
+            Future Edition
+          </p>
+
+          <p className="serif mt-3 text-3xl font-black leading-[0.82]">
+            WRITE
+            <br />
+            YOUR
+            <br />
+            STORY.
+          </p>
+
+        </div>
+
+        <div className="cutout absolute right-[6%] top-[20%] hidden w-[160px] rotate-6 bg-[#701d2a] p-4 text-[#f5f0e6] lg:block">
+
+          <p className="sans text-[7px] font-black uppercase tracking-[0.2em]">
+            Apex
+          </p>
+
+          <p className="serif mt-3 text-2xl font-black leading-[0.82]">
+            YOUR
+            <br />
+            TIME
+            <br />
+            IS NOW.
+          </p>
+
+        </div>
+
+        <div className="mx-auto max-w-[1100px] text-center">
+
+          <p className="sans text-[8px] font-black uppercase tracking-[0.28em] text-[#701d2a]">
+            The Final Page
+          </p>
+
+          <h2 className="headline serif mt-6 text-[17vw] font-black uppercase sm:text-[110px] lg:text-[150px]">
+            Make
+            <br />
+            Your
+            <br />
+            Mark.
+          </h2>
+
+          <p className="mx-auto mt-8 max-w-xl text-base leading-7 text-black/60">
+            Every student has a story waiting to be written. Discover the
+            place where your next chapter can begin.
+          </p>
+
+          <a
+            href="#admissions"
+            className="mt-8 inline-flex items-center gap-3 bg-[#171412] px-7 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-[#f5f0e6] hover:bg-[#701d2a]"
+          >
+            Start Your Journey
+            <ArrowRight size={15} />
+          </a>
+
+        </div>
+      </section>
+
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+      <footer className="bg-[#171412] px-5 py-12 text-[#f5f0e6]">
+
+        <div className="mx-auto max-w-[1450px]">
+
+          <div className="grid gap-10 border-b border-white/15 pb-10 md:grid-cols-[1.5fr_0.5fr_0.5fr]">
+
+            <div>
+
+              <p className="serif text-5xl font-black">
+                APEX
+              </p>
+
+              <p className="sans mt-2 text-[8px] font-bold uppercase tracking-[0.3em] text-white/40">
+                Public School
+              </p>
+
+              <p className="mt-6 max-w-md text-sm leading-6 text-white/45">
+                A school community built around learning, curiosity,
+                creativity, character and meaningful experiences.
+              </p>
+
+            </div>
+
+            <div>
+
+              <p className="sans mb-4 text-[8px] font-black uppercase tracking-[0.2em] text-[#d5a75e]">
+                Explore
+              </p>
+
+              <div className="grid gap-3 text-xs text-white/50">
+                <a href="#about">About</a>
+                <a href="#academics">Academics</a>
+                <a href="#campus">Campus</a>
+                <a href="#student-life">Student Life</a>
+              </div>
+
+            </div>
+
+            <div>
+
+              <p className="sans mb-4 text-[8px] font-black uppercase tracking-[0.2em] text-[#d5a75e]">
+                Visit
+              </p>
+
+              <div className="grid gap-3 text-xs text-white/50">
+                <a href="#gallery">Gallery</a>
+                <a href="#admissions">Admissions</a>
+                <a href="/">Main Website</a>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="flex flex-col justify-between gap-4 pt-6 text-[8px] font-bold uppercase tracking-[0.15em] text-white/25 sm:flex-row">
+            <span>© 2026 Apex Public School</span>
+            <span>The Apex Chronicle • Website Concept</span>
+            <span>Edition 01</span>
+          </div>
+
+        </div>
+      </footer>
+
+    </main>
+  );
+}

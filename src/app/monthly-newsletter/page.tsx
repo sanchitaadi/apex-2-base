@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -24,19 +25,39 @@ type NewsletterDocument = {
   document_label: string | null;
   sort_order: number;
   is_active: boolean;
+  created_at?: string | null;
 };
 
 const CATEGORY = "monthly-newsletter";
 
-export default function MonthlyNewsletterPage() {
-  const [documents, setDocuments] = useState<
-    NewsletterDocument[]
-  >([]);
+const MONTHS = [
+  "All Months",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
+export default function MonthlyNewsletterPage() {
+  const [documents, setDocuments] = useState<NewsletterDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selected, setSelected] =
     useState<NewsletterDocument | null>(null);
+
+  const [selectedYear, setSelectedYear] =
+    useState("All Years");
+
+  const [selectedMonth, setSelectedMonth] =
+    useState("All Months");
 
   useEffect(() => {
     loadDocuments();
@@ -57,15 +78,16 @@ export default function MonthlyNewsletterPage() {
         external_url,
         document_label,
         sort_order,
-        is_active
+        is_active,
+        created_at
         `
       )
       .eq("category", CATEGORY)
       .eq("is_active", true)
-      .order("sort_order", { ascending: true });
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error("Newsletter loading error:", error);
       setDocuments([]);
     } else {
       setDocuments(
@@ -75,6 +97,83 @@ export default function MonthlyNewsletterPage() {
 
     setLoading(false);
   }
+
+  /*
+   * AVAILABLE YEARS
+   */
+
+  const years = useMemo(() => {
+    const yearSet = new Set<string>();
+
+    documents.forEach((document) => {
+      if (!document.created_at) return;
+
+      const date = new Date(document.created_at);
+
+      if (Number.isNaN(date.getTime())) return;
+
+      yearSet.add(String(date.getFullYear()));
+    });
+
+    return [
+      "All Years",
+      ...Array.from(yearSet).sort(
+        (a, b) => Number(b) - Number(a)
+      ),
+    ];
+  }, [documents]);
+
+  /*
+   * FILTERED DOCUMENTS
+   */
+
+  const filteredDocuments = useMemo(() => {
+    return [...documents]
+      .filter((document) => {
+        if (!document.created_at) {
+          return (
+            selectedYear === "All Years" &&
+            selectedMonth === "All Months"
+          );
+        }
+
+        const date = new Date(document.created_at);
+
+        if (Number.isNaN(date.getTime())) {
+          return false;
+        }
+
+        const year = String(date.getFullYear());
+        const month = date.toLocaleString("en-US", {
+          month: "long",
+        });
+
+        const yearMatches =
+          selectedYear === "All Years" ||
+          year === selectedYear;
+
+        const monthMatches =
+          selectedMonth === "All Months" ||
+          month === selectedMonth;
+
+        return yearMatches && monthMatches;
+      })
+      .sort((a, b) => {
+        const dateA = a.created_at
+          ? new Date(a.created_at).getTime()
+          : 0;
+
+        const dateB = b.created_at
+          ? new Date(b.created_at).getTime()
+          : 0;
+
+        return dateB - dateA;
+      });
+  }, [
+    documents,
+    selectedYear,
+    selectedMonth,
+  ]);
 
   return (
     <main className="min-h-screen bg-[#F5F0E6] text-[#10203A]">
@@ -96,13 +195,11 @@ export default function MonthlyNewsletterPage() {
           </Link>
 
           <div className="mt-14 flex items-center gap-3">
-
             <span className="h-px w-10 bg-white/25" />
 
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">
               Publications &amp; Updates
             </p>
-
           </div>
 
           <h1 className="mt-7 max-w-5xl text-5xl font-semibold leading-[0.9] tracking-[-0.06em] md:text-7xl lg:text-[6.2vw]">
@@ -117,6 +214,7 @@ export default function MonthlyNewsletterPage() {
 
         </div>
       </section>
+
 
       {/* CONTENT */}
 
@@ -143,6 +241,9 @@ export default function MonthlyNewsletterPage() {
 
           </div>
 
+
+          {/* LOADING */}
+
           {loading ? (
 
             <div className="flex min-h-[360px] items-center justify-center">
@@ -153,14 +254,15 @@ export default function MonthlyNewsletterPage() {
 
             </div>
 
+
           ) : documents.length === 0 ? (
+
+            /* NO DOCUMENTS */
 
             <div className="rounded-[2rem] border border-[#102A56]/10 bg-white px-8 py-16 text-center">
 
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#102A56] text-white">
-
                 <BookOpen size={26} />
-
               </div>
 
               <h3 className="mt-6 text-2xl font-semibold text-[#102A56]">
@@ -174,123 +276,290 @@ export default function MonthlyNewsletterPage() {
 
             </div>
 
+
           ) : (
 
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            /*
+             * EVERYTHING INSIDE THIS DIV
+             * This fixes the JSX error.
+             */
 
-              {documents.map(
-                (document, index) => {
+            <div className="w-full">
 
-                  const hasPdf =
-                    Boolean(
-                      document.document_url?.trim()
-                    );
+              {/* YEAR + MONTH FILTERS */}
 
-                  return (
-                    <article
-                      key={document.id}
-                      className="
-                        group
-                        relative
-                        overflow-hidden
-                        rounded-[2rem]
-                        border
-                        border-[#102A56]/10
-                        bg-white
-                        p-7
-                        transition-all
-                        duration-300
-                        hover:-translate-y-1
-                        hover:shadow-[0_24px_70px_rgba(16,42,86,0.1)]
-                        md:p-8
-                      "
+              <div className="mb-10 flex flex-col gap-4 sm:flex-row">
+
+                {/* YEAR */}
+
+                <select
+                  value={selectedYear}
+                  onChange={(e) =>
+                    setSelectedYear(e.target.value)
+                  }
+                  className="rounded-full border border-[#102A56]/15 bg-white px-5 py-3 text-sm font-medium text-[#102A56] outline-none shadow-sm"
+                >
+                  {years.map((year) => (
+                    <option
+                      key={year}
+                      value={year}
                     >
+                      {year}
+                    </option>
+                  ))}
+                </select>
 
-                      <span className="absolute right-7 top-7 text-[10px] font-semibold tracking-[0.18em] text-[#102A56]/20">
-                        {String(index + 1).padStart(
-                          2,
-                          "0"
-                        )}
-                      </span>
 
-                      <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#102A56] text-white">
-                        <BookOpen size={18} />
-                      </div>
+                {/* MONTH */}
 
-                      {document.class_name && (
-                        <p className="mt-8 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#102A56]/35">
-                          {document.class_name}
-                        </p>
-                      )}
+                <select
+                  value={selectedMonth}
+                  onChange={(e) =>
+                    setSelectedMonth(e.target.value)
+                  }
+                  className="rounded-full border border-[#102A56]/15 bg-white px-5 py-3 text-sm font-medium text-[#102A56] outline-none shadow-sm"
+                >
+                  {MONTHS.map((month) => (
+                    <option
+                      key={month}
+                      value={month}
+                    >
+                      {month}
+                    </option>
+                  ))}
+                </select>
 
-                      <h3 className="mt-4 min-h-[76px] text-2xl font-semibold leading-[1.05] tracking-[-0.035em] text-[#102A56]">
-                        {document.title}
-                      </h3>
 
-                      <p className="mt-5 min-h-[52px] text-sm leading-7 text-[#10203A]/50">
-                        {document.description ||
-                          "Read the official Apex Public School publication."}
-                      </p>
+                {/* CLEAR */}
 
-                      {hasPdf ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedYear("All Years");
+                    setSelectedMonth("All Months");
+                  }}
+                  className="rounded-full bg-[#102A56] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1B3D73]"
+                >
+                  Clear Filters
+                </button>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelected(document)
-                          }
+              </div>
+
+
+              {/* RESULT COUNT */}
+
+              <div className="mb-6 text-sm text-[#10203A]/45">
+                Showing{" "}
+                <span className="font-semibold text-[#102A56]">
+                  {filteredDocuments.length}
+                </span>{" "}
+                {filteredDocuments.length === 1
+                  ? "newsletter"
+                  : "newsletters"}
+              </div>
+
+
+              {/* NO RESULTS AFTER FILTER */}
+
+              {filteredDocuments.length === 0 ? (
+
+                <div className="rounded-[2rem] border border-[#102A56]/10 bg-white px-8 py-16 text-center">
+
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#102A56]/10 text-[#102A56]">
+                    <BookOpen size={26} />
+                  </div>
+
+                  <h3 className="mt-6 text-2xl font-semibold text-[#102A56]">
+                    No newsletters found
+                  </h3>
+
+                  <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-500">
+                    No newsletter is available for the
+                    selected year and month.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedYear("All Years");
+                      setSelectedMonth("All Months");
+                    }}
+                    className="mt-6 rounded-full bg-[#102A56] px-6 py-3 text-sm font-semibold text-white"
+                  >
+                    Show All Newsletters
+                  </button>
+
+                </div>
+
+
+              ) : (
+
+                /* NEWSLETTER GRID */
+
+                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+
+                  {filteredDocuments.map(
+                    (document, index) => {
+
+                      const hasPdf =
+                        Boolean(
+                          document.document_url?.trim()
+                        );
+
+                      return (
+
+                        <article
+                          key={document.id}
                           className="
-                            mt-7
-                            inline-flex
-                            items-center
-                            gap-2
-                            rounded-full
-                            bg-[#102A56]
-                            px-5
-                            py-3.5
-                            text-sm
-                            font-semibold
-                            text-white
-                            transition
-                            hover:-translate-y-0.5
-                            hover:bg-[#1B3D73]
+                            group
+                            relative
+                            overflow-hidden
+                            rounded-[2rem]
+                            border
+                            border-[#102A56]/10
+                            bg-white
+                            p-7
+                            transition-all
+                            duration-300
+                            hover:-translate-y-1
+                            hover:shadow-[0_24px_70px_rgba(16,42,86,0.1)]
+                            md:p-8
                           "
                         >
-                          Read newsletter
 
-                          <ArrowRight size={14} />
+                          {/* NUMBER */}
 
-                        </button>
+                          <span className="absolute right-7 top-7 text-[10px] font-semibold tracking-[0.18em] text-[#102A56]/20">
+                            {String(index + 1).padStart(
+                              2,
+                              "0"
+                            )}
+                          </span>
 
-                      ) : (
 
-                        <div
-                          className="
-                            mt-7
-                            inline-flex
-                            items-center
-                            gap-2
-                            rounded-full
-                            bg-slate-100
-                            px-5
-                            py-3.5
-                            text-sm
-                            font-semibold
-                            text-slate-500
-                          "
-                        >
-                          PDF not uploaded
+                          {/* ICON */}
 
-                          <FileText size={14} />
-                        </div>
+                          <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#102A56] text-white">
+                            <BookOpen size={18} />
+                          </div>
 
-                      )}
 
-                      <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#102A56] transition-all duration-500 group-hover:w-full" />
+                          {/* DATE */}
 
-                    </article>
-                  );
-                }
+                          {document.created_at && (
+
+                            <p className="mt-7 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#102A56]/40">
+                              {new Date(
+                                document.created_at
+                              ).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "long",
+                                  year: "numeric",
+                                }
+                              )}
+                            </p>
+
+                          )}
+
+
+                          {/* CLASS */}
+
+                          {document.class_name && (
+
+                            <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#102A56]/35">
+                              {document.class_name}
+                            </p>
+
+                          )}
+
+
+                          {/* TITLE */}
+
+                          <h3 className="mt-4 min-h-[76px] text-2xl font-semibold leading-[1.05] tracking-[-0.035em] text-[#102A56]">
+                            {document.title}
+                          </h3>
+
+
+                          {/* DESCRIPTION */}
+
+                          <p className="mt-5 min-h-[52px] text-sm leading-7 text-[#10203A]/50">
+                            {document.description ||
+                              "Read the official Apex Public School publication."}
+                          </p>
+
+
+                          {/* PDF BUTTON */}
+
+                          {hasPdf ? (
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelected(document)
+                              }
+                              className="
+                                mt-7
+                                inline-flex
+                                items-center
+                                gap-2
+                                rounded-full
+                                bg-[#102A56]
+                                px-5
+                                py-3.5
+                                text-sm
+                                font-semibold
+                                text-white
+                                transition
+                                hover:-translate-y-0.5
+                                hover:bg-[#1B3D73]
+                              "
+                            >
+                              Read newsletter
+
+                              <ArrowRight size={14} />
+
+                            </button>
+
+                          ) : (
+
+                            <div
+                              className="
+                                mt-7
+                                inline-flex
+                                items-center
+                                gap-2
+                                rounded-full
+                                bg-slate-100
+                                px-5
+                                py-3.5
+                                text-sm
+                                font-semibold
+                                text-slate-500
+                              "
+                            >
+                              PDF not uploaded
+
+                              <FileText size={14} />
+
+                            </div>
+
+                          )}
+
+
+                          {/* BOTTOM LINE */}
+
+                          <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#102A56] transition-all duration-500 group-hover:w-full" />
+
+                        </article>
+
+                      );
+
+                    }
+                  )}
+
+                </div>
+
               )}
 
             </div>
@@ -298,7 +567,9 @@ export default function MonthlyNewsletterPage() {
           )}
 
         </div>
+
       </section>
+
 
       {/* 3D BOOKLET MODAL */}
 
@@ -325,6 +596,9 @@ export default function MonthlyNewsletterPage() {
 
                 </div>
 
+
+                {/* CLOSE */}
+
                 <button
                   type="button"
                   onClick={() =>
@@ -349,6 +623,7 @@ export default function MonthlyNewsletterPage() {
 
               </div>
 
+
               {/* BOOK */}
 
               <div className="min-h-0 flex-1 overflow-auto bg-[#e8e5de] p-2 sm:p-4 lg:p-6">
@@ -368,6 +643,7 @@ export default function MonthlyNewsletterPage() {
             </div>
 
           </div>
+
         )}
 
     </main>

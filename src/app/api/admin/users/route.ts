@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl =
@@ -9,6 +9,31 @@ const supabasePublishableKey =
 
 const supabaseSecretKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+/* ============================================================
+   ROLE SYSTEM
+============================================================ */
+
+const ALLOWED_ROLES = [
+  "super_admin",
+  "admin",
+  "content_manager",
+  "editor",
+  "viewer",
+] as const;
+
+type AdminRole = (typeof ALLOWED_ROLES)[number];
+
+function isValidRole(
+  value: unknown
+): value is AdminRole {
+  return (
+    typeof value === "string" &&
+    ALLOWED_ROLES.includes(
+      value as AdminRole
+    )
+  );
+}
 
 /* ============================================================
    SERVER CLIENTS
@@ -85,15 +110,13 @@ async function getAuthorizedAdmin(
     adminError ||
     !admin ||
     !admin.is_active ||
-    !["admin", "super_admin"].includes(
-      admin.role
-    )
+    !isValidRole(admin.role)
   ) {
     return {
       user,
       admin: null,
       error:
-        "You are not authorized to manage CMS users.",
+        "You are not authorized to access the CMS.",
     };
   }
 
@@ -128,7 +151,9 @@ export async function POST(
       );
     }
 
-    /* Only Super Admin can create users */
+    /*
+      Only Super Admin can create CMS users.
+    */
 
     if (admin.role !== "super_admin") {
       return NextResponse.json(
@@ -170,14 +195,22 @@ export async function POST(
       body.password || ""
     );
 
-    const role =
-      body.role === "super_admin"
-        ? "super_admin"
+    const requestedRole = String(
+      body.role || "admin"
+    );
+
+    /*
+      Validate role.
+    */
+
+    const role: AdminRole =
+      isValidRole(requestedRole)
+        ? requestedRole
         : "admin";
 
-    /* ----------------------------------------------------------
+    /* ========================================================
        VALIDATION
-    ---------------------------------------------------------- */
+    ======================================================== */
 
     if (!email) {
       return NextResponse.json(
@@ -213,9 +246,9 @@ export async function POST(
       );
     }
 
-    /* ----------------------------------------------------------
+    /* ========================================================
        CHECK EXISTING CMS USER
-    ---------------------------------------------------------- */
+    ======================================================== */
 
     const {
       data: existingAdmin,
@@ -244,9 +277,9 @@ export async function POST(
       );
     }
 
-    /* ----------------------------------------------------------
+    /* ========================================================
        CHECK SUPABASE AUTH USER
-    ---------------------------------------------------------- */
+    ======================================================== */
 
     const {
       data: authUsers,
@@ -268,10 +301,9 @@ export async function POST(
           email
       );
 
-    /* ----------------------------------------------------------
-       IF AUTH USER EXISTS BUT IS NOT CMS USER
-       CONFIRM + RESET PASSWORD + USE IT
-    ---------------------------------------------------------- */
+    /* ========================================================
+       EXISTING AUTH USER
+    ======================================================== */
 
     if (existingAuthUser) {
       const {
@@ -323,13 +355,13 @@ export async function POST(
         userId: existingAuthUser.id,
         existingAuthAccount: true,
         emailConfirmed: true,
+        role,
       });
     }
 
-    /* ----------------------------------------------------------
+    /* ========================================================
        CREATE NEW AUTH USER
-       AUTO-CONFIRM EMAIL
-    ---------------------------------------------------------- */
+    ======================================================== */
 
     const {
       data: created,
@@ -338,11 +370,6 @@ export async function POST(
       await adminClient.auth.admin.createUser({
         email,
         password,
-
-        /* IMPORTANT:
-           Staff created through the CMS do not
-           need to confirm their email through
-           Supabase. */
         email_confirm: true,
 
         user_metadata: {
@@ -360,9 +387,9 @@ export async function POST(
       );
     }
 
-    /* ----------------------------------------------------------
+    /* ========================================================
        CREATE CMS AUTHORIZATION RECORD
-    ---------------------------------------------------------- */
+    ======================================================== */
 
     const {
       error: insertError,
@@ -377,9 +404,9 @@ export async function POST(
         is_active: true,
       });
 
-    /* ----------------------------------------------------------
-       CLEANUP AUTH USER IF DATABASE INSERT FAILS
-    ---------------------------------------------------------- */
+    /* ========================================================
+       CLEANUP IF DATABASE INSERT FAILS
+    ======================================================== */
 
     if (insertError) {
       await adminClient.auth.admin.deleteUser(
@@ -394,6 +421,7 @@ export async function POST(
       userId: created.user.id,
       existingAuthAccount: false,
       emailConfirmed: true,
+      role,
     });
   } catch (error: any) {
     console.error(
@@ -436,6 +464,10 @@ export async function PATCH(
       );
     }
 
+    /*
+      Only Super Admin can modify CMS users.
+    */
+
     if (admin.role !== "super_admin") {
       return NextResponse.json(
         {
@@ -459,7 +491,8 @@ export async function PATCH(
     if (!userId) {
       return NextResponse.json(
         {
-          error: "User ID is required.",
+          error:
+            "User ID is required.",
         },
         { status: 400 }
       );
@@ -508,7 +541,10 @@ export async function PATCH(
         );
       }
 
-      /* Never deactivate the last Super Admin */
+      /*
+        Never deactivate the last active
+        Super Administrator.
+      */
 
       if (
         targetUser.role ===
@@ -568,7 +604,7 @@ export async function PATCH(
         throw updateError;
       }
 
-      /* Disable/enable Auth login */
+      /* Disable / enable Auth login */
 
       const {
         error: authStatusError,
@@ -597,10 +633,24 @@ export async function PATCH(
     ======================================================== */
 
     if (action === "role") {
-      const role =
-        body.role === "super_admin"
-          ? "super_admin"
-          : "admin";
+      const requestedRole = String(
+        body.role || ""
+      );
+
+      if (!isValidRole(requestedRole)) {
+        return NextResponse.json(
+          {
+            error:
+              "Invalid CMS role.",
+            allowedRoles:
+              ALLOWED_ROLES,
+          },
+          { status: 400 }
+        );
+      }
+
+      const role: AdminRole =
+        requestedRole;
 
       const {
         data: targetUser,
@@ -630,7 +680,10 @@ export async function PATCH(
         );
       }
 
-      /* Never downgrade the last active Super Admin */
+      /*
+        Never downgrade the last active
+        Super Administrator.
+      */
 
       if (
         role !== "super_admin" &&
@@ -714,12 +767,6 @@ export async function PATCH(
         );
       }
 
-      /*
-        Password is changed server-side.
-        email_confirm:true guarantees the account
-        remains usable without a confirmation flow.
-      */
-
       const {
         error: passwordError,
       } =
@@ -789,6 +836,10 @@ export async function DELETE(
       );
     }
 
+    /*
+      Only Super Admin can delete users.
+    */
+
     if (admin.role !== "super_admin") {
       return NextResponse.json(
         {
@@ -808,7 +859,8 @@ export async function DELETE(
     if (!userId) {
       return NextResponse.json(
         {
-          error: "User ID is required.",
+          error:
+            "User ID is required.",
         },
         { status: 400 }
       );
@@ -824,9 +876,9 @@ export async function DELETE(
       );
     }
 
-    /* ----------------------------------------------------------
+    /* ========================================================
        FIND TARGET
-    ---------------------------------------------------------- */
+    ======================================================== */
 
     const {
       data: targetUser,
@@ -856,9 +908,9 @@ export async function DELETE(
       );
     }
 
-    /* ----------------------------------------------------------
+    /* ========================================================
        PROTECT LAST ACTIVE SUPER ADMIN
-    ---------------------------------------------------------- */
+    ======================================================== */
 
     if (
       targetUser.role ===
@@ -898,27 +950,28 @@ export async function DELETE(
       }
     }
 
-    /* ----------------------------------------------------------
-       DELETE AUTH ACCOUNT
-       admin_users should have ON DELETE CASCADE
-    ---------------------------------------------------------- */
+    /* ========================================================
+       DELETE AUTH USER
+    ======================================================== */
 
     const {
-      error: deleteError,
+      error: deleteAuthError,
     } =
       await adminClient.auth.admin.deleteUser(
         userId
       );
 
-    if (deleteError) {
-      throw deleteError;
+    if (deleteAuthError) {
+      throw deleteAuthError;
     }
 
-    /* ----------------------------------------------------------
-       EXTRA CLEANUP
-    ---------------------------------------------------------- */
+    /* ========================================================
+       DELETE CMS RECORD
+    ======================================================== */
 
-    await adminClient
+    const {
+      error: deleteCmsError,
+    } = await adminClient
       .from("admin_users")
       .delete()
       .eq(
@@ -926,8 +979,13 @@ export async function DELETE(
         userId
       );
 
+    if (deleteCmsError) {
+      throw deleteCmsError;
+    }
+
     return NextResponse.json({
       success: true,
+      deletedUserId: userId,
     });
   } catch (error: any) {
     console.error(

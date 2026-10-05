@@ -134,20 +134,23 @@ export default function AdminLoginPage() {
          5. CHECK ROLE
       ===================================================== */
 
-      if (
-        ![
-          "admin",
-          "super_admin",
-        ].includes(admin.role)
-      ) {
-        await supabase.auth.signOut();
+      const ALLOWED_CMS_ROLES = [
+  "super_admin",
+  "admin",
+  "content_manager",
+  "editor",
+  "viewer",
+] as const;
 
-        setError(
-          "This account does not have CMS administrator privileges."
-        );
+if (!ALLOWED_CMS_ROLES.includes(admin.role as any)) {
+  await supabase.auth.signOut();
 
-        return;
-      }
+  setError(
+    "This account does not have permission to access the Apex CMS."
+  );
+
+  return;
+}
 
       /* =====================================================
          6. CREATE TAB SESSION

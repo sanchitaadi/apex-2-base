@@ -108,12 +108,20 @@ export default function AdminDashboard() {
             .eq("id", user.id)
             .maybeSingle();
 
-        if (
-          adminError ||
-          !admin ||
-          !admin.is_active ||
-          !["admin", "super_admin"].includes(admin.role)
-        ) {
+        const ALLOWED_CMS_ROLES = [
+  "super_admin",
+  "admin",
+  "content_manager",
+  "editor",
+  "viewer",
+] as const;
+
+if (
+  adminError ||
+  !admin ||
+  !admin.is_active ||
+  !ALLOWED_CMS_ROLES.includes(admin.role as any)
+) {
           await supabase.auth.signOut();
 
           router.replace("/admin/login");

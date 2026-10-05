@@ -24,20 +24,81 @@ type AccoladeDocument = {
   document_label: string | null;
   sort_order: number;
   is_active: boolean;
-  created_at?: string;
+  created_at?: string | null;
 };
 
 const CATEGORY = "monthly-newsletter";
 
-export default function ApexianAccoladePage() {
-  const [documents, setDocuments] = useState<
-    AccoladeDocument[]
-  >([]);
+const MONTHS = [
+  "All Months",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
+function getYear(date?: string | null) {
+  if (!date) return null;
+
+  const parsed = new Date(date);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return String(parsed.getFullYear());
+}
+
+function getMonth(date?: string | null) {
+  if (!date) return null;
+
+  const parsed = new Date(date);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "long",
+  });
+}
+
+function formatDate(date?: string | null) {
+  if (!date) return "";
+
+  const parsed = new Date(date);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  return parsed.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export default function ApexianAccoladePage() {
+  const [documents, setDocuments] = useState<AccoladeDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedDocument, setSelectedDocument] =
     useState<AccoladeDocument | null>(null);
+
+  const [selectedYear, setSelectedYear] =
+    useState("All Years");
+
+  const [selectedMonth, setSelectedMonth] =
+    useState("All Months");
 
   useEffect(() => {
     loadAccoladeDocuments();
@@ -48,7 +109,8 @@ export default function ApexianAccoladePage() {
 
     const { data, error } = await supabase
       .from("academic_documents")
-      .select(`
+      .select(
+        `
         id,
         title,
         class_name,
@@ -59,12 +121,13 @@ export default function ApexianAccoladePage() {
         sort_order,
         is_active,
         created_at
-      `)
+        `
+      )
       .eq("category", CATEGORY)
       .eq("is_active", true)
       .ilike("title", "%Apexian Accolade%")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .order("sort_order", { ascending: true });
 
     if (error) {
       console.error(
@@ -83,62 +146,87 @@ export default function ApexianAccoladePage() {
   }
 
   /*
-   * Current publications first.
-   * This keeps the latest editions at the top without
-   * changing the Admin display order.
+   * AVAILABLE YEARS
    */
-  const currentDocuments = useMemo(() => {
-    return documents.filter((document) => {
-      const text = `
-        ${document.title}
-        ${document.class_name ?? ""}
-      `.toLowerCase();
 
-      return (
-        text.includes("2026") ||
-        text.includes("2026-27") ||
-        text.includes("2026–27")
-      );
-    });
-  }, [documents]);
+  const years = useMemo(() => {
+    const uniqueYears = Array.from(
+      new Set(
+        documents
+          .map((document) =>
+            getYear(document.created_at)
+          )
+          .filter(Boolean) as string[]
+      )
+    );
 
-  const previousDocuments = useMemo(() => {
-    return documents.filter((document) => {
-      const text = `
-        ${document.title}
-        ${document.class_name ?? ""}
-      `.toLowerCase();
+    uniqueYears.sort(
+      (a, b) => Number(b) - Number(a)
+    );
 
-      return (
-        text.includes("2025") ||
-        text.includes("2025-26") ||
-        text.includes("2025–26") ||
-        text.includes("edition")
-      );
-    });
+    return ["All Years", ...uniqueYears];
   }, [documents]);
 
   /*
-   * Don't lose any records which don't have a recognizable
-   * year/session.
+   * FILTERED DOCUMENTS
    */
-  const categorizedIds = useMemo(() => {
-    return new Set([
-      ...currentDocuments.map(
-        (document) => document.id
-      ),
-      ...previousDocuments.map(
-        (document) => document.id
-      ),
-    ]);
-  }, [currentDocuments, previousDocuments]);
 
-  const otherDocuments = useMemo(() => {
-    return documents.filter(
-      (document) =>
-        !categorizedIds.has(document.id)
-    );
-  }, [documents, categorizedIds]);
+  const filteredDocuments = useMemo(() => {
+    return documents
+      .filter((document) => {
+        const year = getYear(document.created_at);
+        const month = getMonth(document.created_at);
+
+        const yearMatches =
+          selectedYear === "All Years" ||
+          year === selectedYear;
+
+        const monthMatches =
+          selectedMonth === "All Months" ||
+          month === selectedMonth;
+
+        return yearMatches && monthMatches;
+      })
+      .sort((a, b) => {
+        const dateA = a.created_at
+          ? new Date(a.created_at).getTime()
+          : 0;
+
+        const dateB = b.created_at
+          ? new Date(b.created_at).getTime()
+          : 0;
+
+        if (dateA !== dateB) {
+          return dateB - dateA;
+        }
+
+        return (
+          (a.sort_order ?? 0) -
+          (b.sort_order ?? 0)
+        );
+      });
+  }, [
+    documents,
+    selectedYear,
+    selectedMonth,
+  ]);
+
+  /*
+   * RESET MONTH WHEN YEAR CHANGES
+   */
+
+  function handleYearChange(value: string) {
+    setSelectedYear(value);
+
+    if (value === "All Years") {
+      return;
+    }
+
+    /*
+     * Keep selected month if it exists for
+     * the selected year.
+     */
+  }
 
   return (
     <main className="min-h-screen bg-[#F5F0E6] text-[#10203A]">
@@ -150,6 +238,7 @@ export default function ApexianAccoladePage() {
       <section className="relative overflow-hidden bg-[#102A56] text-white">
 
         {/* Decorative circles */}
+
         <div className="pointer-events-none absolute -right-48 -top-48 h-[650px] w-[650px] rounded-full border border-white/[0.05]" />
 
         <div className="pointer-events-none absolute -right-24 -top-24 h-[450px] w-[450px] rounded-full border border-white/[0.05]" />
@@ -157,11 +246,13 @@ export default function ApexianAccoladePage() {
         <div className="pointer-events-none absolute -left-48 bottom-[-300px] h-[600px] w-[600px] rounded-full border border-white/[0.04]" />
 
         {/* Glow */}
+
         <div className="pointer-events-none absolute right-[-5%] top-[10%] h-[500px] w-[500px] rounded-full bg-[#8DB9E5]/10 blur-[150px]" />
 
         <div className="relative mx-auto max-w-[1500px] px-6 pb-24 pt-32 md:px-10 md:pb-32 lg:px-14 lg:pt-36">
 
           {/* Back */}
+
           <Link
             href="/"
             className="
@@ -178,22 +269,21 @@ export default function ApexianAccoladePage() {
             "
           >
             <ArrowLeft size={13} />
-
             Apex Public School
           </Link>
 
           {/* Eyebrow */}
-          <div className="mt-14 flex items-center gap-3">
 
+          <div className="mt-14 flex items-center gap-3">
             <span className="h-px w-10 bg-white/25" />
 
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">
               School Publication
             </p>
-
           </div>
 
           {/* Heading */}
+
           <h1
             className="
               mt-7
@@ -211,6 +301,7 @@ export default function ApexianAccoladePage() {
           </h1>
 
           {/* Description */}
+
           <p className="mt-8 max-w-2xl text-base leading-8 text-white/55 md:text-lg">
             Explore the official editions of The Apexian
             Accolade, presented as interactive digital
@@ -228,6 +319,7 @@ export default function ApexianAccoladePage() {
         <div className="mx-auto max-w-[1500px] px-6 py-20 md:px-10 md:py-28 lg:px-14 lg:py-32">
 
           {/* INTRO */}
+
           <div className="mb-12">
 
             <p className="text-[9px] font-semibold uppercase tracking-[0.28em] text-[#102A56]/35">
@@ -247,20 +339,21 @@ export default function ApexianAccoladePage() {
 
           </div>
 
-          {/* LOADING */}
+          {/* =====================================================
+              LOADING
+          ===================================================== */}
+
           {loading ? (
-
             <div className="flex min-h-[360px] items-center justify-center">
-
               <Loader2
                 className="h-8 w-8 animate-spin text-[#102A56]"
               />
-
             </div>
 
           ) : documents.length === 0 ? (
 
             /* EMPTY STATE */
+
             <div className="rounded-[2rem] border border-[#102A56]/10 bg-white px-8 py-16 text-center shadow-[0_20px_60px_rgba(16,42,86,0.06)]">
 
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#102A56] text-white">
@@ -284,120 +377,179 @@ export default function ApexianAccoladePage() {
 
           ) : (
 
-            <div className="space-y-20">
+            <>
 
               {/* =================================================
-                  CURRENT EDITIONS
+                  YEAR + MONTH FILTERS
               ================================================= */}
 
-              {currentDocuments.length > 0 && (
-                <section>
+              <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center">
 
-                  <div className="mb-8">
+                {/* YEAR */}
 
-                    <div className="mb-4 flex items-center gap-3">
+                <select
+                  value={selectedYear}
+                  onChange={(e) =>
+                    handleYearChange(e.target.value)
+                  }
+                  className="
+                    rounded-full
+                    border
+                    border-[#102A56]/15
+                    bg-white
+                    px-5
+                    py-3
+                    text-sm
+                    font-medium
+                    text-[#102A56]
+                    outline-none
+                    shadow-sm
+                    transition
+                    focus:border-[#102A56]/40
+                  "
+                >
+                  {years.map((year) => (
+                    <option
+                      key={year}
+                      value={year}
+                    >
+                      {year}
+                    </option>
+                  ))}
+                </select>
 
-                      <span className="h-2 w-2 rounded-full bg-[#102A56]" />
+                {/* MONTH */}
 
-                      <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#102A56]">
-                        Current Publications
-                      </span>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) =>
+                    setSelectedMonth(e.target.value)
+                  }
+                  className="
+                    rounded-full
+                    border
+                    border-[#102A56]/15
+                    bg-white
+                    px-5
+                    py-3
+                    text-sm
+                    font-medium
+                    text-[#102A56]
+                    outline-none
+                    shadow-sm
+                    transition
+                    focus:border-[#102A56]/40
+                  "
+                >
+                  {MONTHS.map((month) => (
+                    <option
+                      key={month}
+                      value={month}
+                    >
+                      {month}
+                    </option>
+                  ))}
+                </select>
 
-                    </div>
+                {/* CLEAR */}
 
-                    <h3 className="text-3xl font-semibold tracking-tight text-[#102A56] sm:text-4xl">
-                      Latest Apexian Accolade
-                    </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedYear("All Years");
+                    setSelectedMonth("All Months");
+                  }}
+                  className="
+                    rounded-full
+                    bg-[#102A56]
+                    px-5
+                    py-3
+                    text-sm
+                    font-semibold
+                    text-white
+                    transition
+                    hover:bg-[#1B3D73]
+                  "
+                >
+                  Clear Filters
+                </button>
 
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                      The latest editions of The Apexian
-                      Accolade.
-                    </p>
+              </div>
 
-                  </div>
+              {/* FILTER RESULT */}
 
-                  <DocumentGrid
-                    documents={currentDocuments}
-                    onOpen={setSelectedDocument}
-                    featured
-                  />
+              <div className="mb-8 flex items-center justify-between">
 
-                </section>
-              )}
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-[#102A56]/35">
+                    Publications
+                  </p>
+
+                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-[#102A56]">
+                    {selectedYear === "All Years" &&
+                    selectedMonth === "All Months"
+                      ? "All Editions"
+                      : `${selectedMonth === "All Months" ? "" : selectedMonth + " "}${
+                          selectedYear === "All Years"
+                            ? ""
+                            : selectedYear
+                        } Editions`}
+                  </h3>
+                </div>
+
+                <span className="rounded-full bg-[#102A56]/[0.06] px-4 py-2 text-xs font-semibold text-[#102A56]/60">
+                  {filteredDocuments.length}{" "}
+                  {filteredDocuments.length === 1
+                    ? "Edition"
+                    : "Editions"}
+                </span>
+
+              </div>
 
               {/* =================================================
-                  PREVIOUS EDITIONS
+                  DOCUMENTS
               ================================================= */}
 
-              {previousDocuments.length > 0 && (
-                <section>
+              {filteredDocuments.length === 0 ? (
 
-                  <div className="mb-8">
+                <div className="rounded-[2rem] border border-[#102A56]/10 bg-white px-8 py-16 text-center">
 
-                    <div className="mb-4 flex items-center gap-3">
-
-                      <span className="h-2 w-2 rounded-full bg-slate-400" />
-
-                      <span className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
-                        Previous Editions
-                      </span>
-
-                    </div>
-
-                    <h3 className="text-3xl font-semibold tracking-tight text-[#102A56] sm:text-4xl">
-                      Earlier Apexian Accolade
-                    </h3>
-
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                      Previous editions retained as part of
-                      the Apex publication collection.
-                    </p>
-
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#102A56]/[0.06] text-[#102A56]">
+                    <FileText size={24} />
                   </div>
 
-                  <DocumentGrid
-                    documents={previousDocuments}
-                    onOpen={setSelectedDocument}
-                  />
+                  <h3 className="mt-6 text-2xl font-semibold text-[#102A56]">
+                    No editions found
+                  </h3>
 
-                </section>
+                  <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-slate-500">
+                    There are no Apexian Accolade editions
+                    for the selected year and month.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedYear("All Years");
+                      setSelectedMonth("All Months");
+                    }}
+                    className="mt-6 rounded-full bg-[#102A56] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#1B3D73]"
+                  >
+                    Show All Editions
+                  </button>
+
+                </div>
+
+              ) : (
+
+                <DocumentGrid
+                  documents={filteredDocuments}
+                  onOpen={setSelectedDocument}
+                />
+
               )}
 
-              {/* =================================================
-                  OTHER EDITIONS
-              ================================================= */}
-
-              {otherDocuments.length > 0 && (
-                <section>
-
-                  <div className="mb-8">
-
-                    <div className="mb-4 flex items-center gap-3">
-
-                      <span className="h-2 w-2 rounded-full bg-slate-400" />
-
-                      <span className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
-                        Publications
-                      </span>
-
-                    </div>
-
-                    <h3 className="text-3xl font-semibold tracking-tight text-[#102A56] sm:text-4xl">
-                      Other Editions
-                    </h3>
-
-                  </div>
-
-                  <DocumentGrid
-                    documents={otherDocuments}
-                    onOpen={setSelectedDocument}
-                  />
-
-                </section>
-              )}
-
-            </div>
-
+            </>
           )}
 
         </div>
@@ -408,6 +560,7 @@ export default function ApexianAccoladePage() {
       ========================================================= */}
 
       {selectedDocument && (
+
         <div
           className="
             fixed
@@ -450,6 +603,14 @@ export default function ApexianAccoladePage() {
                 <h2 className="truncate text-sm font-semibold sm:text-base">
                   {selectedDocument.title}
                 </h2>
+
+                {selectedDocument.created_at && (
+                  <p className="mt-0.5 text-[10px] text-white/40">
+                    {formatDate(
+                      selectedDocument.created_at
+                    )}
+                  </p>
+                )}
 
               </div>
 
@@ -525,6 +686,7 @@ export default function ApexianAccoladePage() {
           </div>
 
         </div>
+
       )}
 
     </main>
@@ -538,13 +700,11 @@ export default function ApexianAccoladePage() {
 function DocumentGrid({
   documents,
   onOpen,
-  featured = false,
 }: {
   documents: AccoladeDocument[];
   onOpen: (
     document: AccoladeDocument
   ) => void;
-  featured?: boolean;
 }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -558,6 +718,7 @@ function DocumentGrid({
             );
 
           return (
+
             <article
               key={document.id}
               className="
@@ -597,19 +758,26 @@ function DocumentGrid({
 
               </div>
 
+              {/* Date */}
+
+              {document.created_at && (
+
+                <p className="mt-8 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#102A56]/35">
+                  {formatDate(
+                    document.created_at
+                  )}
+                </p>
+
+              )}
+
               {/* Edition */}
 
               {document.class_name && (
-                <p
-                  className={[
-                    "mt-8 text-[9px] font-semibold uppercase tracking-[0.24em]",
-                    featured
-                      ? "text-[#102A56]/45"
-                      : "text-[#102A56]/30",
-                  ].join(" ")}
-                >
+
+                <p className="mt-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#102A56]/30">
                   {document.class_name}
                 </p>
+
               )}
 
               {/* Title */}
@@ -658,7 +826,6 @@ function DocumentGrid({
                     size={14}
                     className="transition-transform duration-300 group-hover:translate-x-0.5"
                   />
-
                 </button>
 
               ) : (
@@ -691,6 +858,7 @@ function DocumentGrid({
               <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#102A56] transition-all duration-500 group-hover:w-full" />
 
             </article>
+
           );
         }
       )}

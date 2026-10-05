@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 /* =========================================================
    CMS THEME SYSTEM
@@ -1407,3 +1407,61 @@ body, header, footer, section, article, main, button, a {
   visibility: visible !important;
   pointer-events: auto !important;
 }
+/* =========================================================
+   CMS PUBLIC PAGES
+   Keeps Page Builder content below the fixed site header
+   Applies automatically to every /[slug] CMS page
+   ========================================================= */
+
+.cms-public-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding-top: 145px;
+}
+
+/* Tablet */
+@media (max-width: 1199px) {
+  .cms-public-page {
+    padding-top: 125px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .cms-public-page {
+    padding-top: 105px;
+  }
+}
+/* =========================================================
+   CMS PAGE BUILDER - REMOVE EXTRA TOP SPACE
+   Applies only to pages created through the CMS Page Builder
+   ========================================================= */
+
+.cms-page {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.cms-page > div:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.cms-page > div:first-child > section:first-child {
+  margin-top: 0 !important;
+}
+
+
+/* =========================================================
+   CMS PAGE BUILDER - REMOVE HEADER RESERVED SPACE
+   CMS pages start underneath the floating header.
+   ========================================================= */
+
+.cms-page {
+  margin-top: -132px !important;
+  padding-top: 0 !important;
+  position: relative;
+  z-index: 1;
+}
+

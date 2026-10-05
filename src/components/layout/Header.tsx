@@ -909,11 +909,7 @@ export default function Header() {
                     alt={`${siteSettings.school_name} logo`}
                     fill
                     priority
-                    sizes="
-                      (max-width: 639px) 40px,
-                      (max-width: 1279px) 50px,
-                      56px
-                    "
+                    sizes="(max-width: 639px) 40px, (max-width: 1279px) 50px, 56px"
                     className="
                       object-contain
                       p-2

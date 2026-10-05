@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useEffect,
@@ -226,6 +226,11 @@ const sections = [
         icon: FileText,
       },
       {
+  label: "Blogs",
+  href: "/admin/blogs",
+  icon: FileText,
+},
+      {
         label: "Activities",
         href: "/admin/activities",
         icon: Activity,
@@ -302,12 +307,18 @@ const sections = [
         label: "THEME",
         href: "/admin/theme",
         icon: ImageIcon,
+      }, 
+      {
+        label: "page builder",
+        href: "/admin/pages",
+        icon: Shield,
       },
       {
         label: "Users",
         href: "/admin/users",
         icon: Shield,
       },
+      
     ],
   },
 ];
@@ -334,8 +345,34 @@ export default function AdminLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const [userEmail, setUserEmail] = useState("");
-  const [userRole, setUserRole] = useState("");
+  type AdminRole =
+  | "super_admin"
+  | "admin"
+  | "content_manager"
+  | "editor"
+  | "viewer";
+
+const [userEmail, setUserEmail] = useState("");
+const [userRole, setUserRole] =
+  useState<AdminRole | "">("");
+  const isSuperAdmin =
+  userRole === "super_admin";
+
+const isAdmin =
+  userRole === "admin" ||
+  isSuperAdmin;
+
+const isContentManager =
+  userRole === "content_manager" ||
+  isAdmin;
+
+const isEditor =
+  userRole === "editor" ||
+  isContentManager;
+
+const isViewer =
+  userRole === "viewer" ||
+  isEditor;
 
   const authCheckStarted = useRef(false);
 
@@ -421,7 +458,13 @@ export default function AdminLayout({
           adminError ||
           !admin ||
           !admin.is_active ||
-          !["admin", "super_admin"].includes(admin.role)
+          ![
+          "admin",
+          "super_admin",
+          "content_manager",
+          "editor",
+          "viewer",
+        ].includes(admin.role)
         ) {
           sessionStorage.removeItem(TAB_SESSION_KEY);
 
@@ -442,7 +485,7 @@ export default function AdminLayout({
             ""
         );
 
-        setUserRole(admin.role);
+        setUserRole(admin.role as AdminRole);
 
         setChecking(false);
       } catch (error) {

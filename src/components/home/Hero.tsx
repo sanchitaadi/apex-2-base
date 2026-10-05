@@ -1,14 +1,10 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
-  ChevronDown,
-  ChevronsDown,
-  ChevronLeft,
-  ChevronRight,
   MapPin,
   Phone,
 } from "lucide-react";
@@ -82,14 +78,111 @@ const fallbackSlides: HeroSlide[] = [
   },
 ];
 
+/* =========================================================
+   RESPONSIVE IMAGE POSITION
+   ========================================================= */
+
+function getSmartImagePosition(
+  viewportWidth: number,
+  viewportHeight: number,
+  imageWidth: number,
+  imageHeight: number
+) {
+  if (!viewportWidth || !viewportHeight) {
+    return "50% 50%";
+  }
+
+  const viewportRatio = viewportWidth / viewportHeight;
+  const imageRatio = imageWidth / imageHeight;
+
+  /*
+   * Very narrow phone screens.
+   *
+   * Move the crop slightly upward because school
+   * photographs normally contain important people/faces
+   * around the upper-middle area.
+   */
+  if (viewportWidth < 480) {
+    if (imageRatio > viewportRatio) {
+      return "50% 38%";
+    }
+
+    return "50% 45%";
+  }
+
+  /*
+   * Tablets / small laptops.
+   */
+  if (viewportWidth < 1024) {
+    if (imageRatio > viewportRatio) {
+      return "50% 42%";
+    }
+
+    return "50% 48%";
+  }
+
+  /*
+   * Desktop.
+   */
+  if (imageRatio > viewportRatio) {
+    return "50% 50%";
+  }
+
+  return "50% 50%";
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
 export default function Hero() {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
 
-  /* =====================================================
+  /*
+   * Browser viewport.
+   *
+   * This is intentionally client-side so it never affects
+   * the server-rendered HTML and avoids hydration mismatch.
+   */
+  const [viewport, setViewport] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  /*
+   * Actual uploaded image dimensions.
+   */
+  const [imageSize, setImageSize] = useState({
+    width: 1920,
+    height: 1080,
+  });
+
+  /* =========================================================
+     VIEWPORT DETECTION
+     ========================================================= */
+
+  useEffect(() => {
+    function updateViewport() {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    updateViewport();
+
+    window.addEventListener("resize", updateViewport);
+
+    return () => {
+      window.removeEventListener("resize", updateViewport);
+    };
+  }, []);
+
+  /* =========================================================
      LOAD HERO SLIDES
-  ====================================================== */
+     ========================================================= */
 
   useEffect(() => {
     let mounted = true;
@@ -119,15 +212,21 @@ export default function Hero() {
       if (!mounted) return;
 
       if (error) {
-        console.error("Hero slides load failed:", error);
+        console.error(
+          "Hero slides load failed:",
+          error
+        );
+
         setSlides(fallbackSlides);
         setLoaded(true);
+
         return;
       }
 
       if (!data || data.length === 0) {
         setSlides(fallbackSlides);
         setLoaded(true);
+
         return;
       }
 
@@ -143,12 +242,14 @@ export default function Hero() {
     };
   }, []);
 
-  /* =====================================================
+  /* =========================================================
      SAFE SLIDES
-  ====================================================== */
+     ========================================================= */
 
   const safeSlides = useMemo(() => {
-    return slides.length > 0 ? slides : fallbackSlides;
+    return slides.length > 0
+      ? slides
+      : fallbackSlides;
   }, [slides]);
 
   const activeSlide =
@@ -159,9 +260,71 @@ export default function Hero() {
       )
     ];
 
-  /* =====================================================
+  /* =========================================================
+     READ ACTUAL IMAGE DIMENSIONS
+     ========================================================= */
+
+  useEffect(() => {
+    if (!activeSlide?.image_url) return;
+
+    let cancelled = false;
+
+    const image = new window.Image();
+
+    image.onload = () => {
+      if (cancelled) return;
+
+      if (
+        image.naturalWidth > 0 &&
+        image.naturalHeight > 0
+      ) {
+        setImageSize({
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        });
+      }
+    };
+
+    image.onerror = () => {
+      if (cancelled) return;
+
+      /*
+       * Safe fallback.
+       */
+      setImageSize({
+        width: 1920,
+        height: 1080,
+      });
+    };
+
+    image.src = activeSlide.image_url;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSlide?.image_url]);
+
+  /* =========================================================
+     SMART RESPONSIVE POSITION
+     ========================================================= */
+
+  const imagePosition = useMemo(() => {
+    return getSmartImagePosition(
+      viewport.width,
+      viewport.height,
+      imageSize.width,
+      imageSize.height
+    );
+  }, [
+    viewport.width,
+    viewport.height,
+    imageSize.width,
+    imageSize.height,
+  ]);
+
+  /* =========================================================
      AUTO SLIDESHOW
-  ====================================================== */
+     ========================================================= */
 
   useEffect(() => {
     if (!loaded || safeSlides.length <= 1) {
@@ -174,7 +337,8 @@ export default function Hero() {
     const timer = window.setTimeout(() => {
       setActiveIndex(
         (current) =>
-          (current + 1) % safeSlides.length
+          (current + 1) %
+          safeSlides.length
       );
     }, duration);
 
@@ -188,14 +352,15 @@ export default function Hero() {
     safeSlides,
   ]);
 
-  /* =====================================================
+  /* =========================================================
      MANUAL NAVIGATION
-  ====================================================== */
+     ========================================================= */
 
   function nextSlide() {
     setActiveIndex(
       (current) =>
-        (current + 1) % safeSlides.length
+        (current + 1) %
+        safeSlides.length
     );
   }
 
@@ -207,16 +372,22 @@ export default function Hero() {
     );
   }
 
-  /* =====================================================
+  /* =========================================================
      URL HELPER
-  ====================================================== */
+     ========================================================= */
 
-  function isExternal(url?: string | null) {
+  function isExternal(
+    url?: string | null
+  ) {
     return Boolean(
       url &&
         /^https?:\/\//i.test(url)
     );
   }
+
+  /* =========================================================
+     RENDER
+     ========================================================= */
 
   return (
     <section
@@ -230,10 +401,9 @@ export default function Hero() {
         text-white
       "
     >
-
       {/* =================================================
           BACKGROUND IMAGE
-      ================================================== */}
+      ================================================= */}
 
       <AnimatePresence mode="sync">
         <motion.div
@@ -261,7 +431,11 @@ export default function Hero() {
               ease: "linear",
             },
           }}
-          className="absolute inset-0"
+          className="
+            absolute
+            inset-0
+            overflow-hidden
+          "
         >
           <Image
             src={activeSlide.image_url}
@@ -271,19 +445,41 @@ export default function Hero() {
             }
             fill
             priority
-            sizes="100vw"
+            sizes="
+              100vw
+            "
+            quality={92}
             className="
               object-cover
-              object-center
               saturate-[0.92]
             "
+            style={{
+              /*
+               * JavaScript controls this value.
+               *
+               * The uploaded image remains the same.
+               * Only the visible crop changes depending
+               * on the device viewport.
+               */
+              objectPosition: imagePosition,
+
+              /*
+               * Prevent browser interpolation from
+               * making the image look soft when the
+               * viewport changes.
+               */
+              transform:
+                "translateZ(0)",
+              backfaceVisibility:
+                "hidden",
+            }}
           />
         </motion.div>
       </AnimatePresence>
 
       {/* =================================================
           IMAGE PROTECTION
-      ================================================== */}
+      ================================================= */}
 
       <div className="pointer-events-none absolute inset-0 bg-black/15" />
 
@@ -295,7 +491,7 @@ export default function Hero() {
 
       {/* =================================================
           CONTENT
-      ================================================== */}
+      ================================================= */}
 
       <div
         className="
@@ -316,7 +512,6 @@ export default function Hero() {
           lg:px-14
         "
       >
-
         <div
           className="
             grid
@@ -328,10 +523,9 @@ export default function Hero() {
             lg:gap-8
           "
         >
-
           {/* =================================================
               LEFT HERO COPY
-          ================================================== */}
+          ================================================= */}
 
           <div className="min-w-0 max-w-4xl">
 
@@ -399,7 +593,12 @@ export default function Hero() {
                 }}
                 transition={{
                   duration: 0.65,
-                  ease: [0.22, 1, 0.36, 1],
+                  ease: [
+                    0.22,
+                    1,
+                    0.36,
+                    1,
+                  ],
                 }}
                 className="
                   mt-[clamp(1rem,2.4vh,1.75rem)]
@@ -480,7 +679,6 @@ export default function Hero() {
                   gap-2.5
                 "
               >
-
                 {/* PRIMARY */}
 
                 {activeSlide.primary_button_text &&
@@ -517,7 +715,9 @@ export default function Hero() {
                           "
                         >
                           <span className="!text-[#102A56]">
-                            {activeSlide.primary_button_text}
+                            {
+                              activeSlide.primary_button_text
+                            }
                           </span>
 
                           <span
@@ -566,7 +766,9 @@ export default function Hero() {
                           "
                         >
                           <span className="!text-[#102A56]">
-                            {activeSlide.primary_button_text}
+                            {
+                              activeSlide.primary_button_text
+                            }
                           </span>
 
                           <span
@@ -631,7 +833,9 @@ export default function Hero() {
                           "
                         >
                           <span>
-                            {activeSlide.secondary_button_text}
+                            {
+                              activeSlide.secondary_button_text
+                            }
                           </span>
 
                           <ArrowRight
@@ -666,7 +870,9 @@ export default function Hero() {
                           "
                         >
                           <span>
-                            {activeSlide.secondary_button_text}
+                            {
+                              activeSlide.secondary_button_text
+                            }
                           </span>
 
                           <ArrowRight
@@ -677,15 +883,13 @@ export default function Hero() {
                       )}
                     </>
                   )}
-
               </motion.div>
             </AnimatePresence>
-
           </div>
 
           {/* =================================================
               RIGHT INFORMATION CARD
-          ================================================== */}
+          ================================================= */}
 
           <motion.div
             initial={{
@@ -699,7 +903,12 @@ export default function Hero() {
             transition={{
               duration: 0.8,
               delay: 0.25,
-              ease: [0.22, 1, 0.36, 1],
+              ease: [
+                0.22,
+                1,
+                0.36,
+                1,
+              ],
             }}
             className="
               hidden
@@ -716,11 +925,9 @@ export default function Hero() {
               xl:p-5
             "
           >
-
             {/* CARD TITLE */}
 
             <div className="px-1">
-
               <p className="text-[8px] uppercase tracking-[0.28em] text-white/35">
                 Apex Public School
               </p>
@@ -728,22 +935,18 @@ export default function Hero() {
               <h2 className="mt-2 text-lg font-semibold tracking-[-0.03em]">
                 Answer Duty&apos;s Call
               </h2>
-
             </div>
 
             {/* CAMPUS */}
 
             <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-
               <div className="flex items-start gap-3">
-
                 <MapPin
                   size={16}
                   className="mt-0.5 shrink-0 text-white/70"
                 />
 
                 <div>
-
                   <p className="text-[8px] uppercase tracking-[0.24em] text-white/35">
                     Campus
                   </p>
@@ -753,11 +956,8 @@ export default function Hero() {
                     <br />
                     Burari, Delhi – 110084
                   </p>
-
                 </div>
-
               </div>
-
             </div>
 
             {/* CONTACT */}
@@ -780,16 +980,13 @@ export default function Hero() {
                 hover:bg-white/[0.07]
               "
             >
-
               <div className="flex items-center gap-3">
-
                 <Phone
                   size={16}
                   className="text-white/70"
                 />
 
                 <div>
-
                   <p className="text-[8px] uppercase tracking-[0.24em] text-white/35">
                     Contact
                   </p>
@@ -797,9 +994,7 @@ export default function Hero() {
                   <p className="mt-1.5 text-xs text-white/75 xl:text-sm">
                     09990061747
                   </p>
-
                 </div>
-
               </div>
 
               <ArrowRight
@@ -811,127 +1006,14 @@ export default function Hero() {
                   group-hover:translate-x-1
                 "
               />
-
             </a>
-
-            {/* CONTROLS */}
-
-            <div className="mt-4 flex items-center justify-between">
-
-              <div className="text-[9px] tracking-[0.15em] text-white/35">
-
-                {String(
-                  activeIndex + 1
-                ).padStart(2, "0")}
-
-                {" / "}
-
-                {String(
-                  safeSlides.length
-                ).padStart(2, "0")}
-
-              </div>
-
-              <div className="flex items-center gap-1.5">
-
-                <button
-                  type="button"
-                  onClick={previousSlide}
-                  aria-label="Previous slide"
-                  className="
-                    grid
-                    h-9
-                    w-9
-                    place-items-center
-                    rounded-full
-                    border
-                    border-white/10
-                    bg-white/[0.035]
-                    text-white/70
-                    transition
-                    hover:bg-white/10
-                    hover:text-white
-                  "
-                >
-                  <ChevronLeft size={15} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={nextSlide}
-                  aria-label="Next slide"
-                  className="
-                    grid
-                    h-9
-                    w-9
-                    place-items-center
-                    rounded-full
-                    border
-                    border-white/10
-                    bg-white/[0.035]
-                    text-white/70
-                    transition
-                    hover:bg-white/10
-                    hover:text-white
-                  "
-                >
-                  <ChevronRight size={15} />
-                </button>
-
-              </div>
-
-            </div>
-
-            {/* PROGRESS */}
-
-            <div className="mt-3 flex gap-1.5">
-
-              {safeSlides.map(
-                (item, index) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-label={`Go to slide ${index + 1}`}
-                    onClick={() =>
-                      setActiveIndex(index)
-                    }
-                    className="
-                      group
-                      h-1
-                      flex-1
-                      overflow-hidden
-                      rounded-full
-                      bg-white/10
-                    "
-                  >
-                    <span
-                      className={`
-                        block
-                        h-full
-                        rounded-full
-                        transition-all
-                        duration-500
-                        ${
-                          index === activeIndex
-                            ? "bg-white"
-                            : "bg-transparent group-hover:bg-white/30"
-                        }
-                      `}
-                    />
-                  </button>
-                )
-              )}
-
-            </div>
-
           </motion.div>
-
         </div>
       </div>
 
       {/* =================================================
           MOBILE SLIDE INDICATOR
-      ================================================== */}
+      ================================================= */}
 
       <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1.5 lg:hidden">
         {safeSlides.map(
@@ -939,7 +1021,9 @@ export default function Hero() {
             <button
               key={item.id}
               type="button"
-              aria-label={`Go to slide ${index + 1}`}
+              aria-label={`Go to slide ${
+                index + 1
+              }`}
               onClick={() =>
                 setActiveIndex(index)
               }
@@ -957,172 +1041,7 @@ export default function Hero() {
             />
           )
         )}
-
       </div>
-{/* =================================================
-    SCROLL CONTROLS
-================================================= */}
-
-<div
-  className="
-    absolute
-    bottom-16
-    left-1/2
-    z-[50]
-    flex
-    -translate-x-1/2
-    items-center
-    gap-2
-    sm:bottom-16
-    sm:gap-3
-  "
->
-
-  {/* SCROLL TO ABOUT */}
-
-  <motion.a
-    href="#about"
-    initial={{ opacity: 0, y: 12 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{
-      duration: 0.7,
-      delay: 0.8,
-    }}
-    className="
-  group
-  flex
-  items-center
-  gap-2
-  rounded-full
-  border
-  border-white/25
-  bg-[#102A56]/70
-  px-3
-  py-2
-  backdrop-blur-md
-  transition
-  duration-300
-  hover:border-white/40
-  hover:bg-[#102A56]/85
-  sm:gap-3
-  sm:px-4
-"
-  >
-    <span
-      className="
-        text-[8px]
-        font-semibold
-        uppercase
-        tracking-[0.28em]
-        text-white/45
-        transition
-        duration-300
-        group-hover:text-white/80
-      "
-    >
-      Scroll
-    </span>
-
-    <motion.span
-      animate={{
-        y: [0, 4, 0],
-      }}
-      transition={{
-        duration: 1.6,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-      className="
-        grid
-        h-8
-        w-8
-        place-items-center
-        rounded-full
-        border
-        border-white/15
-        bg-white/[0.05]
-        text-white/70
-      "
-    >
-      <ChevronDown
-        size={14}
-        strokeWidth={1.7}
-      />
-    </motion.span>
-  </motion.a>
-
-  {/* SCROLL TO END */}
-
-  <motion.a
-    href="#site-end"
-    initial={{ opacity: 0, y: 12 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{
-      duration: 0.7,
-      delay: 0.95,
-    }}
-    className="
-      group
-      flex
-      items-center
-      gap-3
-      rounded-full
-      border
-      border-white/15
-      bg-black/10
-      px-4
-      py-2
-      backdrop-blur-md
-      transition
-      duration-300
-      hover:border-white/30
-      hover:bg-white/10
-    "
-  >
-    <span
-      className="
-        text-[8px]
-        font-semibold
-        uppercase
-        tracking-[0.28em]
-        text-white/45
-        transition
-        duration-300
-        group-hover:text-white/80
-      "
-    >
-      End
-    </span>
-
-    <motion.span
-      animate={{
-        y: [0, 5, 0],
-      }}
-      transition={{
-        duration: 1.8,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-      className="
-        grid
-        h-8
-        w-8
-        place-items-center
-        rounded-full
-        border
-        border-white/15
-        bg-white/[0.05]
-        text-white/70
-      "
-    >
-      <ChevronsDown
-        size={14}
-        strokeWidth={1.7}
-      />
-    </motion.span>
-  </motion.a>
-
-</div>
     </section>
   );
 }

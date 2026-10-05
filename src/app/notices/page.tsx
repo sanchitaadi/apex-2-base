@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -77,6 +77,79 @@ export default function NoticesPage() {
 
   const [loading, setLoading] =
     useState(true);
+
+  const [selectedYear, setSelectedYear] =
+    useState("All Years");
+
+  const [selectedMonth, setSelectedMonth] =
+    useState("All Months");
+
+  const months = [
+    "All Months",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const years = useMemo(() => {
+    const uniqueYears = Array.from(
+      new Set(
+        notices
+          .map((notice) => {
+            const year = new Date(
+              `${notice.notice_date}T00:00:00`
+            ).getFullYear();
+
+            return Number.isNaN(year)
+              ? null
+              : year;
+          })
+          .filter(
+            (year): year is number =>
+              year !== null
+          )
+      )
+    ).sort((a, b) => b - a);
+
+    return [
+      "All Years",
+      ...uniqueYears.map(String),
+    ];
+  }, [notices]);
+
+  const filteredNotices = useMemo(() => {
+    return notices.filter((notice) => {
+      const date = new Date(
+        `${notice.notice_date}T00:00:00`
+      );
+
+      const yearMatches =
+        selectedYear === "All Years" ||
+        String(date.getFullYear()) ===
+          selectedYear;
+
+      const monthMatches =
+        selectedMonth === "All Months" ||
+        date.toLocaleString("en-IN", {
+          month: "long",
+        }) === selectedMonth;
+
+      return yearMatches && monthMatches;
+    });
+  }, [
+    notices,
+    selectedYear,
+    selectedMonth,
+  ]);
 
   useEffect(() => {
     let mounted = true;
@@ -212,9 +285,52 @@ export default function NoticesPage() {
 
               </div>
             ) : (
-              <div className="grid gap-4">
+              <>
+                {/* YEAR + MONTH FILTERS */}
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row">
+            <select
+              value={selectedYear}
+              onChange={(e) =>
+                setSelectedYear(e.target.value)
+              }
+              className="rounded-full border border-[#cbd5e1] bg-white px-5 py-3 text-sm font-medium text-[#102A56] outline-none shadow-sm"
+            >
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
 
-                {notices.map(
+            <select
+              value={selectedMonth}
+              onChange={(e) =>
+                setSelectedMonth(e.target.value)
+              }
+              className="rounded-full border border-[#cbd5e1] bg-white px-5 py-3 text-sm font-medium text-[#102A56] outline-none shadow-sm"
+            >
+              {months.map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedYear("All Years");
+                setSelectedMonth("All Months");
+              }}
+              className="rounded-full bg-[#102A56] px-5 py-3 text-sm font-semibold text-white"
+            >
+              Clear Filters
+            </button>
+          </div>
+
+          <div className="grid gap-4">
+
+                {filteredNotices.map(
                   (notice, index) => (
                     <Reveal
                       key={notice.id}
@@ -438,6 +554,7 @@ export default function NoticesPage() {
                 )}
 
               </div>
+              </>
             )}
 
           </div>
@@ -512,3 +629,6 @@ export default function NoticesPage() {
     </>
   );
 }
+
+
+

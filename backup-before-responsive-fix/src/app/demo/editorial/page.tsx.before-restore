@@ -1,0 +1,689 @@
+﻿"use client";
+
+import { useState } from "react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Menu,
+  X,
+  BookOpen,
+  Trophy,
+  Users,
+  FlaskConical,
+  Palette,
+  Dumbbell,
+  GraduationCap,
+  ChevronDown,
+  CalendarDays,
+} from "lucide-react";
+
+const photos = [
+  "https://apexpublicschool.in/wp-content/uploads/2020/05/IMG_0413-scaled.jpg",
+  "https://apexpublicschool.in/wp-content/uploads/2023/01/WhatsApp-Image-2023-01-02-at-1.06.01-PM-22.jpeg",
+  "https://apexpublicschool.in/wp-content/uploads/2023/01/WhatsApp-Image-2023-01-02-at-1.06.01-PM-28.jpeg",
+];
+
+const faqs = [
+  {
+    q: "How can I apply for admission?",
+    a: "Visit the admissions section or contact the school office for current admission information.",
+  },
+  {
+    q: "What does the Apex learning experience include?",
+    a: "The school experience combines academics with sports, arts, activities, collaboration and opportunities for personal growth.",
+  },
+  {
+    q: "Does Apex have extracurricular activities?",
+    a: "Students can participate in sports, arts, clubs, competitions, events and other activities.",
+  },
+  {
+    q: "How can I contact the school?",
+    a: "Please visit the contact section of the main school website for the latest contact information.",
+  },
+];
+
+export default function EditorialDemoPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  return (
+    <main className="min-h-screen overflow-x-hidden bg-[#f5f0e6] text-[#171412]">
+
+      <style jsx global>{`
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          margin: 0;
+          background: #f5f0e6;
+        }
+
+        .serif {
+          font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .sans {
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .paper {
+          background-color: #f5f0e6;
+          background-image:
+            radial-gradient(
+              rgba(30, 20, 15, 0.04) 0.7px,
+              transparent 0.7px
+            );
+          background-size: 7px 7px;
+        }
+
+        .dark-paper {
+          background-color: #171412;
+          background-image:
+            radial-gradient(
+              rgba(255, 255, 255, 0.025) 0.7px,
+              transparent 0.7px
+            );
+          background-size: 8px 8px;
+        }
+
+        .headline {
+          letter-spacing: -0.065em;
+          line-height: 0.88;
+        }
+
+        .cutout {
+          box-shadow: 0 15px 30px rgba(30, 20, 15, 0.14);
+        }
+
+        .photo {
+          filter: grayscale(90%) contrast(1.06);
+          transition: 0.4s ease;
+        }
+
+        .photo:hover {
+          filter: grayscale(25%) contrast(1.02);
+        }
+      `}</style>
+
+      {/* =====================================================
+          TOP BAR
+      ===================================================== */}
+
+      <div className="bg-[#701d2a] px-5 py-2 text-[#f5f0e6]">
+        <div className="mx-auto flex max-w-[1450px] items-center justify-between">
+          <span className="sans text-[8px] font-bold uppercase tracking-[0.22em]">
+            Apex Public School
+          </span>
+
+          <span className="hidden text-[8px] font-bold uppercase tracking-[0.22em] sm:block">
+            Education • Character • Future
+          </span>
+
+          <span className="sans text-[8px] font-bold uppercase tracking-[0.22em]">
+            2026 Edition
+          </span>
+        </div>
+      </div>
+
+      {/* =====================================================
+          NAVBAR
+      ===================================================== */}
+
+      <header className="sticky top-0 z-50 border-b border-[#171412]/20 bg-[#f5f0e6]/95 backdrop-blur">
+        <div className="mx-auto max-w-[1450px] px-5">
+
+          <div className="flex h-[76px] items-center justify-between">
+
+            <a href="#" className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center bg-[#171412] text-xl font-black text-[#f5f0e6]">
+                A
+              </div>
+
+              <div>
+                <p className="serif text-[19px] font-black leading-none">
+                  APEX
+                </p>
+
+                <p className="sans mt-1 text-[7px] font-bold uppercase tracking-[0.28em]">
+                  Public School
+                </p>
+              </div>
+            </a>
+
+            <nav className="hidden items-center gap-7 lg:flex">
+              <a href="#about" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                About
+              </a>
+
+              <a href="#academics" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                Academics
+              </a>
+
+              <a href="#campus" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                Campus
+              </a>
+
+              <a href="#student-life" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                Student Life
+              </a>
+
+              <a href="#gallery" className="sans text-[9px] font-bold uppercase tracking-[0.16em] hover:text-[#701d2a]">
+                Gallery
+              </a>
+
+              <a
+                href="/online-registration"
+                className="bg-[#701d2a] px-5 py-3 text-[9px] font-bold uppercase tracking-[0.17em] text-white hover:bg-[#171412]"
+              >
+                Admissions
+              </a>
+            </nav>
+
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex h-10 w-10 items-center justify-center border border-[#171412] lg:hidden"
+            >
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+
+          </div>
+
+          {menuOpen && (
+            <div className="border-t border-[#171412]/20 py-5 lg:hidden">
+              <div className="grid gap-4">
+                {[
+                  ["About", "#about"],
+                  ["Academics", "#academics"],
+                  ["Campus", "#campus"],
+                  ["Student Life", "#student-life"],
+                  ["Gallery", "#gallery"],
+                  ["Admissions", "#admissions"],
+                ].map(([name, href]) => (
+                  <a
+                    key={name}
+                    href={href}
+                    onClick={() => setMenuOpen(false)}
+                    className="sans text-[10px] font-bold uppercase tracking-[0.18em]"
+                  >
+                    {name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </header>
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
+
+      
+
+      {/* =====================================================
+          EVENTS
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12 flex items-end justify-between border-b-4 border-[#171412] pb-5">
+
+            <div>
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+                School Calendar
+              </p>
+
+              <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+                What's
+                <br />
+                Happening
+              </h2>
+            </div>
+
+            <CalendarDays className="hidden sm:block" size={35} />
+
+          </div>
+
+          <div className="border-t border-[#171412]">
+
+            {[
+              ["12", "SEP", "Student Orientation", "Main Auditorium"],
+              ["18", "SEP", "Sports Meet", "Sports Ground"],
+              ["26", "SEP", "Cultural Showcase", "School Auditorium"],
+              ["04", "OCT", "Science Exhibition", "Innovation Wing"],
+              ["16", "OCT", "Community Celebration", "School Campus"],
+            ].map(([date, month, title, location]) => (
+              <div
+                key={title}
+                className="grid gap-5 border-b border-black/20 py-6 md:grid-cols-[110px_1fr_250px] md:items-center"
+              >
+
+                <div className="flex items-center gap-3">
+                  <span className="serif text-4xl font-black">
+                    {date}
+                  </span>
+
+                  <span className="sans text-[8px] font-black uppercase text-[#701d2a]">
+                    {month}
+                  </span>
+                </div>
+
+                <h3 className="serif text-2xl font-black">
+                  {title}
+                </h3>
+
+                <p className="sans text-[9px] font-bold uppercase tracking-[0.12em] text-black/45">
+                  {location}
+                </p>
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          GALLERY
+      ===================================================== */}
+
+      <section id="gallery" className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12 flex flex-col justify-between gap-5 border-b-4 border-[#171412] pb-5 md:flex-row md:items-end">
+
+            <div>
+              <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+                Photo Desk
+              </p>
+
+              <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+                Around
+                <br />
+                Apex
+              </h2>
+            </div>
+
+            <p className="max-w-sm text-sm text-black/55">
+              A glimpse into the people, places and moments that make school
+              life memorable.
+            </p>
+
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-12">
+
+            <div className="md:col-span-7">
+
+              <div className="border border-[#171412] bg-[#171412] p-2">
+                <img
+                  src={photos[0]}
+                  alt="Apex Public School"
+                  className="photo h-[500px] w-full object-cover"
+                />
+              </div>
+
+              <p className="sans mt-3 text-[8px] font-bold uppercase tracking-[0.16em]">
+                Figure 01 — The Apex Community
+              </p>
+
+            </div>
+
+            <div className="md:col-span-5">
+
+              <div className="border border-[#171412] bg-[#171412] p-2">
+                <img
+                  src={photos[1]}
+                  alt="Apex students"
+                  className="photo h-[300px] w-full object-cover"
+                />
+              </div>
+
+              <p className="sans mt-3 text-[8px] font-bold uppercase tracking-[0.16em]">
+                Figure 02 — Learning Together
+              </p>
+
+              <div className="mt-8 border border-[#171412] bg-[#171412] p-2">
+                <img
+                  src={photos[2]}
+                  alt="Apex school life"
+                  className="photo h-[300px] w-full object-cover"
+                />
+              </div>
+
+              <p className="sans mt-3 text-[8px] font-bold uppercase tracking-[0.16em]">
+                Figure 03 — School Life
+              </p>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          TESTIMONIALS
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1450px] px-5 py-20">
+
+          <div className="mb-12">
+
+            <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+              Community Voices
+            </p>
+
+            <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+              What They
+              <br />
+              Say.
+            </h2>
+
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+
+            {[
+              ["Student Voice", "A place where I can learn, participate and discover things I did not know I enjoyed."],
+              ["Parent Voice", "The school experience goes beyond academics and gives children opportunities to grow."],
+              ["Community Voice", "A strong school community creates experiences students carry with them."],
+            ].map(([role, quote], index) => (
+              <div
+                key={role}
+                className={`p-7 ${
+                  index === 1
+                    ? "bg-[#701d2a] text-[#f5f0e6]"
+                    : "border border-black/25"
+                }`}
+              >
+
+                <p className="sans text-[8px] font-black uppercase tracking-[0.2em] opacity-60">
+                  {role}
+                </p>
+
+                <p className="serif mt-8 text-2xl font-black leading-tight">
+                  “{quote}”
+                </p>
+
+                <div className="mt-8 h-px bg-current opacity-20" />
+
+                <p className="sans mt-3 text-[8px] font-black uppercase tracking-[0.15em] opacity-50">
+                  Apex Community
+                </p>
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          ADMISSIONS
+      ===================================================== */}
+
+      <section
+        id="admissions"
+        className="dark-paper px-5 py-20 text-[#f5f0e6]"
+      >
+
+        <div className="mx-auto max-w-[1300px]">
+
+          <div className="border-2 border-white/40 p-2">
+
+            <div className="border border-white/20 px-6 py-14 text-center sm:px-12">
+
+              <p className="sans text-[8px] font-black uppercase tracking-[0.3em] text-[#d5a75e]">
+                Special Admission Bulletin
+              </p>
+
+              <h2 className="headline serif mt-7 text-6xl font-black uppercase sm:text-8xl lg:text-[115px]">
+                Begin
+                <br />
+                Your
+                <br />
+                Story.
+              </h2>
+
+              <p className="mx-auto mt-8 max-w-xl text-sm leading-6 text-white/50">
+                Discover a school experience where learning, creativity,
+                character and community come together.
+              </p>
+
+              <a
+                href="/online-registration"
+                className="mt-8 inline-flex items-center gap-3 bg-[#d5a75e] px-7 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-[#171412] hover:bg-white"
+              >
+                Explore Admissions
+                <ArrowRight size={15} />
+              </a>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          FAQ
+      ===================================================== */}
+
+      <section className="paper border-b border-black/20">
+
+        <div className="mx-auto max-w-[1050px] px-5 py-20">
+
+          <div className="mb-12 text-center">
+
+            <p className="sans text-[8px] font-black uppercase tracking-[0.25em] text-[#701d2a]">
+              Readers Ask
+            </p>
+
+            <h2 className="headline serif mt-4 text-6xl font-black uppercase sm:text-8xl">
+              FAQ
+            </h2>
+
+          </div>
+
+          <div className="border-t-2 border-[#171412]">
+
+            {faqs.map((faq, index) => {
+              const isOpen = openFaq === index;
+
+              return (
+                <div
+                  key={faq.q}
+                  className="border-b border-black/20"
+                >
+
+                  <button
+                    onClick={() =>
+                      setOpenFaq(isOpen ? null : index)
+                    }
+                    className="flex w-full items-center justify-between gap-5 py-6 text-left"
+                  >
+
+                    <div className="flex items-center gap-5">
+
+                      <span className="sans text-[8px] font-black text-[#701d2a]">
+                        0{index + 1}
+                      </span>
+
+                      <span className="serif text-xl font-black sm:text-2xl">
+                        {faq.q}
+                      </span>
+
+                    </div>
+
+                    <ChevronDown
+                      size={18}
+                      className={`shrink-0 transition-transform ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                    />
+
+                  </button>
+
+                  {isOpen && (
+                    <div className="pb-6 pl-10 pr-10">
+                      <p className="text-sm leading-6 text-black/55">
+                        {faq.a}
+                      </p>
+                    </div>
+                  )}
+
+                </div>
+              );
+            })}
+
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          FINAL CTA
+      ===================================================== */}
+
+      <section className="paper relative overflow-hidden px-5 py-24">
+
+        <div className="cutout absolute left-[5%] top-[20%] hidden w-[165px] -rotate-6 bg-[#e7ddce] p-4 lg:block">
+
+          <p className="sans text-[7px] font-black uppercase tracking-[0.2em]">
+            Future Edition
+          </p>
+
+          <p className="serif mt-3 text-3xl font-black leading-[0.82]">
+            WRITE
+            <br />
+            YOUR
+            <br />
+            STORY.
+          </p>
+
+        </div>
+
+        <div className="cutout absolute right-[6%] top-[20%] hidden w-[160px] rotate-6 bg-[#701d2a] p-4 text-[#f5f0e6] lg:block">
+
+          <p className="sans text-[7px] font-black uppercase tracking-[0.2em]">
+            Apex
+          </p>
+
+          <p className="serif mt-3 text-2xl font-black leading-[0.82]">
+            YOUR
+            <br />
+            TIME
+            <br />
+            IS NOW.
+          </p>
+
+        </div>
+
+        <div className="mx-auto max-w-[1100px] text-center">
+
+          <p className="sans text-[8px] font-black uppercase tracking-[0.28em] text-[#701d2a]">
+            The Final Page
+          </p>
+
+          <h2 className="headline serif mt-6 text-[17vw] font-black uppercase sm:text-[110px] lg:text-[150px]">
+            Make
+            <br />
+            Your
+            <br />
+            Mark.
+          </h2>
+
+          <p className="mx-auto mt-8 max-w-xl text-base leading-7 text-black/60">
+            Every student has a story waiting to be written. Discover the
+            place where your next chapter can begin.
+          </p>
+
+          <a
+            href="/online-registration"
+            className="mt-8 inline-flex items-center gap-3 bg-[#171412] px-7 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-[#f5f0e6] hover:bg-[#701d2a]"
+          >
+            Start Your Journey
+            <ArrowRight size={15} />
+          </a>
+
+        </div>
+      </section>
+
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+      <footer className="bg-[#171412] px-5 py-12 text-[#f5f0e6]">
+
+        <div className="mx-auto max-w-[1450px]">
+
+          <div className="grid gap-10 border-b border-white/15 pb-10 md:grid-cols-[1.5fr_0.5fr_0.5fr]">
+
+            <div>
+
+              <p className="serif text-5xl font-black">
+                APEX
+              </p>
+
+              <p className="sans mt-2 text-[8px] font-bold uppercase tracking-[0.3em] text-white/40">
+                Public School
+              </p>
+
+              <p className="mt-6 max-w-md text-sm leading-6 text-white/45">
+                A school community built around learning, curiosity,
+                creativity, character and meaningful experiences.
+              </p>
+
+            </div>
+
+            <div>
+
+              <p className="sans mb-4 text-[8px] font-black uppercase tracking-[0.2em] text-[#d5a75e]">
+                Explore
+              </p>
+
+              <div className="grid gap-3 text-xs text-white/50">
+                <a href="#about">About</a>
+                <a href="#academics">Academics</a>
+                <a href="#campus">Campus</a>
+                <a href="#student-life">Student Life</a>
+              </div>
+
+            </div>
+
+            <div>
+
+              <p className="sans mb-4 text-[8px] font-black uppercase tracking-[0.2em] text-[#d5a75e]">
+                Visit
+              </p>
+
+              <div className="grid gap-3 text-xs text-white/50">
+                <a href="#gallery">Gallery</a>
+                <a href="/online-registration">Admissions</a>
+                <a href="/">Main Website</a>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="flex flex-col justify-between gap-4 pt-6 text-[8px] font-bold uppercase tracking-[0.15em] text-white/25 sm:flex-row">
+            <span>© 2026 Apex Public School</span>
+            <span>The Apex Chronicle • Website Concept</span>
+            <span>Edition 01</span>
+          </div>
+
+        </div>
+      </footer>
+
+    </main>
+  );
+}
+
+
+
+
+
