@@ -80,7 +80,7 @@ Head Academic Coordinator`,
   hero_back_label: "About Apex",
   hero_back_url: "/about",
 
-  image_label: "Academic Leadership",
+  image_label: "",
   profile_label: "Head Academic Coordinator's Message",
 
   message_heading_line_1: "Academic leadership",
@@ -350,11 +350,6 @@ export default async function HeadAcademicCoordinatorPage() {
               )}
 
               <div className="absolute inset-0 bg-gradient-to-t from-[#071A38]/90 via-[#071A38]/10 to-transparent" />
-
-              <div className="absolute left-7 top-7 rounded-full border border-white/15 bg-black/10 px-4 py-2 text-[9px] uppercase tracking-[0.24em] text-white/75 backdrop-blur-md">
-                {coordinator.image_label ||
-                  fallbackCoordinator.image_label}
-              </div>
 
               <div className="absolute bottom-8 left-7 right-7 md:bottom-10 md:left-9 md:right-9">
 

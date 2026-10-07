@@ -54,7 +54,7 @@ const defaultData: ManagerPage = {
   hero_back_label: "About Apex",
   hero_back_url: "/about",
 
-  image_label: "School Administration",
+  image_label: "",
   profile_label: "Manager's Profile",
 
   leadership_label: "Leadership",

@@ -78,7 +78,7 @@ Apex Public School greets all of you, the parents, the students and the readers.
   back_link_url: "/about",
 
   message_label: "Principal's Message",
-  image_label: "School Leadership",
+  image_label: "",
 
   philosophy_section_enabled: true,
 

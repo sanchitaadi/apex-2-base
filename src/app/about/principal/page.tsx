@@ -86,7 +86,7 @@ So let us unleash the great potential that our children have and bring them up n
   back_link_url: "/about",
 
   message_label: "Principal's Message",
-  image_label: "School Leadership",
+  image_label: "",
 
   philosophy_section_enabled: true,
 
@@ -217,11 +217,6 @@ export default async function PrincipalPage() {
       fallbackPrincipal.eyebrow!
     );
 
-  const imageLabel = value(
-    principal.image_label,
-    fallbackPrincipal.image_label!
-  );
-
   const messageLabel =
     value(
       principal.message_label,
@@ -346,10 +341,6 @@ export default async function PrincipalPage() {
               )}
 
               <div className="absolute inset-0 bg-gradient-to-t from-[#071A38]/90 via-[#071A38]/10 to-transparent" />
-
-              <div className="absolute left-7 top-7 rounded-full border border-white/15 bg-black/10 px-4 py-2 text-[9px] uppercase tracking-[0.24em] text-white/75 backdrop-blur-md">
-                {imageLabel}
-              </div>
 
               <div className="absolute bottom-8 left-7 right-7 md:bottom-10 md:left-9 md:right-9">
 
@@ -591,3 +582,5 @@ export default async function PrincipalPage() {
     </main>
   );
 }
+
+

@@ -78,7 +78,7 @@ Mrs. Kiran Chadha
   image_url: "https://apexpublicschool.in/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-06-at-8.30.25-AM-461x1024.jpeg",
   hero_back_label: "About Apex",
   hero_back_url: "/about",
-  image_label: "School Leadership",
+  image_label: "",
   profile_label: "Head Mistress's Message",
   message_heading_line_1: "A shared vision",
   message_heading_line_2: "for excellence.",
@@ -233,10 +233,6 @@ export default function HeadMistressPublicPage() {
 
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#071A38]/95 via-[#071A38]/15 to-transparent" />
 
-              <div className="absolute left-7 top-7 rounded-full border border-white/15 bg-black/10 px-4 py-2 text-[9px] uppercase tracking-[0.24em] text-white/75 backdrop-blur-md">
-                {page.image_label || officialDefaults.image_label}
-              </div>
-
               <div className="absolute bottom-8 left-7 right-7 md:bottom-10 md:left-9 md:right-9">
                 <p className="text-[9px] uppercase tracking-[0.28em] text-[#F5F0E6]/50">
                   {page.person_role || officialDefaults.person_role}
@@ -358,5 +354,6 @@ export default function HeadMistressPublicPage() {
     </main>
   );
 }
+
 
 

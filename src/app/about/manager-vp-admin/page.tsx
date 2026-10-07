@@ -54,7 +54,7 @@ const fallbackManager: ManagerPage = {
 
   hero_back_label: "About Apex",
   hero_back_url: "/about",
-  image_label: "School Administration",
+  image_label: "",
   profile_label: "Manager's Profile",
 
   leadership_label: "Leadership",
@@ -253,11 +253,6 @@ export default async function ManagerVPAdminPage() {
               )}
 
               <div className="absolute inset-0 bg-gradient-to-t from-[#071A38]/90 via-transparent to-transparent" />
-
-              <div className="absolute left-7 top-7 rounded-full border border-white/15 bg-black/10 px-4 py-2 text-[9px] uppercase tracking-[0.24em] text-white/75 backdrop-blur-md">
-                {manager.image_label ||
-                  fallbackManager.image_label}
-              </div>
 
               <div className="absolute bottom-8 left-7 right-7 md:left-9 md:right-9">
 

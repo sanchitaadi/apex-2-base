@@ -85,7 +85,7 @@ Welcome once again and I sincerely hope that our website will raise your interes
   hero_back_label: "About Apex",
   hero_back_url: "/about",
 
-  image_label: "Apex Leadership",
+  image_label: "",
   profile_label:
     "From the Chief Executive Officer's Desk",
 
@@ -383,11 +383,6 @@ export default async function CEOPage() {
               )}
 
               <div className="absolute inset-0 bg-gradient-to-t from-[#071A38]/90 via-[#071A38]/10 to-transparent" />
-
-              <div className="absolute left-7 top-7 rounded-full border border-white/15 bg-black/10 px-4 py-2 text-[9px] uppercase tracking-[0.24em] text-white/75 backdrop-blur-md">
-                {ceo.image_label ||
-                  fallbackCEO.image_label}
-              </div>
 
               <div className="absolute bottom-8 left-7 right-7 md:bottom-10 md:left-9 md:right-9">
 
