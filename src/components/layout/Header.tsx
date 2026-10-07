@@ -188,10 +188,6 @@ function DesktopDropdown({
           rounded-full
           px-2
           xl:px-2.5
-          text-[12px]
-          xl:text-[13px]
-          font-medium
-          leading-none
           transition-all
           duration-300
           hover:bg-[color-mix(in_srgb,var(--cms-secondary)_10%,transparent)]
@@ -203,8 +199,13 @@ function DesktopDropdown({
           }
         `}
         style={{
-          color: "var(--cms-secondary)",
-        }}
+  color: "var(--cms-white)",
+  backgroundColor: "transparent",
+  fontSize: "13px",
+  fontWeight: 500,
+  lineHeight: "1",
+  fontFamily: "inherit",
+}}
       >
         <span className="whitespace-nowrap">
           {item.label}
@@ -909,7 +910,11 @@ export default function Header() {
                     alt={`${siteSettings.school_name} logo`}
                     fill
                     priority
-                    sizes="(max-width: 639px) 40px, (max-width: 1279px) 50px, 56px"
+                    sizes="
+                      (max-width: 639px) 40px,
+                      (max-width: 1279px) 50px,
+                      56px
+                    "
                     className="
                       object-contain
                       p-2
@@ -935,7 +940,6 @@ export default function Header() {
                       sm:tracking-[0.09em]
                       xl:text-[14px]
                       xl:tracking-[0.1em]
-                      2xl:text-[15px]
                     "
                     style={{
                       color:

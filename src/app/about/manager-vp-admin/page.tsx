@@ -74,15 +74,11 @@ const fallbackManager: ManagerPage = {
 };
 
 function Paragraphs({ text }: { text: string }) {
+  const formattedText = text.replace(/\r\n/g, "\n").replace(/\n\s*\*\s*\n/g, "\n\n");
+
   return (
-    <div className="space-y-6 text-sm leading-8 text-[#10203A]/65 md:text-base">
-      {text.split(/\n\s*\n/).map((paragraph, index) => {
-        const value = paragraph.trim();
-
-        if (!value) return null;
-
-        return <p key={index}>{value}</p>;
-      })}
+    <div className="whitespace-pre-wrap text-sm leading-8 text-[#10203A]/65 md:text-base">
+      {formattedText}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-
+import { publicDocumentUrl } from "@/lib/publicDocumentUrl";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -98,13 +98,17 @@ export default async function MandatoryDisclosurePage() {
           ===================================================== */
           <div className="space-y-6">
             {disclosureDocuments.map((document) => {
-              const documentUrl = document.document_url?.trim();
+             const documentUrl = document.document_url?.trim();
 
-              const validDocumentUrl =
-                documentUrl &&
-                documentUrl !== "YOUR_ACTUAL_PDF_URL" &&
-                !documentUrl.includes("example.com");
+const publicUrl = publicDocumentUrl(
+  documentUrl,
+  document.description
+);
 
+const validDocumentUrl =
+  documentUrl &&
+  documentUrl !== "YOUR_ACTUAL_PDF_URL" &&
+  !documentUrl.includes("example.com");
               return (
                 <div
                   key={
@@ -168,7 +172,7 @@ export default async function MandatoryDisclosurePage() {
                   ================================================= */}
                   {validDocumentUrl ? (
                     <a
-                      href={documentUrl}
+                      href={publicUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`View ${document.description}`}
