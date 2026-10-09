@@ -48,7 +48,11 @@ const PDF_MAP: Record<string, string> = {
 
   "2026/05/LIST-OF-PRT-2026-2027.pdf":
     "https://gkuuvmfuilrbvlwzburj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791399567241-list-of-prt-2026-27.pdf",
-};
+
+  "2025/09/Copy-of-NOC-NO-OBJECTION-CERTIFICATE.pdf":
+  "https://gkuuvmfuilrbvlwzburj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791538099932-copy-of-recognition-certificate.pdf",
+
+  };
 
 // The NOC URL from the uploaded CBSE disclosure PDF is intentionally not
 // mapped here because the current mandatory_public_disclosures export does
