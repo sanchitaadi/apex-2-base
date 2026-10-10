@@ -1459,9 +1459,9 @@ body, header, footer, section, article, main, button, a {
    ========================================================= */
 
 .cms-page {
-  margin-top: -132px !important;
+  margin-top: 0 !important;
   padding-top: 0 !important;
   position: relative;
   z-index: 1;
+  background: transparent;
 }
-

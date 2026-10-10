@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -660,7 +660,7 @@ export default function Header() {
 
   useEffect(() => {
     function handleResize() {
-      if (window.innerWidth >= 1536) {
+      if (window.innerWidth >= 1280) {
         setMobileOpen(false);
         setMobileSections([]);
       }
@@ -748,7 +748,7 @@ export default function Header() {
                   "color-mix(in srgb, var(--cms-secondary) 25%, transparent)",
               }}
             >
-              â€¢
+              •
             </span>
 
             <span
@@ -1273,7 +1273,7 @@ export default function Header() {
                   shrink-0
                   place-items-center
                   rounded-full
-                  2xl:hidden
+                  xl:hidden
                   sm:h-11
                   sm:w-11
                 "

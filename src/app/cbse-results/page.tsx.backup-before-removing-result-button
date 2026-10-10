@@ -1,4 +1,4 @@
-﻿import {
+import {
   ArrowUpRight,
   Award,
   FileText,
@@ -254,6 +254,45 @@ export default async function CBSEResultsPage() {
                       </div>
 
                     </div>
+
+                    {banner.pdf_url && (
+                     <a
+  href={banner.pdf_url}
+  target="_blank"
+  rel="noreferrer"
+  className="
+    inline-flex
+    items-center
+    justify-center
+    gap-2
+    rounded-full
+    bg-[#102A56]
+    px-5
+    py-3
+    text-sm
+    font-semibold
+    !text-[#F5F0E6]
+    transition
+    duration-300
+    hover:bg-[#1B3D73]
+    hover:-translate-y-0.5
+  "
+>
+  <span className="!text-[#F5F0E6]">
+    View complete result
+  </span>
+
+  <ArrowUpRight
+    size={15}
+    className="
+      !text-[#F5F0E6]
+      transition-transform
+      duration-300
+      group-hover:translate-x-0.5
+    "
+  />
+</a>
+                    )}
 
                   </div>
 

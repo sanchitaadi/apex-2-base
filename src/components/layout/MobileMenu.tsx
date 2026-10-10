@@ -55,7 +55,7 @@ export default function MobileMenu({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] xl:hidden">
+    <div className="fixed inset-0 z-[300] 2xl:hidden">
       {/* Backdrop */}
       <button
         type="button"
