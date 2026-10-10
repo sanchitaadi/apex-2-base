@@ -748,7 +748,7 @@ export default function Header() {
                   "color-mix(in srgb, var(--cms-secondary) 25%, transparent)",
               }}
             >
-              
+              â€¢
             </span>
 
             <span
@@ -982,7 +982,7 @@ export default function Header() {
                   justify-center
                   gap-0
                   overflow-visible
-                  min-[1441px]:flex
+                  2lg:flex
                 "
               >
                 {loadingNavigation ? (
@@ -1126,7 +1126,7 @@ export default function Header() {
                   justify-end
                   gap-2
                   pl-2
-                  min-[1441px]:flex
+                  2lg:flex
                   2xl:w-[180px]
                   2xl:min-w-[180px]
                   2xl:gap-3
@@ -1273,7 +1273,7 @@ export default function Header() {
                   shrink-0
                   place-items-center
                   rounded-full
-                  min-[1441px]:hidden
+                  2lg:hidden
                   sm:h-11
                   sm:w-11
                 "
@@ -1319,7 +1319,7 @@ export default function Header() {
   sm:top-[calc(9.5rem+env(safe-area-inset-top))]
   sm:max-h-[calc(100dvh-10.5rem)]
   sm:rounded-[26px]
-  min-[1441px]:hidden
+  2lg:hidden
 "
           style={{
             backgroundColor:
@@ -1497,10 +1497,4 @@ export default function Header() {
     </>
   );
 }
-
-
-
-
-
-
 

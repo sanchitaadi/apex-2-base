@@ -803,7 +803,7 @@ export default function Header() {
 
 <header
   data-static-motion
-  className="sticky top-9 z-[100] -mb-[115px] isolate"
+  className="sticky top-9 z-[100] isolate"
   style={{
     background: "transparent",
   }}
@@ -814,9 +814,9 @@ export default function Header() {
       mx-auto
       max-w-[1600px]
       px-3
-      pt-3
+      pt-0
       sm:px-4
-      sm:pt-4
+      sm:pt-0
       md:px-8
     "
   >
@@ -1497,8 +1497,6 @@ export default function Header() {
     </>
   );
 }
-
-
 
 
 
