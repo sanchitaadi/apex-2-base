@@ -22,6 +22,7 @@ type AcademicsSettings = {
   heading_line_1: string;
   heading_line_2: string;
   description: string;
+  senior_secondary_image_url: string;
 
   explore_button_label: string;
   explore_button_url: string;
@@ -103,7 +104,7 @@ const fallbackSettings: AcademicsSettings = {
     "that feels like yours.",
   senior_secondary_description:
     "Senior secondary education opens the door to more focused study. Apex offers academic pathways in Science, Commerce and Humanities.",
-
+  senior_secondary_image_url: "",
   stream_button_label: "Explore",
   stream_button_url:
     "/academics/senior-secondary",
@@ -460,7 +461,9 @@ export default function Academics() {
               cleanValue(
                 data.senior_secondary_description
               ),
-
+senior_secondary_image_url: cleanValue(
+  data.senior_secondary_image_url
+),
             stream_button_label:
               cleanValue(
                 data.stream_button_label
@@ -1117,28 +1120,24 @@ export default function Academics() {
                   bg-[#163A6D]
                 "
               >
-                {seniorSecondaryStage?.image_url ? (
-                  <img
-                    src={
-                      seniorSecondaryStage.image_url
-                    }
-                    alt={
-                      settings.senior_secondary_label
-                    }
-                    className="
-                      absolute
-                      inset-0
-                      h-full
-                      w-full
-                      object-cover
-                      opacity-50
-                      transition
-                      duration-[1200ms]
-                      group-hover:scale-105
-                      group-hover:opacity-65
-                    "
-                  />
-                ) : null}
+               {settings.senior_secondary_image_url ? (
+  <img
+    src={settings.senior_secondary_image_url}
+    alt={settings.senior_secondary_label}
+    className="
+      absolute
+      inset-0
+      h-full
+      w-full
+      object-cover
+      opacity-50
+      transition
+      duration-[1200ms]
+      group-hover:scale-105
+      group-hover:opacity-65
+    "
+  />
+) : null}
 
                 <div
                   className="
