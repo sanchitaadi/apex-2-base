@@ -187,7 +187,7 @@ export default function AdminAdmissionNoticePage() {
       .from(BUCKET)
       .upload(path, file, {
         upsert: false,
-        cacheControl: "3600",
+        cacheControl: "31536000",
         contentType: file.type,
       });
 

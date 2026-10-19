@@ -152,7 +152,7 @@ export default function HeroAdminPage() {
         .from("hero")
         .upload(filePath, file, {
           upsert: false,
-          cacheControl: "3600",
+          cacheControl: "31536000",
         });
 
       if (uploadError) {

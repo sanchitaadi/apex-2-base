@@ -1,0 +1,4211 @@
+-- =====================================================================
+-- COMPLETE SUPABASE RESTORE SCRIPT (TABLES + DATA + BUCKETS + POLICIES)
+-- Target: Run this in the SQL Editor of your NEW Supabase project
+-- =====================================================================
+
+-- 0. ENABLE REQUIRED EXTENSIONS & SECURITY FUNCTIONS
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Helper function for admin RLS policies
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE id = auth.uid()
+      AND is_active = true
+      AND role IN ('admin', 'super_admin')
+  ) OR EXISTS (
+    SELECT 1 FROM public.admin_profiles
+    WHERE id = auth.uid()
+      AND is_active = true
+      AND role IN ('owner', 'admin', 'super_admin')
+  );
+END;
+$$;
+
+-- ---------------------------------------------------------------------
+-- 1. STORAGE BUCKETS (20 Buckets)
+-- ---------------------------------------------------------------------
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('site-assets', 'site-assets', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('hero', 'hero', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('faculty', 'faculty', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('gallery', 'gallery', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('about', 'about', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('about-pages', 'about-pages', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('campus', 'campus', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('apexian-accolade', 'apexian-accolade', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('academic-resources', 'academic-resources', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('cbse-results', 'cbse-results', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('academic-coordinators', 'academic-coordinators', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('admission-criteria', 'admission-criteria', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('admission-applications', 'admission-applications', false, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('sdg', 'sdg', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('apex-notices', 'apex-notices', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('documents', 'documents', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('admission-notices', 'admission-notices', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('apex-admission-notices', 'apex-admission-notices', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('mandatory-disclosures', 'mandatory-disclosures', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('apex-blogs', 'apex-blogs', true, NULL, NULL)
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public;
+
+-- ---------------------------------------------------------------------
+-- 2. TABLE SCHEMAS & DATA
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS "public"."blogs" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."pages" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."events" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."faculty" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."notices" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "slug" text,
+  "title" text,
+  "content" text,
+  "excerpt" text,
+  "category" text,
+  "file_url" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "is_pinned" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "expiry_date" date,
+  "notice_date" date,
+  "notice_type" text,
+  "storage_url" text,
+  "document_url" text,
+  "external_url" text,
+  "is_published" boolean DEFAULT true,
+  "published_at" timestamptz DEFAULT now(),
+  "short_description" text,
+  "homepage_button_url" text,
+  "homepage_button_label" text
+);
+
+-- Data for notices (18 rows)
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('2eb9dbf4-074c-4956-b466-dfed6c403352', 'vyom-surya-district-instrumental-percussion', 'VYOM SURYA secured 1st position in the District Instrumental Percussion Competition', 'VYOM SURYA secured 1st position in the District Instrumental Percussion Competition held on 12th September 2025.', NULL, 'Achievement', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 101, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-13', 'Notice', NULL, NULL, NULL, true, NULL, 'VYOM SURYA secured 1st position in the District Instrumental Percussion Competition.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('47b8a0e8-bfb9-421f-86e4-4eb2fde00e28', 'celebrating-talent-and-dedication', 'Celebrating Talent and Dedication!', 'We are proud to share the achievements of our students at the district level.', NULL, 'Achievement', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 102, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-12', 'Notice', NULL, NULL, NULL, true, NULL, 'Apex students achieved a 2nd position in a district-level competition.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('4c041d1f-f30f-4956-90ce-d4042a2b46cc', 'folk-song-talent-shines-at-district-level', 'Folk Song Talent Shines at District Level!', 'Our talented students brought glory to the school by winning 3rd Position in the District Folk Song Competition.', NULL, 'Achievement', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 103, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-11', 'Notice', NULL, NULL, NULL, true, NULL, 'Apex students brought glory to the school by securing 3rd position.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('09c6440b-9968-4db2-a9f6-635bf5f66dbc', 'proud-achievement-alert', 'Proud Achievement Alert!', 'Our brilliant young debaters made us proud at the District Level Competition.', NULL, 'Achievement', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 104, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-11', 'Notice', NULL, NULL, NULL, true, NULL, 'Our young debaters achieved a district-level result.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('4b765966-b04e-4cc7-bc80-04c7cbb80902', 'district-level-achievement-kavya-rawat', 'District Level Achievement!', 'Kavya Rawat of Class 8 secured 1st Position at the District Level Competition.', NULL, 'Achievement', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 105, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-11', 'Notice', NULL, NULL, NULL, true, NULL, 'Kavya Rawat of Class 8 secured 1st position.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('5310c362-bc43-4b81-8865-ac8ec29bd44d', 'cbse-nationals-day-1-highlights', 'CBSE Nationals – Day 1 Highlights', 'Apex Public School secured a commendable victory against Kalyani Public School, Pune.', NULL, 'Sports', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 107, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-10', 'Notice', NULL, NULL, NULL, true, NULL, 'Apex Public School secured a victory at the CBSE Nationals.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('5bad7fbd-c0e0-42e6-a9cb-010c547f19d9', 'district-level-best-out-of-waste-competition', 'District Level Best Out of Waste Competition', 'We are thrilled to share the achievements of our students who participated in the District Level Best Out of Waste Competition.', NULL, 'Achievement', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 100, '2026-09-04T22:32:30.861+00:00', NULL, '2025-09-13', 'Notice', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/apex-notices/documents/1788561146936-whatsapp-image-2026-04-24-at-15-07-00.pdf', NULL, true, NULL, 'Our students participated in the District Level Best Out of Waste Competition.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('f6681dd7-062f-443d-9bfc-2af5cf466ab2', 'cbse-nationals-day-2-highlights', 'CBSE Nationals – Day 2 Highlights', 'Apex Public School competed against Suguna PIP School, Kalapatty R.D., Coimbatore, Tamil Nadu, in a closely contested match.', NULL, 'Sports', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 106, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-10', 'Notice', NULL, NULL, NULL, true, NULL, 'Apex Public School competed at the CBSE Nationals.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('2b7ba620-f136-4975-92a0-e05ac3669085', 'victory-in-voice-3rd-place-hindi-debate', 'Victory in Voice: 3rd Place in Hindi Debate', 'Our Junior Boys secured 3rd Place in the Hindi Debate at the district level.', NULL, 'Achievement', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 108, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-10', 'Notice', NULL, NULL, NULL, true, NULL, 'Apex students secured 3rd place in Hindi Debate.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('7eb06201-ab77-4810-a2a9-77ab2b0451c6', 'district-qawwali-competition', 'District Qawwali Competition', 'Our children secured 2nd position in the District Qawwali Competition held at RPVV.', NULL, 'Achievement', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 109, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-09-10', 'Notice', NULL, NULL, NULL, true, NULL, 'Our children secured 2nd position in the District Qawwali Competition.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('9074e773-07f9-4408-a1b8-2fd5a6476711', 'august-ptm-notice', 'August PTM Notice', 'Parent Teacher Meeting notice for August 2025.', NULL, 'PTA', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 110, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-08-06', 'Notice', NULL, NULL, NULL, true, NULL, NULL, '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('07e5de54-0f7f-4735-9c83-d1de842c7362', 'campus-chronicles-july-2025', 'Campus Chronicles – July', 'July Highlights from Apex Public School including stories, achievements and updates from the school community.', NULL, 'Newsletter', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 111, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-08-01', 'Notice', NULL, NULL, NULL, true, NULL, 'July highlights from Apex Public School.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('8d409cf5-4df7-4d3d-af65-7fc7da611ec6', 'may-buzz-2025', 'May Buzz', 'May Buzz — Apex Public School digital newsletter covering updates, achievements and activities.', NULL, 'Newsletter', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 112, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-05-31', 'Notice', NULL, NULL, NULL, true, NULL, 'May edition of the Apex Public School digital newsletter.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('8afa507c-1f82-4f15-8822-48c22fa2f24e', 'admission-notice-2025', 'Admission Notice', 'Admission Information Document for Apex Public School.', NULL, 'Admission', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 113, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-05-28', 'Notice', NULL, NULL, NULL, true, NULL, 'Admission information for the 2025-2026 session.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('a29e9cbe-ebdd-479e-961b-3804c6ae9c8e', 'summer-vacation-notice-vi-xii-2025', 'Summer Vacation Notice VI-XII', 'Summer Vacation Notice for students of Classes VI to XII.', NULL, 'Holiday', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 114, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-05-22', 'Notice', NULL, NULL, NULL, true, NULL, 'Summer vacation notice for Classes VI to XII.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('97d0fc76-fa33-4996-b83d-d43de94c790d', 'summer-vacation-notice-i-v-2025', 'Summer Vacation Notice I-V', 'Summer Vacation Notice for students of Classes I to V.', NULL, 'Holiday', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 115, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-05-20', 'Notice', NULL, NULL, NULL, true, NULL, 'Summer vacation notice for Classes I to V.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('e3d53d1a-7409-45ca-a918-1f294137401e', 'notice-20-5-2025', 'Notice – 20/5', 'School notice dated 20 May 2025.', NULL, 'General', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 116, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-05-20', 'Notice', NULL, NULL, NULL, true, NULL, NULL, '/notices', 'Read more') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."notices" ("id", "slug", "title", "content", "excerpt", "category", "file_url", "image_url", "is_active", "is_pinned", "created_at", "sort_order", "updated_at", "expiry_date", "notice_date", "notice_type", "storage_url", "document_url", "external_url", "is_published", "published_at", "short_description", "homepage_button_url", "homepage_button_label") VALUES ('db651540-7171-411f-a10f-120af4548582', 'avril-en-fleur-april-2025', 'Avril en Fleur – April 2025', 'April Insights Unveiled — the April edition of Apex Public School’s digital newsletter featuring updates and achievements.', NULL, 'Newsletter', NULL, NULL, true, false, '2026-09-02T23:02:05.443668+00:00', 117, '2026-09-02T23:02:05.443668+00:00', NULL, '2025-04-30', 'Notice', NULL, NULL, NULL, true, NULL, 'April edition of the Apex Public School digital newsletter.', '/notices', 'Read more') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."cms_blogs" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."cms_pages" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "slug" text,
+  "title" text,
+  "status" text,
+  "seo_title" text,
+  "created_at" timestamptz DEFAULT now(),
+  "updated_at" timestamptz DEFAULT now(),
+  "layout_json" jsonb DEFAULT '{}'::jsonb,
+  "seo_description" text
+);
+
+-- Data for cms_pages (2 rows)
+INSERT INTO "public"."cms_pages" ("id", "slug", "title", "status", "seo_title", "created_at", "updated_at", "layout_json", "seo_description") VALUES ('93dc2816-a042-4598-bfe0-cf32a1c68821', 'aa', 'aa', 'draft', '', '2026-10-01T14:38:59.26343+00:00', '2026-10-01T14:38:59.26343+00:00', '{"sections":[]}'::jsonb, '') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."cms_pages" ("id", "slug", "title", "status", "seo_title", "created_at", "updated_at", "layout_json", "seo_description") VALUES ('a361067a-7311-409b-9727-df0bbb70ea63', 'campus-life', 'Campus Life', 'published', '', '2026-10-03T00:23:00.543012+00:00', '2026-10-03T00:45:19.919+00:00', '{"sections":[{"id":"d7910746-7ee0-467d-a854-f3bbc6140a70","type":"hero","title":"Campus Life at Apex Public School","content":"A vibrant campus where students learn, explore, create and grow together.","padding":"80px","visible":true,"alignment":"left","image_url":"","button_url":"#","text_color":"#fff700","button_text":"Learn More","background_color":"#0066ff"},{"id":"39e35cd6-68c3-4b0d-b79a-706aa9863083","type":"text","title":"More Than a Classroom","content":"At Apex Public School, campus life is designed to encourage curiosity, collaboration and confidence. Students participate in academic activities, sports, cultural events, clubs and leadership opportunities that make school life meaningful and memorable.","padding":"60px","visible":true,"alignment":"left","image_url":"","button_url":"","text_color":"#2b18b4","button_text":"","background_color":"#8ae64c"},{"id":"bf4fcaac-bba9-45d0-a72d-b388575dc369","type":"image","title":"Our Campus","content":"GREAT STUDENTS","padding":"60px","visible":true,"alignment":"center","image_url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/page-builder/a361067a-7311-409b-9727-df0bbb70ea63/bf4fcaac-bba9-45d0-a72d-b388575dc369-whatsapp-image-2023-01-02-at-1-1790987229070.jpg","button_url":"","text_color":"#2bff00","button_text":"","background_color":"#7b24ff"},{"id":"1f05a181-991b-4470-a0c7-1d840d43fce5","type":"cards","title":"Campus Highlights","content":"Discover the experiences that make life at Apex Public School special.","padding":"60px","visible":true,"alignment":"left","image_url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/page-builder/a361067a-7311-409b-9727-df0bbb70ea63/1f05a181-991b-4470-a0c7-1d840d43fce5-1132472292-1790987394597.jpg","button_url":"","text_color":"#13294b","button_text":"","background_color":"#e90101"},{"id":"e524db9e-c867-435a-98aa-b8c1c63e1516","type":"text","title":"Experience Apex","content":"Every day at Apex Public School is an opportunity to learn something new, build meaningful friendships and discover your potential.","padding":"60px","visible":true,"alignment":"left","image_url":"","button_url":"","text_color":"#212121","button_text":"","background_color":"#ffd500"}]}'::jsonb, '') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."documents" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."sdg_items" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "number" integer DEFAULT 0,
+  "content" text,
+  "eyebrow" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "button_text" text,
+  "description" text,
+  "short_title" text,
+  "external_url" text
+);
+
+-- Data for sdg_items (17 rows)
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('765cb531-c31e-4641-a693-fbda65d88b11', 'SDG 1 — No Poverty', 1, NULL, 'Sustainable Development Goal 01', NULL, true, '2026-09-04T11:07:47.229918+00:00', 1, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'End poverty in all its forms everywhere.', 'No Poverty', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('8003a2ff-561d-49bb-96fb-4b1baba2eb75', 'SDG 2 — Zero Hunger', 2, NULL, 'Sustainable Development Goal 02', NULL, true, '2026-09-04T11:07:47.229918+00:00', 2, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'End hunger, achieve food security and improved nutrition, and promote sustainable agriculture.', 'Zero Hunger', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('307330aa-7e96-4eae-820f-de8294aff378', 'SDG 3 — Good Health and Well-being', 3, NULL, 'Sustainable Development Goal 03', NULL, true, '2026-09-04T11:07:47.229918+00:00', 3, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Ensure healthy lives and promote well-being for all at all ages.', 'Good Health and Well-being', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('8d9419f3-0748-4ca3-8734-91d821bd0e1a', 'SDG 4 — Quality Education', 4, NULL, 'Sustainable Development Goal 04', NULL, true, '2026-09-04T11:07:47.229918+00:00', 4, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Ensure inclusive and equitable quality education and promote lifelong learning opportunities for all.', 'Quality Education', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('9f653fb1-b10c-4ff3-bc11-b18047797055', 'SDG 5 — Gender Equality', 5, NULL, 'Sustainable Development Goal 05', NULL, true, '2026-09-04T11:07:47.229918+00:00', 5, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Achieve gender equality and empower all women and girls.', 'Gender Equality', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('5a23d78f-7684-4e5e-b0cd-2101fcda879d', 'SDG 6 — Clean Water and Sanitation', 6, NULL, 'Sustainable Development Goal 06', NULL, true, '2026-09-04T11:07:47.229918+00:00', 6, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Ensure availability and sustainable management of water and sanitation for all.', 'Clean Water and Sanitation', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('91dd4772-1ef3-4a11-936e-315b73ca27b4', 'SDG 7 — Affordable and Clean Energy', 7, NULL, 'Sustainable Development Goal 07', NULL, true, '2026-09-04T11:07:47.229918+00:00', 7, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Ensure access to affordable, reliable, sustainable and modern energy for all.', 'Affordable and Clean Energy', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('4925b5d9-01ea-40cd-82f7-fbfbb348bb2a', 'SDG 8 — Decent Work and Economic Growth', 8, NULL, 'Sustainable Development Goal 08', NULL, true, '2026-09-04T11:07:47.229918+00:00', 8, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Promote sustained, inclusive and sustainable economic growth, full and productive employment and decent work for all.', 'Decent Work and Economic Growth', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('bffc9e3d-5563-44a0-bd98-1595c9ea5602', 'SDG 9 — Industry, Innovation and Infrastructure', 9, NULL, 'Sustainable Development Goal 09', NULL, true, '2026-09-04T11:07:47.229918+00:00', 9, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Build resilient infrastructure, promote inclusive and sustainable industrialization and foster innovation.', 'Industry, Innovation and Infrastructure', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('97c73799-152c-40ce-b5a7-5455e9c997c7', 'SDG 10 — Reduced Inequalities', 10, NULL, 'Sustainable Development Goal 10', NULL, true, '2026-09-04T11:07:47.229918+00:00', 10, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Reduce inequality within and among countries.', 'Reduced Inequalities', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('429423d0-dd68-4bde-ac62-e9c40b975abb', 'SDG 11 — Sustainable Cities and Communities', 11, NULL, 'Sustainable Development Goal 11', NULL, true, '2026-09-04T11:07:47.229918+00:00', 11, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Make cities and human settlements inclusive, safe, resilient and sustainable.', 'Sustainable Cities and Communities', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('e3052338-af2c-42fa-aa29-56c1e8405dfc', 'SDG 12 — Responsible Consumption and Production', 12, NULL, 'Sustainable Development Goal 12', NULL, true, '2026-09-04T11:07:47.229918+00:00', 12, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Ensure sustainable consumption and production patterns.', 'Responsible Consumption and Production', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('16209b81-268a-45e7-8ed7-43ba46e8bd2f', 'SDG 13 — Climate Action', 13, NULL, 'Sustainable Development Goal 13', NULL, true, '2026-09-04T11:07:47.229918+00:00', 13, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Take urgent action to combat climate change and its impacts.', 'Climate Action', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('60db4205-e101-4326-a28b-806ffe2eeae0', 'SDG 14 — Life Below Water', 14, NULL, 'Sustainable Development Goal 14', NULL, true, '2026-09-04T11:07:47.229918+00:00', 14, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Conserve and sustainably use the oceans, seas and marine resources for sustainable development.', 'Life Below Water', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('2529e52f-513e-4c82-9e64-fa4a02d2693f', 'SDG 15 — Life on Land', 15, NULL, 'Sustainable Development Goal 15', NULL, true, '2026-09-04T11:07:47.229918+00:00', 15, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Protect, restore and promote sustainable use of terrestrial ecosystems.', 'Life on Land', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('8cccb667-1c1c-455e-b324-049d4b95484b', 'SDG 16 — Peace, Justice and Strong Institutions', 16, NULL, 'Sustainable Development Goal 16', NULL, true, '2026-09-04T11:07:47.229918+00:00', 16, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Promote peaceful and inclusive societies for sustainable development.', 'Peace, Justice and Strong Institutions', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."sdg_items" ("id", "title", "number", "content", "eyebrow", "image_url", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "short_title", "external_url") VALUES ('45265ad8-b266-4835-b98a-2ac7a5c9579a', 'SDG 17 — Partnerships for the Goals', 17, NULL, 'Sustainable Development Goal 17', NULL, true, '2026-09-04T11:07:47.229918+00:00', 17, '2026-09-04T11:07:47.229918+00:00', 'Learn More', 'Strengthen the means of implementation and revitalize the global partnership for sustainable development.', 'Partnerships for the Goals', NULL) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."activities" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."blog_posts" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."about_pages" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "slug" text,
+  "title" text,
+  "vision" text,
+  "content" text,
+  "eyebrow" text,
+  "mission" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "menu_label" text,
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "image_label" text,
+  "person_name" text,
+  "person_role" text,
+  "footer_label" text,
+  "footer_title" text,
+  "phone_number" text,
+  "vision_label" text,
+  "back_link_url" text,
+  "contact_email" text,
+  "contact_phone" text,
+  "email_address" text,
+  "hero_back_url" text,
+  "message_label" text,
+  "mission_label" text,
+  "profile_label" text,
+  "vision_number" text,
+  "mission_number" text,
+  "back_link_label" text,
+  "bottom_back_url" text,
+  "hero_back_label" text,
+  "message_heading" text,
+  "commitment_label" text,
+  "leadership_label" text,
+  "preparing_number" text,
+  "vision_icon_name" text,
+  "bottom_back_label" text,
+  "brilliance_number" text,
+  "footer_button_url" text,
+  "intro_description" text,
+  "leadership_text_1" text,
+  "leadership_text_2" text,
+  "mission_icon_name" text,
+  "preparing_enabled" boolean DEFAULT true,
+  "preparing_heading" text,
+  "brilliance_enabled" boolean DEFAULT true,
+  "brilliance_heading" text,
+  "email_button_label" text,
+  "focus_card_1_title" text,
+  "focus_card_2_title" text,
+  "focus_card_3_title" text,
+  "leadership_heading" text,
+  "phone_button_label" text,
+  "contact_email_label" text,
+  "contact_phone_label" text,
+  "focus_card_1_number" text,
+  "focus_card_2_number" text,
+  "focus_card_3_number" text,
+  "footer_button_label" text,
+  "intro_section_label" text,
+  "intro_heading_line_1" text,
+  "intro_heading_line_2" text,
+  "focus_section_enabled" boolean DEFAULT true,
+  "message_heading_line_1" text,
+  "message_heading_line_2" text,
+  "philosophy_card_1_text" text,
+  "philosophy_card_2_text" text,
+  "contact_section_enabled" boolean DEFAULT true,
+  "philosophy_card_1_title" text,
+  "philosophy_card_2_title" text,
+  "focus_card_1_description" text,
+  "focus_card_2_description" text,
+  "focus_card_3_description" text,
+  "philosophy_card_1_number" text,
+  "philosophy_card_2_number" text,
+  "philosophy_section_enabled" boolean DEFAULT true
+);
+
+-- Data for about_pages (7 rows)
+INSERT INTO "public"."about_pages" ("id", "slug", "title", "vision", "content", "eyebrow", "mission", "image_url", "is_active", "created_at", "menu_label", "sort_order", "updated_at", "image_label", "person_name", "person_role", "footer_label", "footer_title", "phone_number", "vision_label", "back_link_url", "contact_email", "contact_phone", "email_address", "hero_back_url", "message_label", "mission_label", "profile_label", "vision_number", "mission_number", "back_link_label", "bottom_back_url", "hero_back_label", "message_heading", "commitment_label", "leadership_label", "preparing_number", "vision_icon_name", "bottom_back_label", "brilliance_number", "footer_button_url", "intro_description", "leadership_text_1", "leadership_text_2", "mission_icon_name", "preparing_enabled", "preparing_heading", "brilliance_enabled", "brilliance_heading", "email_button_label", "focus_card_1_title", "focus_card_2_title", "focus_card_3_title", "leadership_heading", "phone_button_label", "contact_email_label", "contact_phone_label", "focus_card_1_number", "focus_card_2_number", "focus_card_3_number", "footer_button_label", "intro_section_label", "intro_heading_line_1", "intro_heading_line_2", "focus_section_enabled", "message_heading_line_1", "message_heading_line_2", "philosophy_card_1_text", "philosophy_card_2_text", "contact_section_enabled", "philosophy_card_1_title", "philosophy_card_2_title", "focus_card_1_description", "focus_card_2_description", "focus_card_3_description", "philosophy_card_1_number", "philosophy_card_2_number", "philosophy_section_enabled") VALUES ('38d24586-101c-4820-ae58-7e9f1268c920', 'mission-vision', 'Our Mission & Vision', 'Our Vision is to develop our students into human beings who are not only educated through books but in values that make them leaders of the future World', 'Apex Public School strives towards the holistic development of its students in a friendly learning environment while providing opportunities to equip them with life skills and values for the generations to follow.', 'ABOUT APEX', 'In the next three years we strive towards the holistic development of our students in a friendly learning environment while providing them with opportunities to equip them with life skills to be role models for the generations to follow', NULL, true, '2026-09-02T22:38:12.194801+00:00', 'Mission & Vision', 0, '2026-09-03T04:56:42.22012+00:00', 'School Leadership', NULL, NULL, 'Apex Public School', 'Answer Duty''s Call', '09990061747', 'Our Vision', '/about', 'contacts.apexschool@gmail.com', '09990061747', 'contacts.apexschool@gmail.com', '/about', 'Principal''s Message', 'Our Mission', 'Manager''s Profile', '02', '01', 'About Apex', '/about', 'About Apex', 'Forging Ahead Together', 'Our commitment', 'Leadership', '02', 'Eye', 'Back to About Apex', '03', '/about', 'Education at Apex is shaped by learning, character, values and responsibility.', 'The official Apex Public School School Management Committee records state that Mr. Arvind Kumar Tejyan was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).', 'The school''s official faculty listing also identifies him as Manager and VP – Admin.', 'Heart', true, 'Preparing our students for the future', true, 'Creating Brilliance', 'Email school', 'Reading', 'Communication', 'Health & Nutrition', 'Administration at Apex', 'Contact school', 'Email school', 'Contact school', '01', '02', '03', 'About Apex', 'Our direction', 'Education with purpose,', 'values and responsibility.', true, 'A shared vision', 'for excellence.', 'Students are encouraged to channelize their potential in the pursuit of excellence within a holistic, student-centric environment.', 'The school combines trusting relationships with responsibility, self-control, good decision making, confidence and strong moral values.', true, 'Holistic development', 'Love, logic and character', 'Fostering a love for reading through diverse literary resources and regular library visits.', 'Helping students express themselves confidently and articulate their thoughts effectively.', 'Promoting cleanliness, personal hygiene and healthy eating habits for physical and cognitive development.', '01', '02', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."about_pages" ("id", "slug", "title", "vision", "content", "eyebrow", "mission", "image_url", "is_active", "created_at", "menu_label", "sort_order", "updated_at", "image_label", "person_name", "person_role", "footer_label", "footer_title", "phone_number", "vision_label", "back_link_url", "contact_email", "contact_phone", "email_address", "hero_back_url", "message_label", "mission_label", "profile_label", "vision_number", "mission_number", "back_link_label", "bottom_back_url", "hero_back_label", "message_heading", "commitment_label", "leadership_label", "preparing_number", "vision_icon_name", "bottom_back_label", "brilliance_number", "footer_button_url", "intro_description", "leadership_text_1", "leadership_text_2", "mission_icon_name", "preparing_enabled", "preparing_heading", "brilliance_enabled", "brilliance_heading", "email_button_label", "focus_card_1_title", "focus_card_2_title", "focus_card_3_title", "leadership_heading", "phone_button_label", "contact_email_label", "contact_phone_label", "focus_card_1_number", "focus_card_2_number", "focus_card_3_number", "footer_button_label", "intro_section_label", "intro_heading_line_1", "intro_heading_line_2", "focus_section_enabled", "message_heading_line_1", "message_heading_line_2", "philosophy_card_1_text", "philosophy_card_2_text", "contact_section_enabled", "philosophy_card_1_title", "philosophy_card_2_title", "focus_card_1_description", "focus_card_2_description", "focus_card_3_description", "philosophy_card_1_number", "philosophy_card_2_number", "philosophy_section_enabled") VALUES ('b6bf64db-8e0c-4042-8178-53584bb1c50f', 'ceo', 'Forging Ahead Together', NULL, 'With immense pride and great pleasure, I welcome you to the school’s website. You could be a parent, a student, a staff member, alumni or anyone interested in gaining deeper insight into the functioning and learning environs of our exciting world. I invite you to navigate through our ‘Online School’ to help you understand lucidly why our school provides the best environment for your little ones and young adults.
+
+Since its inception to now, our institution has marched forward to spread the light of education and pave the way for all-round excellence for every student. The key focus areas continue to remain creating opportunities, challenging minds, encouraging innovation and sustaining excitement.
+
+Preparing our students for the future
+
+The stringent standards followed by our school since commencement have guided us and helped us offer a contemporary, relevant, & self-motivated learning. Our children are equipped to unrelentingly identify and respond to the volatile demands across the education and employment sector. Accolades have been received through our Alumni and our children continue to do so.
+
+We base our success on the principal of ‘3H’ (Head, Hand and Heart) as this is the way forward and prepare our children for jobs that do not even exist now and will be there in the future. Teaching them to give back to society is of utmost importance. Alumni are placed in some of the best names in the global market place. Do take out time to browse through the list of our famous alumni and faculty members.
+
+Creating Brilliance
+
+It is the objective here at Apex to continue being recognized as the torch bearer of leading educational methods and an institution that has students defining a future not only for them but for our country and the world as well. We have and will continually strive for brighter and more secure prospects for our children. The values and environment we provide for our children are sustainable and see them successfully through their formative years.
+
+The investment we put into our children today will help them achieve greater heights and create the unimaginable.
+
+I take this opportunity to thank sincerely the principal, teachers and other staff without whom these successes – both big and small would not be possible. They teach not only subjects but also inculcate values of commitment, zealousness and pride in everything they do.
+
+Welcome once again and I sincerely hope that our website will raise your interest and encourage you into taking one more step towards making a positive difference in your life.', 'FROM THE CHAIRMAN''S DESK', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/about/ceo/1791221991869.jpeg', true, '2026-09-02T22:38:12.194801+00:00', 'CHAIRMAN', 1, '2026-10-12T12:32:02.686734+00:00', 'School Leadership', 'Mr. Geoff Lyonel Jonathan', 'CHAIRMAN', 'Apex Public School', 'Answer Duty''s Call', '09990061747', 'Our Vision', '/about', 'contacts.apexschool@gmail.com', '09990061747', 'contacts.apexschool@gmail.com', '/about', 'Principal''s Message', 'Our Mission', 'Chairman''s Profile', '02', '01', 'About Apex', '/about', 'About Apex', 'Forging Ahead Together', 'Our commitment', 'Leadership', '02', 'Eye', 'Back to About Apex', '03', '/about', 'Education at Apex is shaped by learning, character, values and responsibility.', 'The official Apex Public School School Management Committee records state that Mr. Arvind Kumar Tejyan was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).', 'The school''s official faculty listing also identifies him as Manager and VP – Admin.', 'Heart', true, 'Preparing our students for the future', true, 'Creating Brilliance', 'Email school', 'Reading', 'Communication', 'Health & Nutrition', 'Administration at Apex', 'Contact school', 'Email school', 'Contact school', '01', '02', '03', 'About Apex', 'Our direction', 'Education with purpose,', 'values and responsibility.', true, 'A shared vision', 'for excellence.', 'Students are encouraged to channelize their potential in the pursuit of excellence within a holistic, student-centric environment.', 'The school combines trusting relationships with responsibility, self-control, good decision making, confidence and strong moral values.', true, 'Holistic development', 'Love, logic and character', 'Fostering a love for reading through diverse literary resources and regular library visits.', 'Helping students express themselves confidently and articulate their thoughts effectively.', 'Promoting cleanliness, personal hygiene and healthy eating habits for physical and cognitive development.', '01', '02', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."about_pages" ("id", "slug", "title", "vision", "content", "eyebrow", "mission", "image_url", "is_active", "created_at", "menu_label", "sort_order", "updated_at", "image_label", "person_name", "person_role", "footer_label", "footer_title", "phone_number", "vision_label", "back_link_url", "contact_email", "contact_phone", "email_address", "hero_back_url", "message_label", "mission_label", "profile_label", "vision_number", "mission_number", "back_link_label", "bottom_back_url", "hero_back_label", "message_heading", "commitment_label", "leadership_label", "preparing_number", "vision_icon_name", "bottom_back_label", "brilliance_number", "footer_button_url", "intro_description", "leadership_text_1", "leadership_text_2", "mission_icon_name", "preparing_enabled", "preparing_heading", "brilliance_enabled", "brilliance_heading", "email_button_label", "focus_card_1_title", "focus_card_2_title", "focus_card_3_title", "leadership_heading", "phone_button_label", "contact_email_label", "contact_phone_label", "focus_card_1_number", "focus_card_2_number", "focus_card_3_number", "footer_button_label", "intro_section_label", "intro_heading_line_1", "intro_heading_line_2", "focus_section_enabled", "message_heading_line_1", "message_heading_line_2", "philosophy_card_1_text", "philosophy_card_2_text", "contact_section_enabled", "philosophy_card_1_title", "philosophy_card_2_title", "focus_card_1_description", "focus_card_2_description", "focus_card_3_description", "philosophy_card_1_number", "philosophy_card_2_number", "philosophy_section_enabled") VALUES ('b3ff781c-2c52-4db0-8a4a-cf749e93d4a4', 'head-academic-coordinator', 'Head Academic Coordinator’s Message', NULL, 'At APEX PUBLIC SCHOOL we believe that education is not only about imparting knowledge but also about nurturing values, creativity, and a spirit of lifelong learning. As the Head Academic Coordinator, it is my privilege to work closely with our dedicated team of teachers, students, and parents to ensure that every child receives a holistic and enriching learning experience.
+
+Our academic framework is designed to balance scholastic excellence with co-scholastic growth, encouraging students to develop critical thinking, problem-solving abilities, and confidence to meet the challenges of tomorrow. Regular monitoring of syllabus completion, innovative teaching practices, and differentiated support for learners help us maintain high academic standards while addressing individual learning needs.
+
+We are equally committed to integrating values, skills, and sustainable practices into our curriculum so that our students emerge as responsible global citizens. With continuous collaboration between teachers, coordinators, and parents, we strive to create an atmosphere where curiosity is nurtured, talents are celebrated, and progress is measured not only in grades but in character and resilience.
+
+I extend my heartfelt gratitude to our educators for their dedication, to parents for their trust, and to our students for their enthusiasm and hard work. Together, we will continue to build an environment of excellence and inspiration at Apex Public School.
+
+Answer Duty’s Call
+
+Ms. Deepa Sharma
+Head Academic Coordinator', 'Head Academic Coordinator’s Message', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/about/head-academic-coordinator/1791387577460.png', true, '2026-09-02T22:38:12.194801+00:00', 'Head Academic Coordinator', 6, '2026-10-10T09:23:31.394656+00:00', 'School Leadership', 'Ms. Deepa Sharma', 'Head Academic Coordinator', 'Apex Public School', 'Answer Duty''s Call', '09990061747', 'Our Vision', '/about', 'contacts.apexschool@gmail.com', '09990061747', 'contacts.apexschool@gmail.com', '/about', 'Principal''s Message', 'Our Mission', 'Head Academic Coordinator''s Profile', '02', '01', 'About Apex', '/about', 'About Apex', 'Forging Ahead Together', 'Our commitment', 'Leadership', '02', 'Eye', 'Back to About Apex', '03', '/about', 'Education at Apex is shaped by learning, character, values and responsibility.', 'The official Apex Public School School Management Committee records state that Mr. Arvind Kumar Tejyan was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).', 'The school''s official faculty listing also identifies him as Manager and VP – Admin.', 'Heart', true, 'Preparing our students for the future', true, 'Creating Brilliance', 'Email school', 'Reading', 'Communication', 'Health & Nutrition', 'Administration at Apex', 'Contact school', 'Email school', 'Contact school', '01', '02', '03', 'About Apex', 'Our direction', 'Education with purpose,', 'values and responsibility.', true, 'A shared vision', 'for excellence.', 'Students are encouraged to channelize their potential in the pursuit of excellence within a holistic, student-centric environment.', 'The school combines trusting relationships with responsibility, self-control, good decision making, confidence and strong moral values.', true, 'Holistic development', 'Love, logic and character', 'Fostering a love for reading through diverse literary resources and regular library visits.', 'Helping students express themselves confidently and articulate their thoughts effectively.', 'Promoting cleanliness, personal hygiene and healthy eating habits for physical and cognitive development.', '01', '02', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."about_pages" ("id", "slug", "title", "vision", "content", "eyebrow", "mission", "image_url", "is_active", "created_at", "menu_label", "sort_order", "updated_at", "image_label", "person_name", "person_role", "footer_label", "footer_title", "phone_number", "vision_label", "back_link_url", "contact_email", "contact_phone", "email_address", "hero_back_url", "message_label", "mission_label", "profile_label", "vision_number", "mission_number", "back_link_label", "bottom_back_url", "hero_back_label", "message_heading", "commitment_label", "leadership_label", "preparing_number", "vision_icon_name", "bottom_back_label", "brilliance_number", "footer_button_url", "intro_description", "leadership_text_1", "leadership_text_2", "mission_icon_name", "preparing_enabled", "preparing_heading", "brilliance_enabled", "brilliance_heading", "email_button_label", "focus_card_1_title", "focus_card_2_title", "focus_card_3_title", "leadership_heading", "phone_button_label", "contact_email_label", "contact_phone_label", "focus_card_1_number", "focus_card_2_number", "focus_card_3_number", "footer_button_label", "intro_section_label", "intro_heading_line_1", "intro_heading_line_2", "focus_section_enabled", "message_heading_line_1", "message_heading_line_2", "philosophy_card_1_text", "philosophy_card_2_text", "contact_section_enabled", "philosophy_card_1_title", "philosophy_card_2_title", "focus_card_1_description", "focus_card_2_description", "focus_card_3_description", "philosophy_card_1_number", "philosophy_card_2_number", "philosophy_section_enabled") VALUES ('a03cf848-4990-45a4-bff1-43e6783c2f3f', 'head-mistress', 'Head Mistress''s Message', NULL, 'Head Mistress’s Message
+Dear Apexian ,
+I am delighted to extend warm greetings to our dedicated students, esteemed parents, passionate teachers, and the entire Apex community. As the Headmistress of this esteemed institution, I am proud to present our collective goals for the academic year ahead, focusing on reading and communication, cleanliness and nutrition.
+Reading forms the foundation of education and opens up a world of endless possibilities. This year, we aim to foster a love for reading among our students. We will provide diverse literary resources and encourage regular library visits.
+
+Effective communication is an invaluable skill that transcends academic boundaries. Through interactive classroom activities we will empower our students to express themselves with confidence and articulate their thoughts effectively. We believe that proficient communication skills will prepare our students for success in all aspects of life. We are committed to instilling in our students the importance of cleanliness as a habit. Regular cleanliness drives and educating students about personal hygiene practices will be an integral part of our school year. The saying “You are what you eat” holds immense truth. Nutrition plays a vital role in the physical and cognitive development of our students. We are dedicated to promote healthy eating habits and educating our students about the importance of a balanced diet.
+I am confident that together, as a strong and supportive Apex community, we will achieve these goals and provide our students with a well-rounded education. I encourage parents to actively participate in their child’s educational journey, collaborate with our dedicated teachers, and join hands in fostering a positive and enriching environment. Thank you for choosing Apex Public School as your partner in shaping your child’s future. Let us embark on this academic year with enthusiasm, commitment, and a shared vision for excellence.
+Wishing you a successful and fulfilling year ahead!
+
+Answer Duty’s Call
+Mrs. Kiran Chadha
+(Headmistress)
+About
+Apex Public school was and is the brain child of Late', 'FROM THE HEADMISTRESS''S DESK', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/about-pages/head-mistress/head-mistress-1791386193531.png', true, '2026-09-02T22:38:12.194801+00:00', 'Head Mistress', 5, '2026-10-10T09:24:05.494942+00:00', 'School Leadership', 'Mrs. Kiran Chadha', 'Headmistress', 'Apex Public School', 'Answer Duty''s Call', '09990061747', 'Our Vision', '/about', 'contacts.apexschool@gmail.com', '09990061747', 'contacts.apexschool@gmail.com', '/about', 'Principal''s Message', 'Our Mission', 'Head Mistress''s Profile', '02', '01', 'About Apex', '/about', 'About Apex', 'Forging Ahead Together', 'Our commitment', 'Leadership', '02', 'Eye', 'Back to About Apex', '03', '/about', 'Education at Apex is shaped by learning, character, values and responsibility.', 'The official Apex Public School School Management Committee records state that Mr. Arvind Kumar Tejyan was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).', 'The school''s official faculty listing also identifies him as Manager and VP – Admin.', 'Heart', true, 'Preparing our students for the future', true, 'Creating Brilliance', 'Email school', 'Reading', 'Communication', 'Health & Nutrition', 'Administration at Apex', 'Contact school', 'Email school', 'Contact school', '01', '02', '03', 'About Apex', 'Our direction', 'Education with purpose,', 'values and responsibility.', true, 'A shared vision', 'for excellence.', 'Students are encouraged to channelize their potential in the pursuit of excellence within a holistic, student-centric environment.', 'The school combines trusting relationships with responsibility, self-control, good decision making, confidence and strong moral values.', true, 'Holistic development', 'Love, logic and character', 'Fostering a love for reading through diverse literary resources and regular library visits.', 'Helping students express themselves confidently and articulate their thoughts effectively.', 'Promoting cleanliness, personal hygiene and healthy eating habits for physical and cognitive development.', '01', '02', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."about_pages" ("id", "slug", "title", "vision", "content", "eyebrow", "mission", "image_url", "is_active", "created_at", "menu_label", "sort_order", "updated_at", "image_label", "person_name", "person_role", "footer_label", "footer_title", "phone_number", "vision_label", "back_link_url", "contact_email", "contact_phone", "email_address", "hero_back_url", "message_label", "mission_label", "profile_label", "vision_number", "mission_number", "back_link_label", "bottom_back_url", "hero_back_label", "message_heading", "commitment_label", "leadership_label", "preparing_number", "vision_icon_name", "bottom_back_label", "brilliance_number", "footer_button_url", "intro_description", "leadership_text_1", "leadership_text_2", "mission_icon_name", "preparing_enabled", "preparing_heading", "brilliance_enabled", "brilliance_heading", "email_button_label", "focus_card_1_title", "focus_card_2_title", "focus_card_3_title", "leadership_heading", "phone_button_label", "contact_email_label", "contact_phone_label", "focus_card_1_number", "focus_card_2_number", "focus_card_3_number", "footer_button_label", "intro_section_label", "intro_heading_line_1", "intro_heading_line_2", "focus_section_enabled", "message_heading_line_1", "message_heading_line_2", "philosophy_card_1_text", "philosophy_card_2_text", "contact_section_enabled", "philosophy_card_1_title", "philosophy_card_2_title", "focus_card_1_description", "focus_card_2_description", "focus_card_3_description", "philosophy_card_1_number", "philosophy_card_2_number", "philosophy_section_enabled") VALUES ('54fb50fe-7909-4458-bc1d-d098540cb967', 'academic-head', 'Academic Leadership', NULL, '', 'ACADEMIC DIRECTION', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/about/academic-head/1791386170811.png', true, '2026-09-02T22:38:12.194801+00:00', 'Academic Head', 4, '2026-10-10T09:23:01.925402+00:00', 'School Leadership', 'Mr. Harish Singh Rawat', 'Vice Principal Academics', 'Apex Public School', 'Answer Duty''s Call', '09990061747', 'Our Vision', '/about', 'contacts.apexschool@gmail.com', '09990061747', 'contacts.apexschool@gmail.com', '/about', 'Principal''s Message', 'Our Mission', 'Vice Principal Academic''s Profile', '02', '01', 'About Apex', '/about', 'About Apex', 'Forging Ahead Together', 'Our commitment', 'Leadership', '02', 'Eye', 'Back to About Apex', '03', '/about', 'Education at Apex is shaped by learning, character, values and responsibility.', 'The official Apex Public School School Management Committee records state that Mr. Arvind Kumar Tejyan was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).', 'The school''s official faculty listing also identifies him as Manager and VP – Admin.', 'Heart', true, 'Preparing our students for the future', true, 'Creating Brilliance', 'Email school', 'Reading', 'Communication', 'Health & Nutrition', 'Administration at Apex', 'Contact school', 'Email school', 'Contact school', '01', '02', '03', 'About Apex', 'Our direction', 'Education with purpose,', 'values and responsibility.', true, 'A shared vision', 'for excellence.', 'Students are encouraged to channelize their potential in the pursuit of excellence within a holistic, student-centric environment.', 'The school combines trusting relationships with responsibility, self-control, good decision making, confidence and strong moral values.', true, 'Holistic development', 'Love, logic and character', 'Fostering a love for reading through diverse literary resources and regular library visits.', 'Helping students express themselves confidently and articulate their thoughts effectively.', 'Promoting cleanliness, personal hygiene and healthy eating habits for physical and cognitive development.', '01', '02', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."about_pages" ("id", "slug", "title", "vision", "content", "eyebrow", "mission", "image_url", "is_active", "created_at", "menu_label", "sort_order", "updated_at", "image_label", "person_name", "person_role", "footer_label", "footer_title", "phone_number", "vision_label", "back_link_url", "contact_email", "contact_phone", "email_address", "hero_back_url", "message_label", "mission_label", "profile_label", "vision_number", "mission_number", "back_link_label", "bottom_back_url", "hero_back_label", "message_heading", "commitment_label", "leadership_label", "preparing_number", "vision_icon_name", "bottom_back_label", "brilliance_number", "footer_button_url", "intro_description", "leadership_text_1", "leadership_text_2", "mission_icon_name", "preparing_enabled", "preparing_heading", "brilliance_enabled", "brilliance_heading", "email_button_label", "focus_card_1_title", "focus_card_2_title", "focus_card_3_title", "leadership_heading", "phone_button_label", "contact_email_label", "contact_phone_label", "focus_card_1_number", "focus_card_2_number", "focus_card_3_number", "footer_button_label", "intro_section_label", "intro_heading_line_1", "intro_heading_line_2", "focus_section_enabled", "message_heading_line_1", "message_heading_line_2", "philosophy_card_1_text", "philosophy_card_2_text", "contact_section_enabled", "philosophy_card_1_title", "philosophy_card_2_title", "focus_card_1_description", "focus_card_2_description", "focus_card_3_description", "philosophy_card_1_number", "philosophy_card_2_number", "philosophy_section_enabled") VALUES ('54703094-80aa-474c-bf46-5e04afd1c904', 'principal', 'Principal''s Message', NULL, 'Education is not the learning of facts but the training of the mind to think.
+
+Apex Public School greets all of you, the parents, the students and the readers.
+
+The role of a school is not only to pursue academic excellence but also to motivate and empower its students to be lifelong learners, critical thinkers and productive members of an everchanging global society.
+
+We provide an atmosphere to our students for multifaceted development, where children are encouraged to channelize their potential in the pursuit of excellence.
+
+Our team works in tandem and harmony as we believe that team is more about We and less about me.', 'FROM THE PRINCIPAL''S DESK', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/about/principal/principal-1791386224618.png', true, '2026-09-02T22:38:12.194801+00:00', 'Principal', 2, '2026-10-07T15:17:17.227704+00:00', 'School Leadership', 'Dr. Dorothy Jonathan', 'Principal', 'Apex Public School', 'Answer Duty''s Call', '09990061747', 'Our Vision', '/about', 'contacts.apexschool@gmail.com', '09990061747', 'contacts.apexschool@gmail.com', '/about', 'Principal''s Message', 'Our Mission', 'Manager''s Profile', '02', '01', 'About Apex', '/about', 'About Apex', 'Forging Ahead Together', 'Our commitment', 'Leadership', '02', 'Eye', 'Back to About Apex', '03', '/about', 'Education at Apex is shaped by learning, character, values and responsibility.', 'The official Apex Public School School Management Committee records state that Mr. Arvind Kumar Tejyan was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).', 'The school''s official faculty listing also identifies him as Manager and VP – Admin.', 'Heart', true, 'Preparing our students for the future', true, 'Creating Brilliance', 'Email school', 'Reading', 'Communication', 'Health & Nutrition', 'Administration at Apex', 'Contact school', 'Email school', 'Contact school', '01', '02', '03', 'About Apex', 'Our direction', 'Education with purpose,', 'values and responsibility.', true, 'A shared vision', 'for excellence.', 'Students are encouraged to channelize their potential in the pursuit of excellence within a holistic, student-centric environment.', 'The school combines trusting relationships with responsibility, self-control, good decision making, confidence and strong moral values.', true, 'Holistic development', 'Love, logic and character', 'Fostering a love for reading through diverse literary resources and regular library visits.', 'Helping students express themselves confidently and articulate their thoughts effectively.', 'Promoting cleanliness, personal hygiene and healthy eating habits for physical and cognitive development.', '01', '02', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."about_pages" ("id", "slug", "title", "vision", "content", "eyebrow", "mission", "image_url", "is_active", "created_at", "menu_label", "sort_order", "updated_at", "image_label", "person_name", "person_role", "footer_label", "footer_title", "phone_number", "vision_label", "back_link_url", "contact_email", "contact_phone", "email_address", "hero_back_url", "message_label", "mission_label", "profile_label", "vision_number", "mission_number", "back_link_label", "bottom_back_url", "hero_back_label", "message_heading", "commitment_label", "leadership_label", "preparing_number", "vision_icon_name", "bottom_back_label", "brilliance_number", "footer_button_url", "intro_description", "leadership_text_1", "leadership_text_2", "mission_icon_name", "preparing_enabled", "preparing_heading", "brilliance_enabled", "brilliance_heading", "email_button_label", "focus_card_1_title", "focus_card_2_title", "focus_card_3_title", "leadership_heading", "phone_button_label", "contact_email_label", "contact_phone_label", "focus_card_1_number", "focus_card_2_number", "focus_card_3_number", "footer_button_label", "intro_section_label", "intro_heading_line_1", "intro_heading_line_2", "focus_section_enabled", "message_heading_line_1", "message_heading_line_2", "philosophy_card_1_text", "philosophy_card_2_text", "contact_section_enabled", "philosophy_card_1_title", "philosophy_card_2_title", "focus_card_1_description", "focus_card_2_description", "focus_card_3_description", "philosophy_card_1_number", "philosophy_card_2_number", "philosophy_section_enabled") VALUES ('7ac4fdfe-17e9-4989-8151-dffdc79a72d3', 'manager-vp-admin', 'Manager / Vice Principal Administration', NULL, 'A WARM WELCOME TO APEX PUBLIC SCHOOL
+Where Young Minds Take Shape and Dreams Take Flight.
+As the Vice Principal and Manager of this great institution, I take immense pride in welcoming you all to Apex Public School.
+For decades, Apex Public School has been dedicated to nurturing young minds and providing holistic, quality and value-based education. We believe that every child has unique potential, and our endeavour is to provide an environment where students can learn, grow, and become confident and responsible citizens.
+Your suggestions, feedback and concerns are always valuable to us. Please feel free to reach out to me at:
+Email: manageraps77@gmail.com
+With warm regards,
+Arvind Kumar Tejyan
+Vice Principal & Manager
+Apex Public School
+', 'SCHOOL ADMINISTRATION', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/about/manager-vp-admin/manager-1791386147719-98bf6a11-6aac-477c-9557-d8981d95e1ba.png', true, '2026-09-02T22:38:12.194801+00:00', 'Manager / V P Admin', 3, '2026-10-10T09:03:55.773431+00:00', 'School Leadership', 'Mr. Arvind Kumar', 'Manager / Vice-Principal (Admin)', 'Apex Public School', 'Answer Duty''s Call', '09990061747', 'Our Vision', '/about', 'contacts.apexschool@gmail.com', '09990061747', 'contacts.apexschool@gmail.com', '/about', 'Principal''s Message', 'Our Mission', 'Manager / VP Admin''s Profile', '02', '01', 'About Apex', '/about', 'About Apex', 'Forging Ahead Together', 'Our commitment', 'Leadership', '02', 'Eye', 'Back to About Apex', '03', '/about', 'Education at Apex is shaped by learning, character, values and responsibility.', 'The official Apex Public School School Management Committee records state that Mr. Arvind Kumar Tejyan was appointed Manager of Apex Public School with effect from 18 August 2025, as an additional charge while serving as Vice Principal (Administration).', 'The school''s official faculty listing also identifies him as Manager and VP – Admin.', 'Heart', true, 'Preparing our students for the future', true, 'Creating Brilliance', 'Email school', 'Reading', 'Communication', 'Health & Nutrition', 'Administration at Apex', 'Contact school', 'Email school', 'Contact school', '01', '02', '03', 'About Apex', 'Our direction', 'Education with purpose,', 'values and responsibility.', true, 'A shared vision', 'for excellence.', 'Students are encouraged to channelize their potential in the pursuit of excellence within a holistic, student-centric environment.', 'The school combines trusting relationships with responsibility, self-control, good decision making, confidence and strong moral values.', true, 'Holistic development', 'Love, logic and character', 'Fostering a love for reading through diverse literary resources and regular library visits.', 'Helping students express themselves confidently and articulate their thoughts effectively.', 'Promoting cleanliness, personal hygiene and healthy eating habits for physical and cognitive development.', '01', '02', true) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."admin_users" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "role" text,
+  "email" text,
+  "full_name" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "updated_at" timestamptz DEFAULT now()
+);
+
+-- Data for admin_users (3 rows)
+INSERT INTO "public"."admin_users" ("id", "role", "email", "full_name", "is_active", "created_at", "updated_at") VALUES ('0224f118-4ba3-482d-a718-6fcb0e8c1639', 'super_admin', 'sk4625846@gmail.com', 'Apex CMS Administrator', true, '2026-09-04T17:23:12.620402+00:00', '2026-09-04T17:23:12.620402+00:00') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."admin_users" ("id", "role", "email", "full_name", "is_active", "created_at", "updated_at") VALUES ('6339b3d2-8e75-4c8e-a248-85777482b4e3', 'viewer', 'aadiarora@gmail.com', 'aadi', true, '2026-10-04T15:31:50.751756+00:00', '2026-10-04T17:02:27.597+00:00') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."admin_users" ("id", "role", "email", "full_name", "is_active", "created_at", "updated_at") VALUES ('655426db-84e6-4973-94eb-68bfc07d0bd8', 'admin', 'aadiarora634@gmail.com', 'AADI ARORA', true, '2026-09-04T17:36:03.494477+00:00', '2026-10-05T12:39:52.627+00:00') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."blog_images" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."hero_slides" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "eyebrow" text,
+  "duration" integer DEFAULT 0,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "duration_ms" integer DEFAULT 0,
+  "image_mobile_url" text,
+  "image_tablet_url" text,
+  "mobile_image_url" text,
+  "image_desktop_url" text,
+  "button_primary_url" text,
+  "primary_button_url" text,
+  "button_primary_text" text,
+  "primary_button_text" text,
+  "button_secondary_url" text,
+  "secondary_button_url" text,
+  "button_secondary_text" text,
+  "secondary_button_text" text
+);
+
+-- Data for hero_slides (4 rows)
+INSERT INTO "public"."hero_slides" ("id", "title", "eyebrow", "duration", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "duration_ms", "image_mobile_url", "image_tablet_url", "mobile_image_url", "image_desktop_url", "button_primary_url", "primary_button_url", "button_primary_text", "primary_button_text", "button_secondary_url", "secondary_button_url", "button_secondary_text", "secondary_button_text") VALUES ('b2785e36-c49f-462a-9afe-6a097dcf4a6a', 'A school where every child gets room to grow.', 'APEX PUBLIC SCHOOL · SINCE 1985', 6000, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791727866044-apex-public-school-campus-aerial-view--1-.png', true, '2026-09-02T22:14:03.68476+00:00', 0, '2026-10-11T14:11:15.205+00:00', 'Learning, character, confidence and opportunity come together at Apex Public School.', 6000, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1790972736208-whatsapp-image-2023-01-02-at-1.jpg', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1790972736208-whatsapp-image-2023-01-02-at-1.jpg', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1790972736208-whatsapp-image-2023-01-02-at-1.jpg', NULL, '/online-registration', NULL, 'Admissions 2026–27', NULL, '/about', NULL, 'Discover Apex') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."hero_slides" ("id", "title", "eyebrow", "duration", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "duration_ms", "image_mobile_url", "image_tablet_url", "mobile_image_url", "image_desktop_url", "button_primary_url", "primary_button_url", "button_primary_text", "primary_button_text", "button_secondary_url", "secondary_button_url", "button_secondary_text", "secondary_button_text") VALUES ('b4530ed7-4108-4641-8c61-ce1ba67dd947', 'Inspiring Leaders. Shaping Tomorrow.', 'APEX PUBLIC SCHOOL', 6000, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791806848666-formal-school-leadership-ceremony-portrait.png', true, '2026-10-12T12:07:40.949779+00:00', 3, '2026-10-12T12:14:15.451+00:00', 'Celebrating student leadership, achievement, and the values that empower every learner to make a difference', 6000, NULL, NULL, NULL, NULL, NULL, '/gallery', NULL, 'Discover Our Achievements', NULL, '/about', NULL, 'Discover Apex') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."hero_slides" ("id", "title", "eyebrow", "duration", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "duration_ms", "image_mobile_url", "image_tablet_url", "mobile_image_url", "image_desktop_url", "button_primary_url", "primary_button_url", "button_primary_text", "primary_button_text", "button_secondary_url", "secondary_button_url", "button_secondary_text", "secondary_button_text") VALUES ('41aa3e68-e987-4f6d-a58c-e11b10d16269', 'Learning that continues beyond the classroom.', 'ANSWER DUTY''S CALL', 6000, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791073562273-formal-ceremony-with-distinguished-guests.png', true, '2026-09-02T22:14:26.666878+00:00', 1, '2026-10-04T00:26:09.762+00:00', 'Academic growth is strengthened by culture, activities, teamwork, leadership and experience.', 6000, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791070863546-img_0413-scaled--1-.jpg', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791070863546-img_0413-scaled--1-.jpg', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791070863546-img_0413-scaled--1-.jpg', NULL, '/academics', NULL, 'Explore Academics', NULL, '/activities', NULL, 'Our Activities') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."hero_slides" ("id", "title", "eyebrow", "duration", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "duration_ms", "image_mobile_url", "image_tablet_url", "mobile_image_url", "image_desktop_url", "button_primary_url", "primary_button_url", "button_primary_text", "primary_button_text", "button_secondary_url", "secondary_button_url", "button_secondary_text", "secondary_button_text") VALUES ('99f55399-0e6f-43f1-94d2-c5ca64c77210', 'A tradition of education, excellence and growth.', 'APEX COMMUNITY', 6000, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791073750307-ceremonial-cadets-beneath-colourful-flags.png', true, '2026-09-02T22:14:45.233232+00:00', 2, '2026-10-04T00:29:17.288+00:00', 'Apex has been shaping generations of students since 29 July 1985.', 6000, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791070881324-whatsapp-image-2023-01-02-at-1--1-.jpg', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791070881324-whatsapp-image-2023-01-02-at-1--1-.jpg', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/hero/1791070881324-whatsapp-image-2023-01-02-at-1--1-.jpg', NULL, '/about', NULL, 'Our Story', NULL, '/faculty', NULL, 'Meet the Faculty') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."achievements" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."kaushal_bodh" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "event_date" date,
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "gallery_url" text,
+  "is_featured" boolean DEFAULT true,
+  "gallery_images" jsonb DEFAULT '[]'::jsonb
+);
+
+-- Data for kaushal_bodh (1 rows)
+INSERT INTO "public"."kaushal_bodh" ("id", "title", "image_url", "is_active", "created_at", "event_date", "sort_order", "updated_at", "description", "gallery_url", "is_featured", "gallery_images") VALUES ('52f517f7-da5f-4167-bd74-83674b5cb159', 'KAUSHAL BODH 01-07-2026', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/covers/1788559891648-bb96c4bd-e518-4a99-bb19-1dba63abe956.jpeg', true, '2026-09-04T11:39:49.99356+00:00', '2026-07-01', 1, '2026-09-04T22:12:40.136+00:00', 'Kaushal Bodh gallery', NULL, false, '[{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559926461-8fc9c732-d14c-4304-b059-5210d5dc723f.jpeg","caption":"3353951196"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559926990-77ff1394-b900-4f19-a130-16e80228bead.jpeg","caption":"488932777"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559927507-d9a723c6-5122-4e26-94c9-a918298fea6b.jpeg","caption":"4178248249"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559928122-f4ef227b-0a32-4abf-abbf-351d295dd2f3.jpeg","caption":"4065581741"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559928941-3d1ccbcc-ebac-49ee-80ab-7070ab6eabf5.jpeg","caption":"1498729115"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559929866-5db42854-4681-4dec-8f4d-34efe8dab2c2.jpeg","caption":"2626962034"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559930481-894bcce1-ff54-4728-910d-81691f13d0ed.jpeg","caption":"2044553482"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559931091-557055a9-d7be-4823-88af-702524e34117.jpeg","caption":"2039938462"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559931808-59c0148f-dbe9-4e99-bcab-8d9d6a5455f0.jpeg","caption":"3674134085"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559932424-84dd20d3-2dbd-4e43-b4a0-adbe8e4296ae.jpeg","caption":"1419703258"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559932934-ed6037a0-2918-4b50-ab68-3ba6f80690af.jpeg","caption":"350184066"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559933550-5f6ea6f7-ca8c-4941-b604-9054ee96693f.jpeg","caption":"3211060675"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559934129-0512ae67-f8b5-4eaa-8ab8-b9833a37e75e.jpeg","caption":"3504882777"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559935203-61cdd687-c549-41a4-9b2a-db4ff4c3102a.jpeg","caption":"1366320610"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559935802-fde327c9-8bd8-4c3a-a4fb-daf72f8037c9.jpeg","caption":"2622194996"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559936314-84f1fc0a-64b1-4802-bbad-c23ef34f54c6.jpeg","caption":"3669312209"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559936827-a6cd5398-0ce9-43e3-be89-cd90192eea91.jpeg","caption":"4214324979"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559937459-468c61d4-0515-4559-b224-cb93d14e90c0.jpeg","caption":"1240436274"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559938054-64bf57ea-8f2e-4ba9-b940-17be3e1c3df7.jpeg","caption":"2762091639"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559938668-00621ead-4115-48d8-aea6-c1cd8eef5a10.jpeg","caption":"2537856474"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559939592-7b80a1e5-72be-40ed-a462-cf078e2486f5.jpeg","caption":"3913711235"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559940209-315de723-e1c2-4151-ba09-255b98f64045.jpeg","caption":"4219136615"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559940921-bf3a5eb7-2c07-4950-9126-8225ce2f0d63.jpeg","caption":"681107457"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559941458-3a8a990f-d8eb-4c23-b125-7cd304f3708a.jpeg","caption":"345306646"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559942049-d5da91bc-ca40-407c-a1b3-58f5a30d7ba4.jpeg","caption":"3158607219"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559942663-1be74756-fb6d-4a90-8ac1-30cbab954661.jpeg","caption":"1720696799"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559943278-4871895d-4b0a-4d59-92da-a2a6d67eb393.jpeg","caption":"747042410"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559944307-dba311f3-d9a5-4fc6-ad6b-2ad44e76b4d8.jpeg","caption":"2997930342"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559944777-9056b3ca-ab08-43b2-ade6-b57c1da8ff1f.jpeg","caption":"407541547"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559945630-8fc94558-4860-46c7-83f1-b793352475b5.jpeg","caption":"591533568"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559946567-e6043fd4-e140-43a0-b611-30f82b671d10.jpeg","caption":"3282803403"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559947477-eff66450-7264-4fb5-8c2d-1799cfd18b68.jpeg","caption":"4012707473"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559948294-57cd3ae2-77a4-4d05-8550-fccf58a0e5a7.jpeg","caption":"2453070543"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559949114-85261424-b758-484c-9b27-014f690266ae.jpeg","caption":"667724913"},{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/kaushal-bodh/gallery/1788559949830-fe032b04-deef-4a35-b6c5-5471bfeeec32.jpeg","caption":"3327354970"}]'::jsonb) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."about_content" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "vision" text,
+  "content" text,
+  "eyebrow" text,
+  "mission" text,
+  "subtitle" text,
+  "cta_label" text,
+  "image_alt" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "campus_area" text,
+  "glance_text" text,
+  "section_key" text,
+  "story_label" text,
+  "campus_label" text,
+  "founder_name" text,
+  "founder_role" text,
+  "founder_year" text,
+  "glance_label" text,
+  "values_label" text,
+  "vision_label" text,
+  "facts_enabled" boolean DEFAULT true,
+  "founder_story" text,
+  "history_label" text,
+  "mission_label" text,
+  "cta_button_url" text,
+  "direction_label" text,
+  "founder_heading" text,
+  "history_heading" text,
+  "about_button_url" text,
+  "beginnings_label" text,
+  "cta_button_label" text,
+  "established_date" date,
+  "institution_type" text,
+  "established_label" text,
+  "founder_image_alt" text,
+  "founder_image_url" text,
+  "history_image_alt" text,
+  "institution_label" text,
+  "about_button_label" text,
+  "cta_heading_line_1" text,
+  "cta_heading_line_2" text,
+  "default_campus_area" text,
+  "story_heading_line_1" text,
+  "story_heading_line_2" text,
+  "story_secondary_text" text,
+  "founder_section_label" text,
+  "value_learning_number" text,
+  "values_heading_line_1" text,
+  "values_heading_line_2" text,
+  "values_learning_title" text,
+  "value_character_number" text,
+  "value_community_number" text,
+  "values_character_title" text,
+  "values_community_title" text,
+  "default_established_date" date,
+  "direction_heading_line_1" text,
+  "direction_heading_line_2" text,
+  "founder_story_button_url" text,
+  "founder_story_button_label" text,
+  "values_learning_description" text,
+  "values_character_description" text,
+  "values_community_description" text,
+  "founder_section_heading_line_1" text,
+  "founder_section_heading_line_2" text
+);
+
+-- Data for about_content (1 rows)
+INSERT INTO "public"."about_content" ("id", "title", "vision", "content", "eyebrow", "mission", "subtitle", "cta_label", "image_alt", "image_url", "is_active", "created_at", "sort_order", "updated_at", "campus_area", "glance_text", "section_key", "story_label", "campus_label", "founder_name", "founder_role", "founder_year", "glance_label", "values_label", "vision_label", "facts_enabled", "founder_story", "history_label", "mission_label", "cta_button_url", "direction_label", "founder_heading", "history_heading", "about_button_url", "beginnings_label", "cta_button_label", "established_date", "institution_type", "established_label", "founder_image_alt", "founder_image_url", "history_image_alt", "institution_label", "about_button_label", "cta_heading_line_1", "cta_heading_line_2", "default_campus_area", "story_heading_line_1", "story_heading_line_2", "story_secondary_text", "founder_section_label", "value_learning_number", "values_heading_line_1", "values_heading_line_2", "values_learning_title", "value_character_number", "value_community_number", "values_character_title", "values_community_title", "default_established_date", "direction_heading_line_1", "direction_heading_line_2", "founder_story_button_url", "founder_story_button_label", "values_learning_description", "values_character_description", "values_community_description", "founder_section_heading_line_1", "founder_section_heading_line_2") VALUES ('4787ee6d-d9bb-4215-be8c-be7f20242e03', 'A school built around the growth of the whole person.', 'To provide an environment where students can grow intellectually, physically, morally and socially.', 'Apex Public School is a co-educational institution focused on the mental, physical, moral and social growth of its students.', 'ABOUT APEX', 'To develop students through academic learning, character, confidence and responsible participation in the community.', 'Learning, character, confidence and responsibility.', 'Discover more', 'Apex Public School', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/about/main-1788548137682.jpg', true, '2026-09-02T22:25:29.711829+00:00', 0, '2026-09-04T18:55:57.17+00:00', '4 acres', 'A place where academic learning and personal development belong together.', 'main', 'Our story', 'Campus', 'Late Mr. Anthony M. Jonathan', 'Founder Principal', '1985', 'The school at a glance', 'Our values', 'Vision', true, 'Late Mr. Anthony M. Jonathan was the founder principal and an educationist whose vision shaped Apex Public School.', 'Apex Public School', 'Mission', '/academics', 'Direction', 'Founded with education, values and purpose.', 'Education shaped by values, opportunity and experience.', '/about', 'Our beginnings', 'Explore Academics', '29 July 1985', 'Unaided Christian Minority Institution', 'Established', 'Founder', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/about/founder-1788530739995.jpg', 'Apex Public School campus', 'Institution', 'Discover our story', 'See how Apex turns', 'values into experience.', '4 acres', 'More than a', 'classroom.', 'Learning at Apex extends beyond the classroom through character, confidence, responsibility and experience.', 'The founder', '01', 'The foundations', 'of everyday learning.', 'Learning', '02', '03', 'Character', 'Community', '29 July 1985', 'What guides', 'Apex.', '/about', 'Read the founder''s story', 'Building curiosity, understanding and the confidence to keep learning.', 'Developing responsibility, discipline, confidence and respect for others.', 'Creating a school environment where students, families and educators grow together.', 'A vision that', 'became Apex.') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."site_settings" (
+  "id" serial PRIMARY KEY,
+  "email" text,
+  "phone" text,
+  "address" text,
+  "tagline" text,
+  "logo_url" text,
+  "is_public" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "hero_title" text,
+  "updated_at" timestamptz DEFAULT now(),
+  "favicon_url" text,
+  "school_name" text,
+  "setting_key" text,
+  "youtube_url" text,
+  "facebook_url" text,
+  "linkedin_url" text,
+  "instagram_url" text,
+  "primary_color" text,
+  "setting_value" jsonb DEFAULT '{}'::jsonb,
+  "hero_image_url" text,
+  "hero_video_url" text,
+  "secondary_color" text,
+  "hero_description" text
+);
+
+-- Data for site_settings (2 rows)
+INSERT INTO "public"."site_settings" ("id", "email", "phone", "address", "tagline", "logo_url", "is_public", "created_at", "hero_title", "updated_at", "favicon_url", "school_name", "setting_key", "youtube_url", "facebook_url", "linkedin_url", "instagram_url", "primary_color", "setting_value", "hero_image_url", "hero_video_url", "secondary_color", "hero_description") VALUES (1, NULL, NULL, NULL, 'Education for the future', NULL, true, '2026-09-02T13:55:52.258858+00:00', 'Where curiosity becomes capability.', '2026-09-02T13:55:52.258858+00:00', NULL, 'Apex Public School', NULL, NULL, NULL, NULL, NULL, '#111111', NULL, NULL, NULL, '#ffffff', 'A forward-thinking learning environment designed to help every student discover, explore and become.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."site_settings" ("id", "email", "phone", "address", "tagline", "logo_url", "is_public", "created_at", "hero_title", "updated_at", "favicon_url", "school_name", "setting_key", "youtube_url", "facebook_url", "linkedin_url", "instagram_url", "primary_color", "setting_value", "hero_image_url", "hero_video_url", "secondary_color", "hero_description") VALUES (2, NULL, NULL, NULL, NULL, NULL, true, '2026-09-02T21:40:33.318168+00:00', NULL, '2026-10-06T18:19:06.218+00:00', NULL, 'Apex Public School', 'global', NULL, NULL, NULL, NULL, '#111111', '{"email":"contacts.apexschool@gmail.com","phone":"09990061747","address":"Apex Road, B-Block, Sant Nagar, Burari, Delhi – 110084","tagline":"Answer Duty''s Call","logo_url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/site-assets/branding/logo-1791310739882-kqk5jx.webp","maps_url":"https://www.google.com/maps/search/?api=1&query=Apex+Public+School,+Apex+Road,+B-Block,+Sant+Nagar,+Burari,+Delhi+110084","cbse_code":"2730184","favicon_url":"","school_name":"Apex Public School","website_url":"https://apexpublicschool.in/","footer_description":"A co-educational school committed to the mental, physical, moral and social development of its students."}'::jsonb, NULL, NULL, '#ffffff', NULL) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."website_theme" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "card_color" text,
+  "text_color" text,
+  "updated_at" timestamptz DEFAULT now(),
+  "muted_color" text,
+  "white_color" text,
+  "accent_color" text,
+  "button_color" text,
+  "footer_color" text,
+  "header_color" text,
+  "loader_color" text,
+  "palette_name" text,
+  "primary_color" text,
+  "section_color" text,
+  "card_text_color" text,
+  "secondary_color" text,
+  "background_color" text,
+  "button_text_color" text,
+  "card_border_color" text,
+  "primary_mid_color" text,
+  "button_hover_color" text,
+  "primary_dark_color" text,
+  "section_dark_color" text,
+  "loader_accent_color" text,
+  "background_deep_color" text
+);
+
+-- Data for website_theme (1 rows)
+INSERT INTO "public"."website_theme" ("id", "card_color", "text_color", "updated_at", "muted_color", "white_color", "accent_color", "button_color", "footer_color", "header_color", "loader_color", "palette_name", "primary_color", "section_color", "card_text_color", "secondary_color", "background_color", "button_text_color", "card_border_color", "primary_mid_color", "button_hover_color", "primary_dark_color", "section_dark_color", "loader_accent_color", "background_deep_color") VALUES ('dbdc6574-f710-4127-aa49-c2ed4a5a7b8a', '#102a56', '#10203a', '2026-10-07T11:07:28.862+00:00', '#687589', '#fffdf8', '#d4a72c', '#102a56', '#102a56', '#ffffff', '#102a56', 'Classic Blue', '#102a56', '#102a56', '#ffffff', '#dce7f5', '#f5f0e6', '#ffffff', '#1b3d73', '#1b3d73', '#1b3d73', '#0a1d3b', '#0a1d3b', '#d4a72c', '#ebe3d3') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."admin_profiles" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "role" text,
+  "email" text,
+  "full_name" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "updated_at" timestamptz DEFAULT now()
+);
+
+-- Data for admin_profiles (1 rows)
+INSERT INTO "public"."admin_profiles" ("id", "role", "email", "full_name", "is_active", "created_at", "updated_at") VALUES ('655426db-84e6-4973-94eb-68bfc07d0bd8', 'owner', 'aadiarora634@gmail.com', 'AADI ARORA', true, '2026-09-02T20:55:27.056292+00:00', '2026-09-02T20:55:27.056292+00:00') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."gallery_albums" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "slug" text,
+  "title" text,
+  "category" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "is_published" boolean DEFAULT true,
+  "cover_image_url" text
+);
+
+-- Data for gallery_albums (17 rows)
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('9a7e2f6d-e8ba-4af5-9a43-455b28d7ea4e', 'lithe-meet', 'Lithe Meet', 'Activities', true, '2026-09-02T23:24:29.369876+00:00', 6, '2026-09-02T23:24:29.369876+00:00', 'Highlights from the Lithe Meet.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('d46a86e2-25a8-4a1d-b6c5-ee2f36b9917b', 'founders-day-2016', 'Founder’s Day 2016', 'General', true, '2026-09-04T10:45:24.595471+00:00', 6, '2026-09-04T10:45:24.595471+00:00', 'Official Apex Public School gallery.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('277dc0de-1c63-4cd6-80ee-606635aa6a41', 'sports-day-2016-17', 'Sports Day 2016-17', 'General', true, '2026-09-04T10:45:24.595471+00:00', 8, '2026-09-04T10:45:24.595471+00:00', 'Official Apex Public School gallery.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('3b2d1554-866d-4f61-8240-34732c403a78', 'sports-day-2014-15', 'Sports Day 2014-15', 'General', true, '2026-09-04T10:45:24.595471+00:00', 9, '2026-09-04T10:45:24.595471+00:00', 'Official Apex Public School gallery.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('14ee145b-86d7-42ad-99d1-a4d252fa607c', 'sports-day-2012-13', 'Sports Day 2012-13', 'General', true, '2026-09-04T10:45:24.595471+00:00', 10, '2026-09-04T10:45:24.595471+00:00', 'Official Apex Public School gallery.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('42348ce2-0f71-49d2-8274-8fa8cadd31cc', 'sports-day-2011-12', 'Sports Day 2011-12', 'General', true, '2026-09-04T10:45:24.595471+00:00', 11, '2026-09-04T10:45:24.595471+00:00', 'Official Apex Public School gallery.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('796d8100-44ef-4671-a2b5-bffc04358935', 'sports-day-2010-11', 'Sports Day 2010-11', 'General', true, '2026-09-04T10:45:24.595471+00:00', 12, '2026-09-04T10:45:24.595471+00:00', 'Official Apex Public School gallery.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('745e4c32-a224-40e3-9d8c-b3d46efd6cf5', 'sports-day-2008-09', 'Sports Day 2008-09', 'General', true, '2026-09-04T10:45:24.595471+00:00', 13, '2026-09-04T10:45:24.595471+00:00', 'Official Apex Public School gallery.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('bb9a7107-bfc7-4d89-9a1c-c5bf09e0dd5c', 'womens-day-2021', 'Women’s Day 2021', 'General', true, '2026-09-04T10:45:24.595471+00:00', 14, '2026-09-04T10:45:24.595471+00:00', 'Official Apex Public School gallery.', true, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('048fd583-2de1-4d31-b8cf-0898594a5540', 'annual-day-2018', 'Annual Day 2018', 'General', true, '2026-09-04T10:45:24.595471+00:00', 2, '2026-09-04T22:18:44.722+00:00', 'Official Apex Public School gallery.', true, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560296252-0-2976661475.jpg') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'womens-day', 'Women''s Day', 'Celebrations', true, '2026-09-02T23:24:29.369876+00:00', 5, '2026-09-05T16:13:01.44+00:00', 'Women''s Day celebrations and school activities.', true, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624764440-0-440777046.jpg') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('9de91b57-d81f-49e3-b116-d24447aa5ff2', 'founders-day', 'Founder''s Day', 'Celebrations', true, '2026-09-02T23:24:29.369876+00:00', 2, '2026-09-05T16:16:24.5+00:00', 'Celebrating the legacy and vision behind Apex Public School.', true, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624953425-0-78612081.jpg') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('6586a729-e501-4572-bf13-92d37264d4db', 'basketball-clusters', 'Basketball Clusters', 'Sports', true, '2026-09-02T23:24:29.369876+00:00', 3, '2026-09-05T16:18:11.985+00:00', 'Basketball and inter-school sporting moments.', true, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625042590-0-85400357.jpg') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('1cadb6cc-e10f-424b-adeb-52eeb91ccd53', 'sports-day', 'Sports Day', 'Sports', true, '2026-09-02T23:24:29.369876+00:00', 4, '2026-09-05T16:21:22.729+00:00', 'Highlights from Sports Day and athletics activities.', true, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/1cadb6cc-e10f-424b-adeb-52eeb91ccd53/1788625279441-0-dsc_0128.jpg') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'annual-day-2017', 'Annual Day 2017', 'General', true, '2026-09-04T10:45:24.595471+00:00', 3, '2026-09-05T16:26:57.026+00:00', 'Official Apex Public School gallery.', true, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625535891-0-129755782.jpg') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('7a9a1b59-85e7-4cd3-8c13-568223130991', 'annual-day-2015', 'Annual Day 2015', 'General', true, '2026-09-04T10:45:24.595471+00:00', 4, '2026-09-05T16:28:12.295+00:00', 'Official Apex Public School gallery.', true, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/7a9a1b59-85e7-4cd3-8c13-568223130991/1788625689791-0-dsc_0077-3.jpg') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_albums" ("id", "slug", "title", "category", "is_active", "created_at", "sort_order", "updated_at", "description", "is_published", "cover_image_url") VALUES ('823f278e-4cf9-4c32-b996-c4c10b296931', 'investiture-2016', 'Investiture 2016', 'General', true, '2026-09-04T10:45:24.595471+00:00', 5, '2026-09-05T16:34:02.356+00:00', 'Official Apex Public School gallery.', true, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/823f278e-4cf9-4c32-b996-c4c10b296931/1788626039337-0-dsc_0083.jpg') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."gallery_images" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "caption" text,
+  "album_id" text,
+  "alt_text" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "is_published" boolean DEFAULT true
+);
+
+-- Data for gallery_images (209 rows)
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('969254a6-0f8c-4a30-9bf4-20604a429f18', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560296252-0-2976661475.jpg', true, '2026-09-04T22:18:19.342469+00:00', 0, '2026-09-04T22:18:19.342469+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('b1f89325-d21e-4397-a7a4-5759400dfce8', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560298197-1-4218092131.jpg', true, '2026-09-04T22:18:20.35282+00:00', 1, '2026-09-04T22:18:20.35282+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c0a9d746-03ce-43e9-ac4e-32b23f78ea94', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560299324-2-mg_7374.jpg', true, '2026-09-04T22:18:21.806314+00:00', 2, '2026-09-04T22:18:21.806314+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('74acee58-f77f-412f-86ef-bf1692475984', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560300757-3-mg_7370.jpg', true, '2026-09-04T22:18:23.224835+00:00', 3, '2026-09-04T22:18:23.224835+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('85d96caa-0f99-4bd1-b8de-de99f0e33100', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560302112-4-145846820--1-.jpg', true, '2026-09-04T22:18:24.304459+00:00', 4, '2026-09-04T22:18:24.304459+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('0ace65ab-ad3f-45d2-a95e-18cdae4c7ef0', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560303108-5-182569954.jpg', true, '2026-09-04T22:18:25.312154+00:00', 5, '2026-09-04T22:18:25.312154+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('623db5a3-cec0-4d4c-b994-996cb8a557ff', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560304239-6-3626274178.jpg', true, '2026-09-04T22:18:26.406413+00:00', 6, '2026-09-04T22:18:26.406413+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('7768e7fb-826d-4bb4-9248-69930ed7ba8d', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560305263-7-3485852017--4-.jpg', true, '2026-09-04T22:18:27.442208+00:00', 7, '2026-09-04T22:18:27.442208+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c605a6d6-4008-4cb4-91e0-429bf8b3b074', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560306285-8-3485852017--3-.jpg', true, '2026-09-04T22:18:28.454286+00:00', 8, '2026-09-04T22:18:28.454286+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('51fc1424-e83d-4bea-88af-3d03949cce33', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560307414-9-3485852017--2-.jpg', true, '2026-09-04T22:18:29.772294+00:00', 9, '2026-09-04T22:18:29.772294+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('f9642127-f8a2-4a7f-80e5-c65c052d23a5', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560308744-10-3485852017--1-.jpg', true, '2026-09-04T22:18:30.901847+00:00', 10, '2026-09-04T22:18:30.901847+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('d53ed96c-fac8-4c35-adac-0e0d08b38b15', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560309870-11-3485852017.jpg', true, '2026-09-04T22:18:32.048085+00:00', 11, '2026-09-04T22:18:32.048085+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('180257c7-c214-478c-8be1-67aaca852f2b', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560310896-12-145846820.jpg', true, '2026-09-04T22:18:32.956364+00:00', 12, '2026-09-04T22:18:32.956364+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c018679b-4f46-45ba-be66-8f10f8aec968', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560311919-13-1132472292.jpg', true, '2026-09-04T22:18:33.984489+00:00', 13, '2026-09-04T22:18:33.984489+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('456d5b0a-9417-4781-b3c4-1ba16860e69e', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560312809-14-3251539673.jpg', true, '2026-09-04T22:18:34.90733+00:00', 14, '2026-09-04T22:18:34.90733+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('38a13846-1b3a-47c4-b69b-c4286868d33c', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560313761-15-2240847438.jpg', true, '2026-09-04T22:18:36.022574+00:00', 15, '2026-09-04T22:18:36.022574+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('e8ad73e3-77d5-45f3-ac6e-8197439be527', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560314889-16-476188867.jpg', true, '2026-09-04T22:18:37.743187+00:00', 16, '2026-09-04T22:18:37.743187+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3bc570a4-db81-4f6a-955e-07f3fdef90bb', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560316535-17-3891513709.jpg', true, '2026-09-04T22:18:38.585004+00:00', 17, '2026-09-04T22:18:38.585004+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a2c0e307-4282-42e2-a290-fe9a9b35af81', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560317448-18-4218259938.jpg', true, '2026-09-04T22:18:39.716366+00:00', 18, '2026-09-04T22:18:39.716366+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('bd087f7f-460f-4188-834f-d24a78bcad9c', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560318676-19-2253428050.jpg', true, '2026-09-04T22:18:40.832626+00:00', 19, '2026-09-04T22:18:40.832626+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('90e18798-4d3e-4153-871f-dd33e349c4f4', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560319803-20-1449448771.jpg', true, '2026-09-04T22:18:41.961779+00:00', 20, '2026-09-04T22:18:41.961779+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('58d93287-0e5c-4009-9505-68d8a54b16fc', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560320827-21-2224706596.jpg', true, '2026-09-04T22:18:42.982798+00:00', 21, '2026-09-04T22:18:42.982798+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('7824cf51-009e-470a-863f-b3dc900a1ddc', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560321852-22-1786879928.jpg', true, '2026-09-04T22:18:44.005125+00:00', 22, '2026-09-04T22:18:44.005125+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('e1f3d3ce-ad76-42f4-afe2-69320ac1ed79', NULL, NULL, '048fd583-2de1-4d31-b8cf-0898594a5540', 'Annual Day 2018', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/048fd583-2de1-4d31-b8cf-0898594a5540/1788560322906-23-4065710541.jpg', true, '2026-09-04T22:18:44.937946+00:00', 23, '2026-09-04T22:18:44.937946+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ed9c59c3-c3cc-400e-a9cb-b61b5022f3f1', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624764440-0-440777046.jpg', true, '2026-09-05T16:12:48.124349+00:00', 0, '2026-09-05T16:12:48.124349+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('8abb2e47-9424-4c65-9ca9-17d6519a12c1', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624766159-1-544696064.jpg', true, '2026-09-05T16:12:49.580556+00:00', 1, '2026-09-05T16:12:49.580556+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('53738409-b8c3-4ab9-9e68-5a8c1d839738', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624767706-2-655159149.jpg', true, '2026-09-05T16:12:50.692691+00:00', 2, '2026-09-05T16:12:50.692691+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('07078070-b01b-490f-90bb-5e48f40a5a65', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624768716-3-694708873.jpg', true, '2026-09-05T16:12:51.626548+00:00', 3, '2026-09-05T16:12:51.626548+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('e8a27cbd-8346-4df1-9baa-922d70f72c21', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624769655-4-754830024.jpg', true, '2026-09-05T16:12:52.616573+00:00', 4, '2026-09-05T16:12:52.616573+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('bcd8cdfc-c797-48ff-8fc9-6d98b94f05a6', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624770643-5-1348484963.jpg', true, '2026-09-05T16:12:53.460906+00:00', 5, '2026-09-05T16:12:53.460906+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('e2ffd90e-0e0d-4c69-af9f-7f15aacf0a08', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624771484-6-1752377222.jpg', true, '2026-09-05T16:12:54.314902+00:00', 6, '2026-09-05T16:12:54.314902+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('24ba78b1-9440-425c-8145-86816fb9509b', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624772346-7-1957714055.jpg', true, '2026-09-05T16:12:55.136817+00:00', 7, '2026-09-05T16:12:55.136817+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('75c735ba-9d84-493a-a96c-6da57b2e5ed6', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624773158-8-1994801068.jpg', true, '2026-09-05T16:12:55.960979+00:00', 8, '2026-09-05T16:12:55.960979+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('02125960-beca-408e-85ea-fe2c61385a82', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624773984-9-2010239942.jpg', true, '2026-09-05T16:12:57.58352+00:00', 9, '2026-09-05T16:12:57.58352+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('1d86a791-4d3d-4bdc-9687-65b2f8be971a', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624775704-10-2382431318.jpg', true, '2026-09-05T16:12:59.115919+00:00', 10, '2026-09-05T16:12:59.115919+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ef4f0968-d8d9-4c5d-bc00-f79d600c4aa1', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624777156-11-2406450072.jpg', true, '2026-09-05T16:13:00.12774+00:00', 11, '2026-09-05T16:13:00.12774+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('bdd4d03c-744d-44e0-846c-ac3cf4938b5a', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624778139-12-2686889023.jpg', true, '2026-09-05T16:13:01.046766+00:00', 12, '2026-09-05T16:13:01.046766+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('55d3668b-e5cf-44e1-9ca0-4e45cb236ccf', NULL, NULL, 'b0fdc8f1-ceb0-4482-b666-4696d2b0a1db', 'Women''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/b0fdc8f1-ceb0-4482-b666-4696d2b0a1db/1788624779063-13-3076576874.jpg', true, '2026-09-05T16:13:02.44927+00:00', 13, '2026-09-05T16:13:02.44927+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('4c4f7790-f93c-450b-a464-57510ad93f11', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624953425-0-78612081.jpg', true, '2026-09-05T16:15:56.368568+00:00', 0, '2026-09-05T16:15:56.368568+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('b90292ca-e3ea-44e3-878d-0780e0e96227', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624954430-1-347970080.jpg', true, '2026-09-05T16:15:57.27516+00:00', 1, '2026-09-05T16:15:57.27516+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('9bfb112f-63dc-4cc3-bcf9-846bc2327228', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624955384-2-399480345.jpg', true, '2026-09-05T16:15:58.358469+00:00', 2, '2026-09-05T16:15:58.358469+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('664c33b7-139d-4331-81d6-0796a3d1bff6', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624956510-3-408642880.jpg', true, '2026-09-05T16:15:59.357559+00:00', 3, '2026-09-05T16:15:59.357559+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('50f1ffa2-374e-4eb4-9b34-2ca4d9a9171d', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624957372-4-665016546.jpg', true, '2026-09-05T16:16:00.195945+00:00', 4, '2026-09-05T16:16:00.195945+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('2fc8dd9e-68d8-4344-b461-a23a610cfda3', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624958267-5-678959382.jpg', true, '2026-09-05T16:16:01.265376+00:00', 5, '2026-09-05T16:16:01.265376+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('054ccf6c-25be-40a7-9a38-188d035f7d0a', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624959284-6-731771674.jpg', true, '2026-09-05T16:16:02.17148+00:00', 6, '2026-09-05T16:16:02.17148+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('893365ed-bd60-4697-a724-b4fa7a03c99b', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624960194-7-837189174.jpg', true, '2026-09-05T16:16:03.19647+00:00', 7, '2026-09-05T16:16:03.19647+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('f1a502f4-9837-482a-926b-c609bf5fefd8', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624961303-8-952221337.jpg', true, '2026-09-05T16:16:04.145782+00:00', 8, '2026-09-05T16:16:04.145782+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('058db8cc-859f-406e-b3b5-58aa48f726f0', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624962171-9-1202772190.jpg', true, '2026-09-05T16:16:05.085385+00:00', 9, '2026-09-05T16:16:05.085385+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c4ff73c9-d09d-40b2-8d68-4c838aa7c657', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624963111-10-1364032966.jpg', true, '2026-09-05T16:16:05.969802+00:00', 10, '2026-09-05T16:16:05.969802+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('dbb28543-46a5-4f54-b734-20230de6b55b', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624963977-11-1570125107.jpg', true, '2026-09-05T16:16:06.866255+00:00', 11, '2026-09-05T16:16:06.866255+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('8e9f9671-94bd-4c3f-a29d-86a91127ea89', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624964885-12-1618302893.jpg', true, '2026-09-05T16:16:07.835719+00:00', 12, '2026-09-05T16:16:07.835719+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('d7f856d8-cb1e-4e26-b104-a3d27fa552f8', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624965852-13-1720401238.jpg', true, '2026-09-05T16:16:08.691198+00:00', 13, '2026-09-05T16:16:08.691198+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('514d0520-3ef8-4d4a-8836-8c16ab52ea3c', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624966711-14-1889045489.jpg', true, '2026-09-05T16:16:09.569905+00:00', 14, '2026-09-05T16:16:09.569905+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('f444002c-0e47-4ff0-9dfb-a45c60d12b69', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624967586-15-1995799278.jpg', true, '2026-09-05T16:16:10.399452+00:00', 15, '2026-09-05T16:16:10.399452+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ac57dba6-ce67-44a7-ad92-eb3744645fd7', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624968421-16-2214490755.jpg', true, '2026-09-05T16:16:11.256281+00:00', 16, '2026-09-05T16:16:11.256281+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('de07ce1d-0264-4e1b-9366-6a2753f93024', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624969267-17-2284270275.jpg', true, '2026-09-05T16:16:12.1358+00:00', 17, '2026-09-05T16:16:12.1358+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('7f56f602-2f28-4ed7-94e9-2a0e05839082', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624970151-18-2323221014.jpg', true, '2026-09-05T16:16:13.097573+00:00', 18, '2026-09-05T16:16:13.097573+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('19ae142a-9b48-46e9-a036-1ec9dc871ee1', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624971103-19-2364258306.jpg', true, '2026-09-05T16:16:13.939934+00:00', 19, '2026-09-05T16:16:13.939934+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ab79588a-240c-4bb3-b6c2-186270c02474', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624971949-20-2518255598.jpg', true, '2026-09-05T16:16:14.8265+00:00', 20, '2026-09-05T16:16:14.8265+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('5a9424b2-cc91-42db-a91d-0adb4a5be270', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624972845-21-2572235073.jpg', true, '2026-09-05T16:16:15.636942+00:00', 21, '2026-09-05T16:16:15.636942+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('f17f1951-f428-456f-a085-0161dbe66465', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624973652-22-3113494785.jpg', true, '2026-09-05T16:16:16.490871+00:00', 22, '2026-09-05T16:16:16.490871+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('5925af85-ecc5-4f24-9f34-db73416c746e', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624974507-23-3250135491.jpg', true, '2026-09-05T16:16:17.317708+00:00', 23, '2026-09-05T16:16:17.317708+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('8e22ae5d-ef9b-48e2-97a1-426ef14c0913', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624975321-24-3272837784.jpg', true, '2026-09-05T16:16:18.165499+00:00', 24, '2026-09-05T16:16:18.165499+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a79e83f8-5f59-4754-a04c-fe9c49152bec', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624976186-25-3562772206.jpg', true, '2026-09-05T16:16:19.1608+00:00', 25, '2026-09-05T16:16:19.1608+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('378dcc60-88c9-4307-810a-b03d1b24a52c', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624977303-26-3790381280.jpg', true, '2026-09-05T16:16:20.160999+00:00', 26, '2026-09-05T16:16:20.160999+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('9f5f7966-1348-4ee6-98db-9827059d08f7', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624978180-27-3861461810.jpg', true, '2026-09-05T16:16:20.994686+00:00', 27, '2026-09-05T16:16:20.994686+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('9477016b-d813-41f2-bc6a-e06d7d1d5202', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624979007-28-3889960313.jpg', true, '2026-09-05T16:16:21.875492+00:00', 28, '2026-09-05T16:16:21.875492+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('cf0e4d70-6bd4-4df9-a383-1540d6f27a22', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624979908-29-3940179218.jpg', true, '2026-09-05T16:16:22.742843+00:00', 29, '2026-09-05T16:16:22.742843+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('19dd3165-59aa-45ad-a21f-c719db372442', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624980786-30-3971844294.jpg', true, '2026-09-05T16:16:23.699314+00:00', 30, '2026-09-05T16:16:23.699314+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('7c80aa34-dc8f-41af-8d12-4dc36017502e', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624981712-31-4216788552.jpg', true, '2026-09-05T16:16:24.607832+00:00', 31, '2026-09-05T16:16:24.607832+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('56a218b9-b3db-450d-9cc0-ab11da381512', NULL, NULL, '9de91b57-d81f-49e3-b116-d24447aa5ff2', 'Founder''s Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/9de91b57-d81f-49e3-b116-d24447aa5ff2/1788624982622-32-4280283264.jpg', true, '2026-09-05T16:16:25.650587+00:00', 32, '2026-09-05T16:16:25.650587+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('5ebc2430-9979-4f1b-867c-db8245c002a5', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625042590-0-85400357.jpg', true, '2026-09-05T16:17:25.908992+00:00', 0, '2026-09-05T16:17:25.908992+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('7056f6a4-832b-4bbf-bd95-91c6e9de9ed4', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625043926-1-141770841.jpg', true, '2026-09-05T16:17:26.76796+00:00', 1, '2026-09-05T16:17:26.76796+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('23ed7a28-c67e-4646-b0f9-561210036f0c', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625044788-2-197603774.jpg', true, '2026-09-05T16:17:28.621335+00:00', 2, '2026-09-05T16:17:28.621335+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('00368c91-6a24-4b9b-80f1-6250dfb3d1df', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625046630-3-341504636.jpg', true, '2026-09-05T16:17:29.478238+00:00', 3, '2026-09-05T16:17:29.478238+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('25f29b42-ca86-4f98-a76a-51b48feb6ace', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625047501-4-466310388.jpg', true, '2026-09-05T16:17:30.37698+00:00', 4, '2026-09-05T16:17:30.37698+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('f0290ce7-9052-4b5d-863f-6784ccb73833', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625048399-5-638299711.jpg', true, '2026-09-05T16:17:31.282261+00:00', 5, '2026-09-05T16:17:31.282261+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('9043c5df-33fd-4e72-9a77-fbbb34c6775b', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625049291-6-678640186.jpg', true, '2026-09-05T16:17:32.287241+00:00', 6, '2026-09-05T16:17:32.287241+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('d8d5aada-9725-4d13-8ea1-49a5216c0898', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625050312-7-813561156.jpg', true, '2026-09-05T16:17:33.208317+00:00', 7, '2026-09-05T16:17:33.208317+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('1a0f489e-7d4d-4df7-ae86-bc7850bcb253', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625051222-8-860088866.jpg', true, '2026-09-05T16:17:34.050327+00:00', 8, '2026-09-05T16:17:34.050327+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('99f18ffa-763e-477e-933e-13494bb17e17', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625052076-9-877063562.jpg', true, '2026-09-05T16:17:34.906895+00:00', 9, '2026-09-05T16:17:34.906895+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('56b20e39-cbce-4685-b457-159a305d3403', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625052922-10-953416573.jpg', true, '2026-09-05T16:17:35.774438+00:00', 10, '2026-09-05T16:17:35.774438+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('54fbf1b9-cacb-4517-80af-e8ceb8468dcb', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625053782-11-1045655524.jpg', true, '2026-09-05T16:17:36.772101+00:00', 11, '2026-09-05T16:17:36.772101+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a6d8f24a-31e4-4356-a546-532cc714963e', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625054889-12-1060372174.jpg', true, '2026-09-05T16:17:38.284395+00:00', 12, '2026-09-05T16:17:38.284395+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a7576d67-b7b6-45c5-ad15-c45aa48da18c', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625056320-13-1105239287.jpg', true, '2026-09-05T16:17:39.310621+00:00', 13, '2026-09-05T16:17:39.310621+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c8268182-5268-40af-a4b5-bf6b3392badb', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625057426-14-1112488592.jpg', true, '2026-09-05T16:17:40.301812+00:00', 14, '2026-09-05T16:17:40.301812+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('207afc0e-c459-4045-bcd0-8c7763fea66b', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625058319-15-1164889828.jpg', true, '2026-09-05T16:17:41.154028+00:00', 15, '2026-09-05T16:17:41.154028+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3249e2e4-8e95-4039-85aa-0a6f967c88bf', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625059156-16-1184272976.jpg', true, '2026-09-05T16:17:41.965678+00:00', 16, '2026-09-05T16:17:41.965678+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a03cba5e-7f6a-4d8e-a82b-33ba6dd3dd67', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625059986-17-1197269268.jpg', true, '2026-09-05T16:17:42.846406+00:00', 17, '2026-09-05T16:17:42.846406+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('afe797a9-4398-40f9-969f-c3d1f77ea880', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625060852-18-1441982169.jpg', true, '2026-09-05T16:17:43.757118+00:00', 18, '2026-09-05T16:17:43.757118+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('4054f0f5-31cd-47d4-9863-983b6b5391bb', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625061765-19-1520663843.jpg', true, '2026-09-05T16:17:44.625815+00:00', 19, '2026-09-05T16:17:44.625815+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a45d3d1c-d90c-4129-9350-8ede1f34626d', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625062639-20-1671357495.jpg', true, '2026-09-05T16:17:45.578684+00:00', 20, '2026-09-05T16:17:45.578684+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('fd51199d-25b4-4b8f-aebc-21a9732af702', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625063595-21-1692426673.jpg', true, '2026-09-05T16:17:46.457882+00:00', 21, '2026-09-05T16:17:46.457882+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('bf600beb-e045-42fd-9845-50d0b8fda7ee', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625064490-22-1897258131.jpg', true, '2026-09-05T16:17:47.365235+00:00', 22, '2026-09-05T16:17:47.365235+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('8071ac8b-7af0-4d81-89a1-c317c58c7e5f', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625065368-23-1936610677.jpg', true, '2026-09-05T16:17:48.721853+00:00', 23, '2026-09-05T16:17:48.721853+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3438d4bb-affc-437d-a3b8-0e0a62951497', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625066718-24-2000334150.jpg', true, '2026-09-05T16:17:49.551672+00:00', 24, '2026-09-05T16:17:49.551672+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('d66929de-7394-4edf-bce1-9029d82872dc', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625067569-25-2060429052.jpg', true, '2026-09-05T16:17:50.461064+00:00', 25, '2026-09-05T16:17:50.461064+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('26dce33a-953a-4160-ae6c-48a6e299ed00', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625068463-26-2061446272.jpg', true, '2026-09-05T16:17:51.319093+00:00', 26, '2026-09-05T16:17:51.319093+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('b3275ad5-7e07-42fe-bb42-0ecc1ad7d91a', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625069361-27-2112259274.jpg', true, '2026-09-05T16:17:52.307319+00:00', 27, '2026-09-05T16:17:52.307319+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('dd1b96cb-7c6a-4e77-9d13-11bc71e8f3a8', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625070409-28-2230989522.jpg', true, '2026-09-05T16:17:53.266889+00:00', 28, '2026-09-05T16:17:53.266889+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('99f374bd-a660-4aaf-af51-675b05ce89d5', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625071369-29-2266312347.jpg', true, '2026-09-05T16:17:54.245426+00:00', 29, '2026-09-05T16:17:54.245426+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('388d83b2-6d60-4c27-9f02-ef236864584e', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625079880-38-2702981226.jpg', true, '2026-09-05T16:18:02.748029+00:00', 38, '2026-09-05T16:18:02.748029+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('6e75e85c-7623-4db8-b090-89e31f021cfb', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625088660-48-4081472338.jpg', true, '2026-09-05T16:18:11.50199+00:00', 48, '2026-09-05T16:18:11.50199+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('962ca5d1-5473-4bf3-9e9e-bd6c0272bd90', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625072274-30-2326436314.jpg', true, '2026-09-05T16:17:55.206795+00:00', 30, '2026-09-05T16:17:55.206795+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('912d5f84-616e-4c0b-8a00-ef12484e8810', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625080766-39-3049856173.jpg', true, '2026-09-05T16:18:03.721933+00:00', 39, '2026-09-05T16:18:03.721933+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('5ff8ab80-39d6-4d5b-90b1-2b27eb8066eb', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625089498-49-4241752127.jpg', true, '2026-09-05T16:18:12.336162+00:00', 49, '2026-09-05T16:18:12.336162+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('507ed70e-fab4-4459-9d03-066df1489f27', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625073211-31-2517537483.jpg', true, '2026-09-05T16:17:56.129628+00:00', 31, '2026-09-05T16:17:56.129628+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('2492cbb1-6538-4f56-8d0a-4f1111b8d370', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625081744-40-3339338882.jpg', true, '2026-09-05T16:18:04.530099+00:00', 40, '2026-09-05T16:18:04.530099+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('d04f416d-6a0e-45f6-b740-2d25d8a906e9', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625090369-50-4244120993.jpg', true, '2026-09-05T16:18:13.182217+00:00', 50, '2026-09-05T16:18:13.182217+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ea023e99-2b1a-47a9-a9c6-70b0b3522656', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625074133-32-2524232176.jpg', true, '2026-09-05T16:17:56.96173+00:00', 32, '2026-09-05T16:17:56.96173+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('65d4691b-3f81-4a1e-9dc6-e08c3d65c0ca', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625082541-41-3341832223.jpg', true, '2026-09-05T16:18:05.491286+00:00', 41, '2026-09-05T16:18:05.491286+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('6f2ce8e8-d7bf-4cea-b307-d7d0ca2a911e', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625074974-33-2584369309.jpg', true, '2026-09-05T16:17:57.909095+00:00', 33, '2026-09-05T16:17:57.909095+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('49941c06-dea7-43b9-bcbc-83963b639101', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625083505-42-3421839216.jpg', true, '2026-09-05T16:18:06.337556+00:00', 42, '2026-09-05T16:18:06.337556+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('784c8296-db7a-4791-9cbc-7e4b2a832153', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625075924-34-2626456167.jpg', true, '2026-09-05T16:17:58.791669+00:00', 34, '2026-09-05T16:17:58.791669+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('21265325-3541-49c4-9ad8-8002767c9c58', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625084361-43-3675436387.jpg', true, '2026-09-05T16:18:07.171968+00:00', 43, '2026-09-05T16:18:07.171968+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('549279c1-9f3e-4d9f-92a2-9c31a588bffb', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625076814-35-2634890697.jpg', true, '2026-09-05T16:17:59.674923+00:00', 35, '2026-09-05T16:17:59.674923+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('8f3170ac-39a6-4a08-8184-a35da6cacf96', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625085178-44-3754908243.jpg', true, '2026-09-05T16:18:08.037183+00:00', 44, '2026-09-05T16:18:08.037183+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('f0b844f3-2206-4cc9-b9e1-a44a15d93b3a', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625077892-36-2641517192.jpg', true, '2026-09-05T16:18:00.845869+00:00', 36, '2026-09-05T16:18:00.845869+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a3a63def-c09d-4cb8-b2cd-51394599ae7b', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625086044-45-3784868328.jpg', true, '2026-09-05T16:18:08.925837+00:00', 45, '2026-09-05T16:18:08.925837+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('51184664-04e9-4c51-a4cf-8227735a7a2e', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625078896-37-2700028177.jpg', true, '2026-09-05T16:18:01.881024+00:00', 37, '2026-09-05T16:18:01.881024+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c1225558-ce94-4d0d-bb15-c8910fc738c9', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625086931-46-3797549172.jpg', true, '2026-09-05T16:18:09.778146+00:00', 46, '2026-09-05T16:18:09.778146+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a45b2714-1ef3-4349-a877-60bc204edc4d', NULL, NULL, '6586a729-e501-4572-bf13-92d37264d4db', 'Basketball Clusters', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/6586a729-e501-4572-bf13-92d37264d4db/1788625087789-47-4001794134.jpg', true, '2026-09-05T16:18:10.646492+00:00', 47, '2026-09-05T16:18:10.646492+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('1cb4c734-da95-4d5a-b8a8-0bc61d2d471a', NULL, NULL, '1cadb6cc-e10f-424b-adeb-52eeb91ccd53', 'Sports Day', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/1cadb6cc-e10f-424b-adeb-52eeb91ccd53/1788625279441-0-dsc_0128.jpg', true, '2026-09-05T16:21:23.859333+00:00', 0, '2026-09-05T16:21:23.859333+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3cb22af0-8818-4a5d-8dd0-e40217f6b2f5', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625535891-0-129755782.jpg', true, '2026-09-05T16:25:38.859801+00:00', 0, '2026-09-05T16:25:38.859801+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('39673897-1872-4797-a41b-d262dcf89e99', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625536863-1-145846820.jpg', true, '2026-09-05T16:25:40.202518+00:00', 1, '2026-09-05T16:25:40.202518+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c35a4088-dee6-41fe-b42c-d084b6a6a2f7', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625538216-2-147164898.jpg', true, '2026-09-05T16:25:41.061297+00:00', 2, '2026-09-05T16:25:41.061297+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('697602b8-ebf0-430c-a815-2b1529f301cc', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625539062-3-182569954.jpg', true, '2026-09-05T16:25:41.944622+00:00', 3, '2026-09-05T16:25:41.944622+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('5f788973-665b-4665-91ab-ee0612c0e225', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625540004-4-257318122.jpg', true, '2026-09-05T16:25:42.925216+00:00', 4, '2026-09-05T16:25:42.925216+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a9d6aba3-86b7-4dca-b055-9ecd4ae35902', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625540941-5-299310979.jpg', true, '2026-09-05T16:25:43.805212+00:00', 5, '2026-09-05T16:25:43.805212+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c670fbe0-9dba-46fb-8d66-86194b7dd9b8', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625541813-6-305548842.jpg', true, '2026-09-05T16:25:44.701241+00:00', 6, '2026-09-05T16:25:44.701241+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('e9ef9472-2e2e-42a5-b973-991da0a4593b', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625542697-7-393090064.jpg', true, '2026-09-05T16:25:45.666535+00:00', 7, '2026-09-05T16:25:45.666535+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('48057080-f52c-4944-ac87-1a1af0ba2082', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625543668-8-418666053.jpg', true, '2026-09-05T16:25:46.848608+00:00', 8, '2026-09-05T16:25:46.848608+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('0e2c4c7f-f7e2-45db-8878-b94d0b5f8abf', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625544871-9-432355807.jpg', true, '2026-09-05T16:25:47.936655+00:00', 9, '2026-09-05T16:25:47.936655+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('55d9798f-e5d4-45c0-94a1-d049e79d41aa', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625545947-10-476188867.jpg', true, '2026-09-05T16:25:48.895692+00:00', 10, '2026-09-05T16:25:48.895692+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('b65f016c-adea-466a-83ad-6899aebb68b7', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625546898-11-486582033.jpg', true, '2026-09-05T16:25:49.76461+00:00', 11, '2026-09-05T16:25:49.76461+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('69602c3c-bf7f-4d9c-897d-6fc57146ff28', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625547761-12-543428488.jpg', true, '2026-09-05T16:25:50.569674+00:00', 12, '2026-09-05T16:25:50.569674+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('160d9f9f-1a5e-420c-b211-2ea2d7a12800', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625548642-13-656580337.jpg', true, '2026-09-05T16:25:51.532057+00:00', 13, '2026-09-05T16:25:51.532057+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('9fa0380f-61a7-4798-a6a9-9d8c3aba2128', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625549547-14-699382787.jpg', true, '2026-09-05T16:25:52.920695+00:00', 14, '2026-09-05T16:25:52.920695+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('1d4763a8-0d12-4391-82c4-d9274617a16e', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625550935-15-775712267.jpg', true, '2026-09-05T16:25:53.759945+00:00', 15, '2026-09-05T16:25:53.759945+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('34cb5b12-7885-429a-9ac9-45962212dd25', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625551830-16-832042233.jpg', true, '2026-09-05T16:25:54.699955+00:00', 16, '2026-09-05T16:25:54.699955+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c71edbab-b422-43f6-b4ad-092fb11f3d1e', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625552798-17-859897269.jpg', true, '2026-09-05T16:25:55.605576+00:00', 17, '2026-09-05T16:25:55.605576+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ac3a2d39-96f2-4c50-9db3-ae0ee0691852', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625553607-18-918581702.jpg', true, '2026-09-05T16:25:56.462841+00:00', 18, '2026-09-05T16:25:56.462841+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('af666a1e-5528-420e-a0fe-b94be20db7c9', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625554476-19-948142157.jpg', true, '2026-09-05T16:25:57.38425+00:00', 19, '2026-09-05T16:25:57.38425+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('47b158b7-c0a7-46be-9a70-8a443db78128', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625555395-20-954322223.jpg', true, '2026-09-05T16:25:58.235428+00:00', 20, '2026-09-05T16:25:58.235428+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('2e1cae1a-96c4-48af-9436-e4bd6b1a75a5', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625556252-21-977912026.jpg', true, '2026-09-05T16:25:59.205943+00:00', 21, '2026-09-05T16:25:59.205943+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('385c0d6a-0de7-49fc-8080-3fe4e4464a28', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625557203-22-1053972378.jpg', true, '2026-09-05T16:26:00.107411+00:00', 22, '2026-09-05T16:26:00.107411+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('cd97be7c-7a77-4f2f-870a-918a5e1222e0', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625558115-23-1060952374.jpg', true, '2026-09-05T16:26:00.949587+00:00', 23, '2026-09-05T16:26:00.949587+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('fa83a38d-c3a8-4eac-a44d-735355d4898a', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625559043-24-1076485403.jpg', true, '2026-09-05T16:26:01.919517+00:00', 24, '2026-09-05T16:26:01.919517+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('4b243633-bbca-4ace-8a13-011bebda65a4', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625560003-25-1132472292.jpg', true, '2026-09-05T16:26:03.531962+00:00', 25, '2026-09-05T16:26:03.531962+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('dd2c8029-d560-48e9-9f9c-9638e9834bab', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625561601-26-1152535131.jpg', true, '2026-09-05T16:26:04.469896+00:00', 26, '2026-09-05T16:26:04.469896+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('004b5108-df19-4d09-84aa-d663e9351cb5', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625562464-27-1176127406.jpg', true, '2026-09-05T16:26:05.649867+00:00', 27, '2026-09-05T16:26:05.649867+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('6d9cbbb3-d794-4dbd-b46f-d8d6eb85728b', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625563641-28-1199665148.jpg', true, '2026-09-05T16:26:06.568585+00:00', 28, '2026-09-05T16:26:06.568585+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3737dad7-bed4-497b-b4c2-b67cdac27328', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625569153-34-1786879928.jpg', true, '2026-09-05T16:26:11.979707+00:00', 34, '2026-09-05T16:26:11.979707+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('dbe42e0c-4473-47ce-be25-7bb67ea4fc32', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625577849-44-2497642958.jpg', true, '2026-09-05T16:26:20.826557+00:00', 44, '2026-09-05T16:26:20.826557+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('52e68a0a-0ada-49fd-9330-66f104547d98', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625587044-54-3108331353.jpg', true, '2026-09-05T16:26:29.920269+00:00', 54, '2026-09-05T16:26:29.920269+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a3ae97d3-890d-4fef-829a-640fa2839167', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625596623-64-3626274178.jpg', true, '2026-09-05T16:26:39.466336+00:00', 64, '2026-09-05T16:26:39.466336+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('1c103166-6505-4c0f-949f-87251ac12a54', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625605526-74-3960934906.jpg', true, '2026-09-05T16:26:48.351799+00:00', 74, '2026-09-05T16:26:48.351799+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('816e80b1-9170-4183-8f0a-417ccda8c297', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625564575-29-1211890503.jpg', true, '2026-09-05T16:26:07.476162+00:00', 29, '2026-09-05T16:26:07.476162+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('f4da4fc8-c81a-431b-9e8c-d2594cf799ed', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625572563-38-2224706596.jpg', true, '2026-09-05T16:26:15.399176+00:00', 38, '2026-09-05T16:26:15.399176+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('64277fe5-860b-4ba9-9f8b-2809bb818838', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625581610-48-2754107712.jpg', true, '2026-09-05T16:26:24.453957+00:00', 48, '2026-09-05T16:26:24.453957+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ec7916f9-c5de-4827-8f18-89f4365bfa6e', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625590596-58-3272759779.jpg', true, '2026-09-05T16:26:33.433583+00:00', 58, '2026-09-05T16:26:33.433583+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('38e8073b-651a-4ffa-b7b8-65132fb47347', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625600172-68-3783637973.jpg', true, '2026-09-05T16:26:43.135817+00:00', 68, '2026-09-05T16:26:43.135817+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('6d966fa3-e276-4423-9b18-a0edd34bbfa8', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625565487-30-1319436265.jpg', true, '2026-09-05T16:26:08.406133+00:00', 30, '2026-09-05T16:26:08.406133+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('8a458b33-b814-4bc2-835b-6584beea7099', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625574281-40-2253428050.jpg', true, '2026-09-05T16:26:17.126875+00:00', 40, '2026-09-05T16:26:17.126875+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('60f67556-d6fc-4ec3-8ab5-bbce942b516a', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625583430-50-2826429829.jpg', true, '2026-09-05T16:26:26.30462+00:00', 50, '2026-09-05T16:26:26.30462+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('34cc6865-5601-4f70-b1b7-cc7d8222aa99', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625592316-60-3390519569.jpg', true, '2026-09-05T16:26:35.175287+00:00', 60, '2026-09-05T16:26:35.175287+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('374d9b9a-7a76-4b68-afb6-2119181e9b81', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625602032-70-3825547174.jpg', true, '2026-09-05T16:26:44.870117+00:00', 70, '2026-09-05T16:26:44.870117+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('08d4d7c3-ead6-40d7-af9a-7e69f8076e8a', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625566419-31-1449448771.jpg', true, '2026-09-05T16:26:09.26943+00:00', 31, '2026-09-05T16:26:09.26943+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('775fc33b-3dea-4314-ae57-d77253d70d00', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625575141-41-2419071939.jpg', true, '2026-09-05T16:26:17.977146+00:00', 41, '2026-09-05T16:26:17.977146+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('22eb14f6-e366-4699-aab7-7e56592d2ac8', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625584310-51-2863235527.jpg', true, '2026-09-05T16:26:27.146525+00:00', 51, '2026-09-05T16:26:27.146525+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ae1230ce-9a84-47e7-b042-00fc60c90d6f', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625593183-61-3405807551.jpg', true, '2026-09-05T16:26:36.238991+00:00', 61, '2026-09-05T16:26:36.238991+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c4afc248-1607-4862-aa02-984a0fbdc02d', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625602887-71-3891513709.jpg', true, '2026-09-05T16:26:45.732398+00:00', 71, '2026-09-05T16:26:45.732398+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('9d1323eb-e861-4290-aab1-0cff791a39a0', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625567343-32-1712315588.jpg', true, '2026-09-05T16:26:10.215044+00:00', 32, '2026-09-05T16:26:10.215044+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('9f96710c-0df1-4c3b-a399-1371041e6ed2', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625575976-42-2430239893.jpg', true, '2026-09-05T16:26:18.858211+00:00', 42, '2026-09-05T16:26:18.858211+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('cff94a4c-bbfa-4551-bdf2-965e3dfac8f9', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625585148-52-2918125758.jpg', true, '2026-09-05T16:26:28.105682+00:00', 52, '2026-09-05T16:26:28.105682+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('7917423b-cc2f-4b3c-8aa4-738ef968a126', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625594236-62-3485852017.jpg', true, '2026-09-05T16:26:37.765492+00:00', 62, '2026-09-05T16:26:37.765492+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('f1d922b1-fd11-4d34-9483-fdc1f3844a07', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625603727-72-3928263503.jpg', true, '2026-09-05T16:26:46.554132+00:00', 72, '2026-09-05T16:26:46.554132+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ed781afc-d78c-4184-9b1e-71e1a57bd016', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625568226-33-1745373465.jpg', true, '2026-09-05T16:26:11.155853+00:00', 33, '2026-09-05T16:26:11.155853+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('911b4f51-de1e-4878-beae-3a20724b4a86', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625576874-43-2464979835.jpg', true, '2026-09-05T16:26:19.845303+00:00', 43, '2026-09-05T16:26:19.845303+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('7e5b13f6-48c3-4b51-abf3-d7e1926b65c0', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625586123-53-2976661475.jpg', true, '2026-09-05T16:26:29.005829+00:00', 53, '2026-09-05T16:26:29.005829+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('9b941037-254f-409e-8c36-fd25cebcac1b', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625595781-63-3491158744.jpg', true, '2026-09-05T16:26:38.615839+00:00', 63, '2026-09-05T16:26:38.615839+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('8527e588-0d9b-483a-8814-70e55161a33b', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625604625-73-3930506797.jpg', true, '2026-09-05T16:26:47.512018+00:00', 73, '2026-09-05T16:26:47.512018+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('5959bd5f-cc1d-4b57-9310-f318870163de', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625569992-35-2082417483.jpg', true, '2026-09-05T16:26:12.828899+00:00', 35, '2026-09-05T16:26:12.828899+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('e606cffe-ec39-4a0b-be71-eab6cda0fdd0', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625578826-45-2504272284.jpg', true, '2026-09-05T16:26:21.689861+00:00', 45, '2026-09-05T16:26:21.689861+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3372e772-9009-495d-a141-6c8a8c239479', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625587922-55-3134001017.jpg', true, '2026-09-05T16:26:30.931094+00:00', 55, '2026-09-05T16:26:30.931094+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3053f7ea-9b9b-4b57-83c2-ab2e6c0a6b5c', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625597481-65-3657484418.jpg', true, '2026-09-05T16:26:40.39086+00:00', 65, '2026-09-05T16:26:40.39086+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('febcf0af-6d1e-4d6d-bde9-5a15d3ce13e3', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625606367-75-3992559446.jpg', true, '2026-09-05T16:26:49.238023+00:00', 75, '2026-09-05T16:26:49.238023+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3ba33129-ad87-4e93-aeaf-c05c3073a30e', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625570828-36-2126597897.jpg', true, '2026-09-05T16:26:13.669673+00:00', 36, '2026-09-05T16:26:13.669673+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('de01ec92-121c-49ea-a07e-335a5dd41966', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625579819-46-2600385831.jpg', true, '2026-09-05T16:26:22.776867+00:00', 46, '2026-09-05T16:26:22.776867+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('12bb0ee5-ae03-4431-9ea7-c0d460d05b32', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625588935-56-3237265108.jpg', true, '2026-09-05T16:26:31.769436+00:00', 56, '2026-09-05T16:26:31.769436+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('e6d115a5-91c6-4d24-b2c0-519b7f4d6fcf', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625598411-66-3717405322.jpg', true, '2026-09-05T16:26:41.276078+00:00', 66, '2026-09-05T16:26:41.276078+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3fcc3b49-ce46-422d-9d35-006246ea49e9', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625607240-76-4065710541.jpg', true, '2026-09-05T16:26:50.160472+00:00', 76, '2026-09-05T16:26:50.160472+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('4476618a-9d22-453c-844d-7491be23b051', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625571670-37-2145456860.jpg', true, '2026-09-05T16:26:14.547975+00:00', 37, '2026-09-05T16:26:14.547975+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('42bda380-cce4-4822-877d-b87f32eeae24', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625580777-47-2623650185.jpg', true, '2026-09-05T16:26:23.610348+00:00', 47, '2026-09-05T16:26:23.610348+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('3c746d60-0dc4-4a9b-a067-be87f759f2cd', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625589777-57-3251539673.jpg', true, '2026-09-05T16:26:32.604009+00:00', 57, '2026-09-05T16:26:32.604009+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('258bf4e8-fe44-4fdf-91e8-5483d252daab', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625599286-67-3753574935.jpg', true, '2026-09-05T16:26:42.154617+00:00', 67, '2026-09-05T16:26:42.154617+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('38dd3602-73ec-422d-bac1-3ef8a09b736d', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625608175-77-4070656488.jpg', true, '2026-09-05T16:26:51.069733+00:00', 77, '2026-09-05T16:26:51.069733+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('305a5886-9e60-4dcf-8d31-da28078b3468', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625573405-39-2240847438.jpg', true, '2026-09-05T16:26:16.280234+00:00', 39, '2026-09-05T16:26:16.280234+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('338e4db8-2caf-4069-b376-60c2ef3df20c', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625582563-49-2781245444.jpg', true, '2026-09-05T16:26:25.438299+00:00', 49, '2026-09-05T16:26:25.438299+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('ec0d4310-24ae-4a7b-8c54-1b3a773be87d', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625591431-59-3316339312.jpg', true, '2026-09-05T16:26:34.309353+00:00', 59, '2026-09-05T16:26:34.309353+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('0a52ece4-b47f-4d1a-9e48-37137d69e384', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625601142-69-3813847705.jpg', true, '2026-09-05T16:26:44.037282+00:00', 69, '2026-09-05T16:26:44.037282+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('c3917d13-51b9-43e8-b510-47f0aadbdd93', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625609103-78-4125612177.jpg', true, '2026-09-05T16:26:52.757071+00:00', 78, '2026-09-05T16:26:52.757071+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('46e12643-1eb1-4449-915d-041fba1f823d', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625610817-79-4142898649.jpg', true, '2026-09-05T16:26:54.43999+00:00', 79, '2026-09-05T16:26:54.43999+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('551d28ab-e3b7-4700-ab06-ac1b02175075', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625612439-80-4167178435.jpg', true, '2026-09-05T16:26:55.279686+00:00', 80, '2026-09-05T16:26:55.279686+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('508e281c-69c6-4f88-861d-ae28caef6255', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625613276-81-4218092131.jpg', true, '2026-09-05T16:26:56.088481+00:00', 81, '2026-09-05T16:26:56.088481+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('a34dee4b-915c-42a6-82c1-0a6d391bb9d7', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625614103-82-4218259938.jpg', true, '2026-09-05T16:26:57.004828+00:00', 82, '2026-09-05T16:26:57.004828+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('4e6cb9ec-2f7a-428e-8dfd-dc43cecc21d6', NULL, NULL, '29bd42fe-f9d5-402c-9c4a-8421f98e84b5', 'Annual Day 2017', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/29bd42fe-f9d5-402c-9c4a-8421f98e84b5/1788625615009-83-4244187243.jpg', true, '2026-09-05T16:26:58.124899+00:00', 83, '2026-09-05T16:26:58.124899+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('770a096e-78e7-4e08-a623-538f6b92ffa6', NULL, NULL, '7a9a1b59-85e7-4cd3-8c13-568223130991', 'Annual Day 2015', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/7a9a1b59-85e7-4cd3-8c13-568223130991/1788625689791-0-dsc_0077-3.jpg', true, '2026-09-05T16:28:13.506963+00:00', 0, '2026-09-05T16:28:13.506963+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_images" ("id", "title", "caption", "album_id", "alt_text", "image_url", "is_active", "created_at", "sort_order", "updated_at", "is_published") VALUES ('bc4fc64b-4e46-412f-84aa-9066808762a2', NULL, NULL, '823f278e-4cf9-4c32-b996-c4c10b296931', 'Investiture 2016', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/823f278e-4cf9-4c32-b996-c4c10b296931/1788626039337-0-dsc_0083.jpg', true, '2026-09-05T16:34:03.523141+00:00', 0, '2026-09-05T16:34:03.523141+00:00', true) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."academic_stages" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "icon" text,
+  "title" text,
+  "number" text,
+  "classes" text,
+  "card_size" text,
+  "icon_name" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "button_url" text,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "button_label" text,
+  "display_number" text
+);
+
+-- Data for academic_stages (4 rows)
+INSERT INTO "public"."academic_stages" ("id", "icon", "title", "number", "classes", "card_size", "icon_name", "image_url", "is_active", "button_url", "created_at", "sort_order", "updated_at", "description", "button_label", "display_number") VALUES ('64919dbd-adc5-4673-9cbd-217dbc2c3652', NULL, 'Primary School', '1', 'Classes I – V', 'large', 'BookOpen', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/academics/stage-64919dbd-adc5-4673-9cbd-217dbc2c3652-1791805415832.jpeg', true, '/academics', '2026-09-02T23:14:39.850154+00:00', 1, '2026-09-04T13:37:37.168+00:00', 'Building strong foundations through curiosity, confidence, communication and joyful learning.', 'Learn more', '01') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_stages" ("id", "icon", "title", "number", "classes", "card_size", "icon_name", "image_url", "is_active", "button_url", "created_at", "sort_order", "updated_at", "description", "button_label", "display_number") VALUES ('c1245f01-410f-4788-ba4c-ea85dbec928e', NULL, 'Middle School', '2', 'Classes VI – VIII', 'small', 'GraduationCap', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/academics/stage-c1245f01-410f-4788-ba4c-ea85dbec928e-1791805962218.png', true, '/academics', '2026-09-02T23:14:39.850154+00:00', 2, '2026-09-04T13:34:11.54925+00:00', 'Developing independent thinking, wider knowledge, practical understanding and responsibility.', 'Learn more', '02') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_stages" ("id", "icon", "title", "number", "classes", "card_size", "icon_name", "image_url", "is_active", "button_url", "created_at", "sort_order", "updated_at", "description", "button_label", "display_number") VALUES ('50d385cd-bdf0-4ca4-8775-9b74995402bc', NULL, 'Secondary School', '3', 'Classes IX – X', 'small', 'FlaskConical', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/academics/stage-50d385cd-bdf0-4ca4-8775-9b74995402bc-1791727973836.jpeg', true, '/academics', '2026-09-02T23:14:39.850154+00:00', 3, '2026-09-04T13:34:11.54925+00:00', 'A focused academic journey supported by subject depth, discipline and preparation for future pathways.', 'Learn more', '03') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_stages" ("id", "icon", "title", "number", "classes", "card_size", "icon_name", "image_url", "is_active", "button_url", "created_at", "sort_order", "updated_at", "description", "button_label", "display_number") VALUES ('0e4cd308-7d72-4bfe-b58a-af7c5855447d', NULL, 'Senior Secondary', '4', 'Classes XI – XII', 'large', 'Library', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/academics/stage-0e4cd308-7d72-4bfe-b58a-af7c5855447d-1791805436142.jpeg', true, '/academics', '2026-09-02T23:14:39.850154+00:00', 4, '2026-09-04T13:34:11.54925+00:00', 'Students can pursue focused academic pathways aligned with their interests and ambitions.', 'Learn more', '04') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."accolade_images" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."faculty_members" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "bio" text,
+  "name" text,
+  "role" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "department" text,
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "qualification" text
+);
+
+-- Data for faculty_members (5 rows)
+INSERT INTO "public"."faculty_members" ("id", "bio", "name", "role", "image_url", "is_active", "created_at", "department", "sort_order", "updated_at", "qualification") VALUES ('3b32d220-b0e8-4e10-b521-416cb36c3f89', NULL, 'Dr. Geoff L. Jonathan', 'CEO', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/faculty/faculty/1791222844397-0t1a1098-jpg-2-.jpeg', true, '2026-09-02T23:31:15.26138+00:00', 'Administration', 1, '2026-10-05T17:54:11.17981+00:00', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."faculty_members" ("id", "bio", "name", "role", "image_url", "is_active", "created_at", "department", "sort_order", "updated_at", "qualification") VALUES ('bc4f78aa-cb41-4323-83cc-b364f643b2b6', NULL, 'Dr. Dorothy Jonathan', 'Principal', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/faculty/faculty/1791222866019-0q4a1437-jpg-1-.jpeg', true, '2026-09-02T23:31:15.26138+00:00', 'Administration', 2, '2026-10-05T17:54:34.322672+00:00', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."faculty_members" ("id", "bio", "name", "role", "image_url", "is_active", "created_at", "department", "sort_order", "updated_at", "qualification") VALUES ('b3dae45d-be08-40a5-91b0-3c0f2bc60eed', NULL, 'Mrs. Kiran Chadha', 'Headmistress', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/faculty/faculty/1791222900508-0t1a1301-jpg-3-.jpeg', true, '2026-09-02T23:31:15.26138+00:00', 'Academic Administration', 3, '2026-10-05T17:55:10.540114+00:00', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."faculty_members" ("id", "bio", "name", "role", "image_url", "is_active", "created_at", "department", "sort_order", "updated_at", "qualification") VALUES ('95438165-0f83-48e2-af6d-060e5f32b14e', NULL, 'Mr. Arvind Kumar Tejyan', 'Manager / VP – Admin', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/faculty/faculty/1791222922084-0t1a1126-jpg-1-.jpeg', true, '2026-09-02T23:31:15.26138+00:00', 'Academic Administration', 4, '2026-10-05T17:55:27.282207+00:00', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."faculty_members" ("id", "bio", "name", "role", "image_url", "is_active", "created_at", "department", "sort_order", "updated_at", "qualification") VALUES ('59b75630-4e82-4a08-962d-0461420c8b5d', NULL, 'Mr. Harish Singh Rawat', 'Vice Principal – Academics', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/faculty/faculty/1791222936386-0t1a1248-jpg-1-.jpeg', true, '2026-09-02T23:31:15.26138+00:00', 'Academic Administration', 5, '2026-10-05T17:55:40.430487+00:00', NULL) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."academic_streams" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "icon" text,
+  "title" text,
+  "subjects" text,
+  "icon_name" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "button_url" text,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "button_label" text
+);
+
+-- Data for academic_streams (3 rows)
+INSERT INTO "public"."academic_streams" ("id", "icon", "title", "subjects", "icon_name", "image_url", "is_active", "button_url", "created_at", "sort_order", "updated_at", "description", "button_label") VALUES ('52d08200-a7fa-4d78-bfb1-7cf115b51c3e', NULL, 'HUMANITIES', 'History - Geography - Sociology  ', 'FlaskConical', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/academics/stream-52d08200-a7fa-4d78-bfb1-7cf115b51c3e-1791805655859.jpeg', true, '/academics/senior-secondary', '2026-09-04T19:51:58.851306+00:00', 3, '2026-09-04T19:51:58.851306+00:00', 'For students exploring society, people, ideas, history, culture and the wider world', 'Explore') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_streams" ("id", "icon", "title", "subjects", "icon_name", "image_url", "is_active", "button_url", "created_at", "sort_order", "updated_at", "description", "button_label") VALUES ('620a8714-684d-45d7-afcf-4d626781289f', NULL, 'COMMERCE', 'Accountancy - Business Studies - Mathematics ', 'FlaskConical', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/academics/stream-620a8714-684d-45d7-afcf-4d626781289f-1791806031974.jpeg', true, '/academics/senior-secondary', '2026-09-04T19:47:01.892186+00:00', 2, '2026-09-04T19:47:01.892186+00:00', 'Accountancy - Business Studies - Mathematics
+
+For students interested in business, economics, accounting, finance and the world of enterprise.', 'Explore') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_streams" ("id", "icon", "title", "subjects", "icon_name", "image_url", "is_active", "button_url", "created_at", "sort_order", "updated_at", "description", "button_label") VALUES ('67ed157f-e6ce-4c46-9972-35540d6d81b1', NULL, 'SCIENCE', 'Physics - Chemistry - Mathematics ', 'FlaskConical', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/academics/stream-67ed157f-e6ce-4c46-9972-35540d6d81b1-1791806188013.png', true, '/academics/senior-secondary', '2026-09-04T19:43:05.513895+00:00', 1, '2026-09-04T19:43:05.513895+00:00', 'Physics - Chemistry - Mathematics
+
+For students drawn to scientific thinking, experimentation, mathematics and future technical or scientific pathways.', 'Explore') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."contact_messages" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."contact_settings" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "email" text,
+  "phone" text,
+  "address" text,
+  "maps_url" text,
+  "updated_at" timestamptz DEFAULT now(),
+  "school_name" text,
+  "social_links" jsonb DEFAULT '{}'::jsonb,
+  "working_hours" text,
+  "maps_embed_url" text,
+  "footer_description" text
+);
+
+-- Data for contact_settings (1 rows)
+INSERT INTO "public"."contact_settings" ("id", "email", "phone", "address", "maps_url", "updated_at", "school_name", "social_links", "working_hours", "maps_embed_url", "footer_description") VALUES ('dc0eba70-b716-40ed-a9c1-f5dbe262b264', NULL, NULL, NULL, NULL, '2026-09-04T12:32:35.578352+00:00', NULL, '{}'::jsonb, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."navigation_items" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "href" text,
+  "icon" text,
+  "label" text,
+  "target" text,
+  "is_active" boolean DEFAULT true,
+  "parent_id" text,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "open_in_new_tab" boolean DEFAULT true
+);
+
+-- Data for navigation_items (38 rows)
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '/about', NULL, 'About', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 1, '2026-10-02T09:08:34.207+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('44e4f765-83ef-4f24-860a-20a2387091c4', '/virtual-tour', NULL, 'Virtual Tour', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 7, '2026-10-02T09:08:34.207+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('33d47563-fb5a-4aa1-a03e-b0b3bbf089f2', '/admission-notice', NULL, 'Admission Notice', '_self', true, 'dbaf014b-212d-44da-99ee-e1795900bb11', '2026-09-02T22:40:21.775074+00:00', 0, '2026-09-05T05:47:55.804+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('3505c86d-8ce0-44ab-9bfc-5cfa561e16a1', '/mandatory-public-disclosure', NULL, 'Mandatory-Public-Disclosure', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 6, '2026-10-05T15:15:57.351+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('1b5da68a-b8d4-479c-875e-b1ba9f346bf3', '/online-registration', NULL, 'Online-Registration', '_self', true, 'dbaf014b-212d-44da-99ee-e1795900bb11', '2026-09-04T08:41:39.66274+00:00', 4, '2026-09-05T06:14:35.881+00:00', true) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('3926ddc5-ba83-47cc-a0df-d90546722aa9', '/blogs', NULL, 'School Blogs', '_self', true, 'f5d70b35-5646-4770-9cbb-29b13bab8c80', '2026-10-05T15:21:50.926428+00:00', 5, '2026-10-05T15:22:34.543+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('7580450e-2677-4076-a9d4-121f3eb7b464', '/about/vice-principal', NULL, 'Vice principal ( Academic )', '_self', true, 'e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '2026-09-02T22:40:21.775074+00:00', 5, '2026-10-10T09:19:58.105+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('c365aecd-4a61-41ed-90fc-6b1f8075badf', '/monthly-newsletter', NULL, 'Monthly Newsletter', '_self', true, 'f5d70b35-5646-4770-9cbb-29b13bab8c80', '2026-09-02T22:40:21.775074+00:00', 3, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('81daaa8d-ce72-4f05-9011-c4e08f7a3182', '/school-tv', NULL, 'Apex School TV', '_self', true, 'f5d70b35-5646-4770-9cbb-29b13bab8c80', '2026-09-02T22:40:21.775074+00:00', 2, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('b56b62bd-5ab7-47ab-85f4-2e8f42a14a87', '/notices', NULL, 'Notice', '_self', true, 'f5d70b35-5646-4770-9cbb-29b13bab8c80', '2026-09-02T22:40:21.775074+00:00', 1, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('463e4868-b025-426a-b27b-4f595e07bfc4', '/gallery', NULL, 'Gallery', '_self', true, 'f5d70b35-5646-4770-9cbb-29b13bab8c80', '2026-09-02T22:40:21.775074+00:00', 0, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('a1a6b7a5-ff2e-4fcd-892c-7a27ef862d29', 'https://www.cbse.gov.in/', NULL, 'Official Website of CBSE', '_self', true, 'a537705d-7f41-4f42-80f6-025d1ca4fc04', '2026-09-02T22:40:21.775074+00:00', 6, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('45750cfc-4303-48c6-901a-826ab0bf738b', '/syllabus-datesheet', NULL, 'Syllabus & Datesheet', '_self', true, 'a537705d-7f41-4f42-80f6-025d1ca4fc04', '2026-09-02T22:40:21.775074+00:00', 0, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('7828eed0-74bc-486e-b5f3-02318b74f26c', '/faculty', NULL, 'Faculty', '_self', true, 'a537705d-7f41-4f42-80f6-025d1ca4fc04', '2026-09-02T22:40:21.775074+00:00', 1, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('ccc3fc6e-8154-4cfa-be5a-9e1d62723b49', '/cbse-results', NULL, 'CBSE Results', '_self', true, 'a537705d-7f41-4f42-80f6-025d1ca4fc04', '2026-09-02T22:40:21.775074+00:00', 7, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('94df0bda-bcdc-4da8-abe1-5fef2132f7dc', '/academic-coordinators', NULL, 'Academic Coordinators', '_self', true, 'a537705d-7f41-4f42-80f6-025d1ca4fc04', '2026-09-02T22:40:21.775074+00:00', 5, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('4b43729c-0364-497b-b72c-5003efbb51fb', '/admission-criteria', NULL, 'Admission Criterion', '_self', true, 'dbaf014b-212d-44da-99ee-e1795900bb11', '2026-09-02T22:40:21.775074+00:00', 2, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('d0164ef7-9ecd-4826-8112-be3effd37894', '/fee-structure', NULL, 'Fee Structure', '_self', true, 'dbaf014b-212d-44da-99ee-e1795900bb11', '2026-09-02T22:40:21.775074+00:00', 1, '2026-09-02T22:40:21.775074+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('dd13d9f0-e3d2-42ad-8d7f-869c43f68fb6', '/holiday-homework', NULL, 'Holiday Homework 2026-2027', '_self', false, 'a537705d-7f41-4f42-80f6-025d1ca4fc04', '2026-09-02T22:40:21.775074+00:00', 4, '2026-10-01T17:17:42.405+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('c3c45447-4a66-4a68-a392-9d83a4ce3254', '/about/Chairman', NULL, 'Chairman', '_self', true, 'e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '2026-09-02T22:40:21.775074+00:00', 2, '2026-10-12T12:34:35.382+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('75898b3e-3dd5-4057-9b6d-f578b8d21176', 'https://apexps.genericsoftware.in/Parent/Login.aspx', NULL, 'Pay Fee Online', '_self', true, 'a537705d-7f41-4f42-80f6-025d1ca4fc04', '2026-09-02T22:40:21.775074+00:00', 2, '2026-09-04T09:00:21.168+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('5155f8ee-f739-4549-9d0f-bc3bcea80c71', '/apexian-accolade', NULL, 'The Apexian Accolade', '_self', true, 'f5d70b35-5646-4770-9cbb-29b13bab8c80', '2026-09-02T22:40:21.775074+00:00', 4, '2026-09-04T10:26:52.673+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('a4eded15-0645-475a-bf25-a937c0ea8cd6', '/activities', NULL, 'Activities', '_self', true, '372f8506-3241-4622-9e19-9c066413e869', '2026-09-04T11:27:05.808931+00:00', 0, '2026-09-04T11:27:04.522+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('5718836a-b4d8-4b1b-b809-fefd935e2b18', '/sdg', NULL, 'SDG', '_self', true, '372f8506-3241-4622-9e19-9c066413e869', '2026-09-04T11:28:56.865156+00:00', 1, '2026-09-04T11:28:55.791+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('979ddb17-5934-4e6b-8596-f83b7de9e96a', '/uniform-books-details', NULL, 'Uniform & Books Details', '_self', true, 'a537705d-7f41-4f42-80f6-025d1ca4fc04', '2026-09-02T22:40:21.775074+00:00', 3, '2026-10-01T17:17:52.149+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('a537705d-7f41-4f42-80f6-025d1ca4fc04', '/academics', NULL, 'Academic', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 3, '2026-10-02T09:08:34.207+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('742f392c-2286-4e06-a9e8-bc0d5803f2ac', '/', NULL, 'Home', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 0, '2026-10-02T09:08:34.207+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('199b409d-59b0-4d42-a525-819a470234f4', '/contact', NULL, 'Contact', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 5, '2026-10-02T09:08:34.207+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('f5d70b35-5646-4770-9cbb-29b13bab8c80', '/notices', NULL, 'Notices', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 2, '2026-10-02T09:08:34.207+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('dbaf014b-212d-44da-99ee-e1795900bb11', '/admissions', NULL, 'Admission', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 4, '2026-10-02T09:08:34.207+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('372f8506-3241-4622-9e19-9c066413e869', '/sdg', NULL, 'SDG', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 8, '2026-10-02T09:08:34.208+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('b0a3de4b-b41f-45e5-bfa2-e18ad658e752', '/kaushal-bodh', NULL, 'Kaushal Bodh', '_self', true, NULL, '2026-09-02T22:16:20.328115+00:00', 9, '2026-10-02T09:08:34.208+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('f5067796-3334-4a6e-851f-172517dd31c2', '/about/principal', NULL, 'Principal', '_self', true, 'e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '2026-09-02T22:40:21.775074+00:00', 3, '2026-10-06T14:58:54.424+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('a71b8bad-f37f-4636-b634-9066e5f81300', '/about/head-academic-coordinator', NULL, 'Head Academic Coordinator', '_self', true, 'e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '2026-09-02T22:40:21.775074+00:00', 7, '2026-10-06T14:58:54.424+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('25bc841f-44c5-45d0-b2d9-3654e783cbb3', '/about/mission-vision', NULL, 'Mission & Vision', '_self', true, 'e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '2026-09-02T22:40:21.775074+00:00', 1, '2026-10-06T14:58:54.424+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('9b1a3542-bfbd-44ff-8241-831e093a6607', '/about/head-mistress', NULL, 'Head Mistress', '_self', true, 'e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '2026-09-02T22:40:21.775074+00:00', 6, '2026-10-06T14:58:54.424+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('b8513d7e-bdf8-44ec-8da8-532197716d2f', '/about/manager-vp-admin', NULL, 'Manager / V P Admin', '_self', true, 'e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '2026-09-02T22:40:21.775074+00:00', 4, '2026-10-06T14:58:54.424+00:00', false) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."navigation_items" ("id", "href", "icon", "label", "target", "is_active", "parent_id", "created_at", "sort_order", "updated_at", "open_in_new_tab") VALUES ('cedd5b65-72ce-4a71-91eb-e2b0886e81e7', '/about', NULL, 'About', '_self', true, 'e9bc5f99-f3be-4a57-ba2c-dabca7b3844d', '2026-09-04T15:39:49.051927+00:00', 0, '2026-10-06T14:58:54.424+00:00', false) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."admission_notices" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "eyebrow" text,
+  "session" text,
+  "image_alt" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "button_text" text,
+  "description" text,
+  "stream_note" text,
+  "classes_open" text,
+  "notice_pdf_url" text,
+  "class_xi_status" text,
+  "notice_image_url" text,
+  "admissions_status" text,
+  "direct_admission_note" text
+);
+
+-- Data for admission_notices (1 rows)
+INSERT INTO "public"."admission_notices" ("id", "title", "eyebrow", "session", "image_alt", "is_active", "created_at", "sort_order", "updated_at", "button_text", "description", "stream_note", "classes_open", "notice_pdf_url", "class_xi_status", "notice_image_url", "admissions_status", "direct_admission_note") VALUES ('41c31fc8-e090-4581-91d9-579407ea3251', 'Admission Notice 2026-2027', 'Admissions Open', '2026-2027', 'Apex Public School Admission Notice', true, '2026-09-05T05:53:46.366264+00:00', 0, '2026-09-05T06:08:41.181+00:00', 'View Admission Notice', NULL, NULL, 'CLASSES I TO XI', NULL, NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/admission-notices/admission-notices/images/6d986f23-fb00-493b-a967-02b553eaced5.jpg', 'ADMISSION OPEN', NULL) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."campus_facilities" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "icon" text,
+  "title" text,
+  "number" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text
+);
+
+-- Data for campus_facilities (4 rows)
+INSERT INTO "public"."campus_facilities" ("id", "icon", "title", "number", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('b45d09aa-5256-4aba-99f4-0e79a1e6bfa1', 'Trophy', 'Sports & Athletics', '02', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/campus/1791728109037-0q4a4611-jpg.jpeg', true, '2026-09-02T23:18:03.626341+00:00', 1, '2026-10-11T14:15:23.108+00:00', 'Basketball, badminton, volleyball and cricket experiences that develop fitness, teamwork and discipline.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."campus_facilities" ("id", "icon", "title", "number", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('6737904b-9061-4436-9ba1-3e6ec788c602', 'Palette', 'Arts, Music & Dance', '03', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/campus/1791728133037-dsc_9495-jpg.jpeg', true, '2026-09-02T23:18:03.626341+00:00', 2, '2026-10-11T14:15:56.243+00:00', 'Creative spaces where students discover expression, confidence and interests beyond academics.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."campus_facilities" ("id", "icon", "title", "number", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('a4f93cf9-f469-4d1d-992c-e4a002c0865a', 'FlaskConical', 'Science Lab', '01', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/campus/1791805116786-dewr.png', true, '2026-09-02T23:18:03.626341+00:00', 0, '2026-10-12T12:44:22.834+00:00', 'Spaces where students experiment, investigate and turn classroom concepts into practical understanding.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."campus_facilities" ("id", "icon", "title", "number", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('86b38a97-549e-4515-a525-5a7f5dbda7d3', 'Atom', 'Smart Classrooms', '04', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/campus/1791809099504-0q4a2786-jpg.jpeg', true, '2026-09-02T23:18:03.626341+00:00', 3, '2026-10-12T12:45:08.33+00:00', 'Technology-enhanced classrooms designed to make teaching more visual, interactive and engaging.') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."homepage_sections" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."academic_documents" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "category" text,
+  "is_active" boolean DEFAULT true,
+  "class_name" text,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "storage_url" text,
+  "document_url" text,
+  "external_url" text,
+  "document_label" text
+);
+
+-- Data for academic_documents (41 rows)
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('70483ecf-0f7e-4d17-b531-e0201885c3c5', 'Half Yearly Syllabus Class VI', 'half-yearly', true, 'Class VI', '2026-09-03T18:57:42.332175+00:00', 4, '2026-09-03T18:57:42.332175+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://apexpublicschool.in/wp-content/uploads/2026/06/Half-Yearly-Syllabus-Class-VI.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('ad597c50-2da0-46f8-94f6-b7a1ec4f48ac', 'Half-Yearly-All Streams 12', 'half-yearly', true, 'class XII', '2026-09-04T21:48:05.558857+00:00', 11, '2026-09-04T21:48:03.871+00:00', NULL, NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788558481680-class-xii-half-yearly-syllabus-2026-27.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('72e111bb-bfb1-4ce0-88cc-d0ca5c7f7169', 'APEX Public School Class 1', 'annual', true, 'Class I', '2026-09-03T18:57:42.332175+00:00', 1, '2026-09-03T18:57:42.332175+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://apexpublicschool.in/wp-content/uploads/2026/05/APEX-Public-School-Class-1.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('56e24f6d-3291-4446-9926-db0fa51d895b', 'MANDATORY PUBLIC DISCLOSURE 2026-2027', 'mandatory-disclosure', true, NULL, '2026-09-06T09:36:10.307233+00:00', 1, '2026-09-06T10:39:40.288+00:00', 'MANDATORY PUBLIC DISCLOSURE 2026-2027', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1788691177286-mandatory-public-disclosure-revised-updated-format-1-.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('c365ce65-34c2-49ce-bcf8-ac7fb1bc9eb7', 'THE APEXIAN ACCOLADE - September 2026', 'monthly-newsletter', true, 'September 2026', '2026-10-01T17:16:54.604023+00:00', 1, '2026-10-01T17:17:13.293+00:00', NULL, NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/monthly-newsletter/f9b052c6-6493-42c0-a86d-33568c94afd5.pdf', NULL, 'Read newsletter') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('e5d09249-9a45-42ea-8378-ac963c5252a1', 'THE APEXIAN ACCOLADE – JULY – 2026', 'monthly-newsletter', false, 'July 2026', '2026-09-04T22:42:27.050315+00:00', 5, '2026-10-02T10:05:52.849+00:00', NULL, NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/monthly-newsletter/c6632a56-c217-45c9-a86a-d7ccb6f01b17.pdf', NULL, 'Read newsletter') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('b5c3be86-e1fa-49a1-9427-e5c85496861f', 'APEX Public School Class 3', 'annual', true, 'Class III', '2026-09-03T18:57:42.332175+00:00', 3, '2026-09-04T21:32:14.007+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557532498-apex-public-school-class-3.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('4a3b545f-ede5-4512-a8db-897d91311282', 'APEX Public School Class 5', 'annual', true, 'Class V', '2026-09-03T18:57:42.332175+00:00', 5, '2026-09-04T21:32:47.051+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557565560-apex-public-school-class-5.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('01bdab0b-dba7-40ea-b46f-0e30a5776345', 'APEX Public School Class 6', 'annual', true, 'Class VI', '2026-09-03T18:57:42.332175+00:00', 6, '2026-09-04T21:33:02.752+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557581359-apex-public-school-class-6.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('4ff4f158-ab78-4bd7-ae84-f11264bdf649', 'APEX Public School Class 8', 'annual', true, 'Class VIII', '2026-09-03T18:57:42.332175+00:00', 8, '2026-09-04T21:34:00.401+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557638880-apex-public-school-class-8.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('ef3a1cc6-a011-49a7-9271-b0301a86eaac', 'APEX Public School Class 7', 'annual', true, 'Class VII', '2026-09-03T18:57:42.332175+00:00', 7, '2026-09-04T21:33:43.1+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557620635-apex-public-school-class-7-.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('fe858837-4c9e-4962-ab7c-cbb36d1fffec', 'APEX Public School Class 11', 'annual', true, 'Class XI', '2026-09-03T18:57:42.332175+00:00', 10, '2026-09-04T21:34:45.56+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557684086-apex-public-school-class-11.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('e3a5cf87-b24e-4c55-a71e-4646743f3ae0', 'APEX Public School Class 12', 'annual', true, 'Class XII', '2026-09-03T18:57:42.332175+00:00', 11, '2026-09-04T21:35:02.656+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557701238-apex-public-school-class-12.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('4d5887c3-c964-41c0-b74a-7df0a0593a4e', 'Half Yearly Syllabus Class III', 'half-yearly', true, 'Class III', '2026-09-03T18:57:42.332175+00:00', 1, '2026-09-04T21:36:37.383+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557795529-half-yearly-syllabus-class-iii.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('41eb1743-0cb0-482a-b4a5-f7e416cfa42d', 'Half Yearly Syllabus Class IV', 'half-yearly', true, 'Class IV', '2026-09-03T18:57:42.332175+00:00', 2, '2026-09-04T21:37:31.758+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557849501-half-yearly-syllabus-class-4.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('0d8a6b1c-f64b-43cb-a648-121c477b0e46', 'Half Yearly Syllabus Class V', 'half-yearly', true, 'Class V', '2026-09-03T18:57:42.332175+00:00', 3, '2026-09-04T21:37:54.217+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557872579-grade-5-half-yearly-syllabus-26-27.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('8c453b51-c3ae-4121-8c40-294a9a46da30', 'Half Yearly Syllabus Class IX', 'half-yearly', true, 'Class IX', '2026-09-03T18:57:42.332175+00:00', 7, '2026-09-04T21:39:51.025+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557989260-hlf-yrly-ix_syllabus_2026-27.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('176eef34-a1c5-4e18-8192-d340cabfd05e', 'Half Yearly Syllabus Class VII', 'half-yearly', true, 'Class VII', '2026-09-03T18:57:42.332175+00:00', 5, '2026-09-04T21:38:58.036+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557937013-half-yearly-syllabus-class-vi.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('f45c29aa-3973-4877-bfcd-67f39797a514', 'Half Yearly Syllabus Class X', 'half-yearly', true, 'Class X', '2026-09-03T18:57:42.332175+00:00', 8, '2026-09-04T21:40:27.576+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788558025620-half-yearly-syllabus-class-x.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('238b9fe4-3bf8-4a1b-a44a-d04b46bfc5a7', 'Half Yearly Syllabus Class XI – Humanities', 'half-yearly', true, 'Class XI Humanities', '2026-09-03T18:57:42.332175+00:00', 9, '2026-09-04T21:40:49.2+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788558048147-half-yearly-syllabus-class-xi-hum-.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('1b1a3264-3d42-4af3-9eca-9ad0abc2a13e', 'Half Yearly Syllabus Class XI – Commerce', 'half-yearly', true, 'Class XI Commerce', '2026-09-03T18:57:42.332175+00:00', 10, '2026-09-04T21:41:08.434+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788558067644-half-yearly-syllabus-class-xi-comm-.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('2d8806c0-c8a1-48e8-aca1-884ebe9d13ab', 'Fee-Structure-2026-2027', 'fee-structure', true, 'I TO XII 2026-2027', '2026-09-04T21:55:09.053053+00:00', 0, '2026-09-04T21:55:07.508+00:00', NULL, NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/fee-structure/a8bc2a9b-5094-4bbd-ba4e-94754ed611ef.pdf', NULL, 'View Fee Structure') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('2b35175e-ff37-4f29-a4d6-07e95fe23a0c', 'The Apexian Accolade Edition - IV', 'apexian-accolade', true, NULL, '2026-09-04T22:43:47.457386+00:00', 2, '2026-09-04T22:43:47.457386+00:00', 'The Apexian Accolade – Edition IV', NULL, NULL, '/accolade/edition-iv', 'Read Edition IV') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('8540b9cf-0126-457c-91de-b4346d6b1bef', 'The Apexian Accolade Edition - VI', 'apexian-accolade', true, NULL, '2026-09-04T22:43:47.457386+00:00', 3, '2026-09-04T22:43:47.457386+00:00', 'The Apexian Accolade – Edition VI', NULL, NULL, '/accolade/edition-vi', 'Read Edition VI') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('a0c823f3-321c-455a-bd9f-359c1b0b7071', 'The Apexian Accolade Edition - VII', 'apexian-accolade', true, NULL, '2026-09-04T22:43:47.457386+00:00', 4, '2026-09-04T22:43:47.457386+00:00', 'The Apexian Accolade – Edition VII', NULL, NULL, '/accolade/edition-vii', 'Read Edition VII') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('3723a170-6b3d-4bb3-af28-01c14db4f743', 'Book List 2026-2027', 'uniform-books', true, NULL, '2026-09-11T17:55:56.664941+00:00', 1, '2026-09-11T17:55:56.195+00:00', NULL, NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/uniform-books/1789149354233-book-list-2026-2-.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('f38bfe3d-d99f-46d7-8bca-9cabd6dc4d3e', 'The Apexian Accolade Edition - III', 'monthly-newsletter', true, NULL, '2026-09-04T22:43:47.457386+00:00', 1, '2026-10-01T17:17:13.649+00:00', 'The Apexian Accolade – Edition III', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/monthly-newsletter/e710b65a-d749-4f86-9315-f20dd526b314.pdf', NULL, 'Read Edition III') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('af6fd6b4-a794-4f57-a91c-489be712153f', 'THE APEXIAN ACCOLADE – MAY – 2026', 'monthly-newsletter', true, NULL, '2026-09-04T22:37:31.189805+00:00', 1, '2026-09-04T22:40:07.041+00:00', 'Monthly newsletter – May 2026', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/monthly-newsletter/ba59a82c-ac53-451d-b585-abc70afd0c3b.pdf', 'https://apexpublicschool.in/3d-flip-book/the-apexian-accolade-may-2026/', 'Read May 2026 Newsletter') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('97fef5dd-0123-4822-b908-46ea50051428', 'THE APEXIAN ACCOLADE – APRIL 2026', 'monthly-newsletter', true, NULL, '2026-09-04T22:37:31.189805+00:00', 2, '2026-09-04T22:40:33.278+00:00', 'Monthly newsletter – April 2026', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/monthly-newsletter/dfa1e014-ce5b-4bb1-b8b7-cfb09b10b784.pdf', 'https://apexpublicschool.in/3d-flip-book/the-apexian-accolade-april-2026/', 'Read April 2026 Newsletter') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('d7c0b8af-8b4f-444b-ae31-0d53c03762b6', 'Avril-en-fleur – April', 'monthly-newsletter', true, NULL, '2026-09-04T22:37:31.189805+00:00', 3, '2026-09-04T22:41:00.809+00:00', 'Monthly newsletter – April', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/monthly-newsletter/67a44755-d56b-4272-a53c-9a4ecc0b4e87.pdf', 'https://apexpublicschool.in/3d-flip-book/avril-en-fleur-april/', 'Read Newsletter') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('924c7c43-2e42-4948-a144-3efd66bee851', 'MAY BUZZ', 'monthly-newsletter', true, NULL, '2026-09-04T22:37:31.189805+00:00', 4, '2026-09-04T22:43:32.934+00:00', 'Monthly newsletter – May Buzz', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/monthly-newsletter/f928cd61-9b33-43be-a669-3a049c03cdb2.pdf', 'https://apexpublicschool.in/3d-flip-book/may-buzz-2025/', 'Read MAY BUZZ') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('3ccd38a8-33b5-494c-933f-6889d857312d', 'The Apexian Accolade Edition - III', 'apexian-accolade', true, NULL, '2026-09-04T22:46:26.417347+00:00', 1, '2026-09-04T22:46:26.417347+00:00', 'The Apexian Accolade – Edition III', NULL, NULL, '/accolade/edition-iii', 'Read Edition III') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('b9e5b795-7b21-413a-982f-c57633b630cd', 'The Apexian Accolade Edition - IV', 'apexian-accolade', true, NULL, '2026-09-04T22:46:26.417347+00:00', 2, '2026-09-04T22:46:26.417347+00:00', 'The Apexian Accolade – Edition IV', NULL, NULL, '/accolade/edition-iv', 'Read Edition IV') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('accf7679-c46e-47b7-b2d2-54d2171522f6', 'The Apexian Accolade Edition - VI', 'apexian-accolade', true, NULL, '2026-09-04T22:46:26.417347+00:00', 3, '2026-09-04T22:46:26.417347+00:00', 'The Apexian Accolade – Edition VI', NULL, NULL, '/accolade/edition-vi', 'Read Edition VI') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('29363ada-1fe2-48ff-b2a0-1cc7eeb10b57', 'The Apexian Accolade Edition - VII', 'apexian-accolade', true, NULL, '2026-09-04T22:46:26.417347+00:00', 4, '2026-09-04T22:46:26.417347+00:00', 'The Apexian Accolade – Edition VII', NULL, NULL, '/accolade/edition-vii', 'Read Edition VII') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('54c6a3d4-fd91-470e-96a1-d687525f8418', 'School Uniform', 'uniform-books', true, NULL, '2026-09-11T17:57:10.746838+00:00', 2, '2026-09-11T17:57:09.777+00:00', NULL, NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/uniform-books/1789149427751-school-uniform-2-1-.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('b7cf558c-233a-4059-9258-dfee2fe7e088', 'Campus Chronicles – JULY 2025', 'monthly-newsletter', false, NULL, '2026-09-04T22:37:31.189805+00:00', 5, '2026-10-02T10:05:47.17+00:00', 'Campus Chronicles – July 2025', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/monthly-newsletter/ba3be80e-78af-4b90-b750-05a5120cd732.pdf', 'https://apexpublicschool.in/3d-flip-book/campus-chronicles-july-2025/', 'Read Campus Chronicles') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('bb62bc02-13ce-4b5b-b0a0-b5c5c7f72109', 'APEX Public School Class 2', 'annual', true, 'Class II', '2026-09-03T18:57:42.332175+00:00', 2, '2026-09-04T21:31:54.962+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557512312-apex-public-school-class-2.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('4a4b304c-3797-4afc-b211-bb4b00f16270', 'APEX Public School Class 4', 'annual', true, 'Class IV', '2026-09-03T18:57:42.332175+00:00', 4, '2026-09-04T21:32:30.597+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557548768-apex-public-school-class-4.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('3fff51d8-96d8-4fdb-97a2-c121cc559954', 'APEX Public School Class 10', 'annual', true, 'Class X', '2026-09-03T18:57:42.332175+00:00', 9, '2026-09-04T21:34:18.22+00:00', 'Official Apex Public School Tentative Annual Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557656719-apex-public-school-class-10.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_documents" ("id", "title", "category", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url", "external_url", "document_label") VALUES ('4a0b84c6-8f49-49fc-9a71-d53f31c1e800', 'Half Yearly Syllabus Class VIII', 'half-yearly', true, 'Class VIII', '2026-09-03T18:57:42.332175+00:00', 6, '2026-09-04T21:39:24.703+00:00', 'Official Apex Public School Half Yearly Syllabus 2026-27.', NULL, 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/documents/1788557963084-half-yearly-syllabus-class-viii.pdf.pdf', NULL, 'Download PDF') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."academic_resources" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."admission_criteria" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "content" text,
+  "eyebrow" text,
+  "documents" jsonb DEFAULT '[]'::jsonb,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "section_key" text,
+  "requirements" text[],
+  "section_title" text
+);
+
+-- Data for admission_criteria (3 rows)
+INSERT INTO "public"."admission_criteria" ("id", "content", "eyebrow", "documents", "is_active", "created_at", "sort_order", "updated_at", "description", "section_key", "requirements", "section_title") VALUES ('ef837dd7-7766-4df4-b6f2-ad1e3512426f', 'The admission to Class XI is subject to the declaration of CBSE Board result and the availability of seats.', 'Senior Secondary', '[{"url":null,"label":"Required","title":"Class IX Report Card and Pre-Board Result / Class X Mark Sheet"},{"url":null,"label":"If applicable","title":"Certificates of Special Achievements"},{"url":null,"label":"If applicable","title":"Sibling Proof"},{"url":null,"label":"Required","title":"Birth Certificate"},{"url":null,"label":"Required","title":"Proof of Residence"},{"url":null,"label":"Required","title":"Original Character Certificate / Code of Conduct Certificate"},{"url":null,"label":"Download","title":"Class XI Subject Combinations"}]'::jsonb, true, '2026-09-04T07:32:18.520011+00:00', 2, '2026-09-04T07:32:18.520011+00:00', 'Admission to Class XI is subject to the declaration of CBSE Board results and availability of seats.', 'class-11', ARRAY['The candidate should have been studying in a school affiliated to CBSE or any other recognized Board of Secondary Education.', 'Student performance in Pre-Board / Board examination and Entrance Test will be the criteria for admission.', 'Merit will be the sole criteria for allotment of streams.', 'Admission to Class XI will be provisional and will be regularised after declaration of result.', 'The candidate should produce the relevant documents required by the school.', 'Any candidate migrating from a school in a foreign country which is not affiliated to CBSE shall be eligible only on producing an equivalent certificate obtained from CBSE and fulfilling other conditions laid down by the school.', 'Admission will be confirmed only after verification of documents, Class X Board result, qualifying the Entrance Test and an Interactive Session with the parents and the candidate.']::text[], 'Criterion for Class XI') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."admission_criteria" ("id", "content", "eyebrow", "documents", "is_active", "created_at", "sort_order", "updated_at", "description", "section_key", "requirements", "section_title") VALUES ('36515340-abcb-407d-8f90-c3e20e9e65fd', 'Admissions for Classes I to IX are governed by the current admission notification issued by Apex Public School for the 2026–2027 session.', 'Classes I–IX', '[{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/admission-criteria/documents/1788558589599-iuoue6wxt8-1788507872428-3pe3jf7taqn-admission-notification-for-2026-2027.pdf","label":"View Admission Notification","title":"Admission Notification 2026–2027"}]'::jsonb, true, '2026-09-04T07:32:18.520011+00:00', 1, '2026-09-04T21:49:57.74+00:00', 'Admission information for Classes I to IX for the 2026–2027 academic session.', 'classes-1-9', '{}'::text[], 'Criterion for Classes I to IX') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."admission_criteria" ("id", "content", "eyebrow", "documents", "is_active", "created_at", "sort_order", "updated_at", "description", "section_key", "requirements", "section_title") VALUES ('73a1407b-78c4-4897-96ad-35e506b7792f', 'Please refer to the CBSE website for direct admission to Classes X and XII.', 'CBSE Approval', '[{"url":"https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/admission-criteria/documents/1788558731406-s4vect9nyrd-subject_selection.pdf","label":"Download PDF","title":"Subject Selection"}]'::jsonb, true, '2026-09-04T07:32:18.520011+00:00', 3, '2026-09-04T21:52:12.715+00:00', 'Direct admission to Classes X and XII is subject to prior approval from CBSE.', 'classes-10-12', '{}'::text[], 'Criterion for Classes X and XII') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."admission_settings" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "email" text,
+  "phone" text,
+  "title" text,
+  "status" text,
+  "content" jsonb DEFAULT '{}'::jsonb,
+  "headline" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "classes_open" text,
+  "criteria_url" text,
+  "intake_label" text,
+  "session_year" text,
+  "status_label" text,
+  "academic_year" text,
+  "classes_label" text,
+  "section_label" text,
+  "class_xi_label" text,
+  "application_url" text,
+  "class_xi_status" text,
+  "important_dates" text,
+  "fee_structure_url" text,
+  "admission_notice_url" text,
+  "important_info_label" text,
+  "primary_button_label" text,
+  "admission_criteria_url" text,
+  "secondary_button_label" text
+);
+
+-- Data for admission_settings (1 rows)
+INSERT INTO "public"."admission_settings" ("id", "email", "phone", "title", "status", "content", "headline", "is_active", "created_at", "updated_at", "description", "classes_open", "criteria_url", "intake_label", "session_year", "status_label", "academic_year", "classes_label", "section_label", "class_xi_label", "application_url", "class_xi_status", "important_dates", "fee_structure_url", "admission_notice_url", "important_info_label", "primary_button_label", "admission_criteria_url", "secondary_button_label") VALUES ('4f9c495f-d11b-46a1-b96c-3cf66d076e5a', 'contacts.apexschool@gmail.com', '09990061747', NULL, 'Admissions Open', '{}'::jsonb, 'Begin your journey at Apex.', true, '2026-09-02T23:08:44.194308+00:00', '2026-09-02T23:09:00.630545+00:00', 'Admissions are currently open for the 2026–2027 academic session.', 'Classes I – IX', NULL, 'Current intake', '2026-2027', 'Admissions Open', '2026-2027', 'Classes currently open', 'Admissions', 'Class XI', '/online-registration', 'Class XI dates will be announced later.', 'Classes I–IX: Admissions Open. Class XI: Dates to be announced. Direct admission to X & XII is subject to prior CBSE approval.', '/fee-structure', '/admission-notice', 'Important information', 'Explore Admissions', '/admission-criteria', 'Admission notice') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."cbse_result_banners" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "exam" text,
+  "title" text,
+  "pdf_url" text,
+  "session" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "highest_score" text,
+  "total_distinctions" text
+);
+
+-- Data for cbse_result_banners (6 rows)
+INSERT INTO "public"."cbse_result_banners" ("id", "exam", "title", "pdf_url", "session", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "highest_score", "total_distinctions") VALUES ('26d40697-dd94-4522-9b7b-0bddaece0457', 'CBSE Board Results', 'CBSE RESULTS CLASS XII', NULL, '2025-2026', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/cbse-results/banners/1791622517517-whatsapp-image-2026-10-10-at-11.31.01.jpeg.jpeg', true, '2026-10-10T08:55:21.830446+00:00', 1, '2026-10-10T08:55:40.517+00:00', 'CBSE Board Results: 43 students scored 90% and above', '97%', '2029') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."cbse_result_banners" ("id", "exam", "title", "pdf_url", "session", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "highest_score", "total_distinctions") VALUES ('0cb6847d-6454-4fdd-ab98-567f0e74c88f', 'CBSE Board Results', 'CBSE Board Results', NULL, '2024-2025', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/cbse-results/banners/1788557294532-90-cl-10-1536x998.jpg.jpg', true, '2026-09-04T21:28:17.632964+00:00', 6, '2026-10-10T09:01:02.137+00:00', NULL, '93%', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."cbse_result_banners" ("id", "exam", "title", "pdf_url", "session", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "highest_score", "total_distinctions") VALUES ('1370ca50-77ac-4216-bbd4-07dd7a03224f', 'CBSE Board Results', 'CBSE RESULTS', NULL, '2024-2025', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/cbse-results/banners/1788557253154-10-aps-results-1536x998.jpg.jpg', true, '2026-09-04T21:27:36.236812+00:00', 5, '2026-10-10T09:01:09.166+00:00', NULL, '93%', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."cbse_result_banners" ("id", "exam", "title", "pdf_url", "session", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "highest_score", "total_distinctions") VALUES ('3d2683c1-c45f-4112-b2fb-a138b79bb70b', 'CBSE Board Results', 'CBSE RESULTS', NULL, '2024-2025', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/cbse-results/banners/1788557203067-12-aps-results-1536x1249.jpg.jpg', true, '2026-09-04T21:26:46.777061+00:00', 4, '2026-10-10T09:01:13.278+00:00', NULL, '93%', NULL) ON CONFLICT DO NOTHING;
+INSERT INTO "public"."cbse_result_banners" ("id", "exam", "title", "pdf_url", "session", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "highest_score", "total_distinctions") VALUES ('b586d08e-7d67-4284-a317-88c81dd06774', 'CBSE Board Results', 'CBSE RESULTS CLASS X', NULL, '2025-2026', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/cbse-results/banners/1791622854191-cbse-result.jpeg.jpeg', true, '2026-10-10T09:00:57.50637+00:00', 2, '2026-10-10T09:01:19.958+00:00', 'CBSE Board Results: 100% Result', '97.8%', '525') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."cbse_result_banners" ("id", "exam", "title", "pdf_url", "session", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description", "highest_score", "total_distinctions") VALUES ('8ec4d4cc-294f-4c0e-9aad-c9b8e6e68f5d', 'CBSE Board Results', 'CBSE RESULTS 2024-2025', 'https://apexpublicschool.in/wp-content/uploads/2025/05/Aps-Results-1536x1249.jpg', '2024-2025', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/cbse-results/banners/1788504950048-aps-results-1536x1249.jpg.jpg', true, '2026-09-04T06:55:53.265372+00:00', 3, '2026-10-10T09:01:19.958+00:00', NULL, '93%', NULL) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."news_events_settings" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "max_items" integer DEFAULT 0,
+  "created_at" timestamptz DEFAULT now(),
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "view_all_url" text,
+  "section_label" text,
+  "heading_line_1" text,
+  "heading_line_2" text,
+  "view_all_label" text,
+  "featured_button_label" text,
+  "secondary_button_label" text
+);
+
+-- Data for news_events_settings (1 rows)
+INSERT INTO "public"."news_events_settings" ("id", "is_active", "max_items", "created_at", "updated_at", "description", "view_all_url", "section_label", "heading_line_1", "heading_line_2", "view_all_label", "featured_button_label", "secondary_button_label") VALUES ('80c39e51-9463-4bd6-8ef4-07d61c6ec4db', false, 4, '2026-09-04T13:00:26.617132+00:00', '2026-09-05T04:59:01.718+00:00', 'Stay informed about school announcements, admissions, activities, holidays and important communications.', '/notices', 'Notices & Events', 'What''s happening', 'at Apex.', 'View all notices', 'Read notice', 'Read more') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."academic_coordinators" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "session" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "class_name" text,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "designation" text,
+  "coordinator_name" text
+);
+
+-- Data for academic_coordinators (12 rows)
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('db63d634-1904-481c-a395-563b3032ac88', '2025–2026', NULL, true, 'Class I', '2026-09-04T07:22:08.508544+00:00', 1, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Mahima Balodi') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('f2fdeda6-d1c0-40bf-bc48-c6b009184025', '2025–2026', NULL, true, 'Class II', '2026-09-04T07:22:08.508544+00:00', 2, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Vandana Sharma') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('0356da04-ff21-44bc-bf90-e908ff202296', '2025–2026', NULL, true, 'Class III', '2026-09-04T07:22:08.508544+00:00', 3, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Jyoti Sharma') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('776d32b1-d831-48de-859a-8196a2dac316', '2025–2026', NULL, true, 'Class IV', '2026-09-04T07:22:08.508544+00:00', 4, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Keeratleen Kaur') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('47a34c55-e11e-469c-83e6-4a4f2490524d', '2025–2026', NULL, true, 'Class V', '2026-09-04T07:22:08.508544+00:00', 5, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Kamya Bhagat') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('6571a483-7f9b-4b71-9a58-87c3c1ee9dcd', '2025–2026', NULL, true, 'Class VI', '2026-09-04T07:22:08.508544+00:00', 6, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Nidhi Pandey') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('2b038ac7-3337-4e7d-9e9e-95dcce009958', '2025–2026', NULL, true, 'Class VII', '2026-09-04T07:22:08.508544+00:00', 7, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Santosh Sundriyal') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('e57ad6d9-be4d-42ba-8037-221f0938c2ce', '2025–2026', NULL, true, 'Class VIII', '2026-09-04T07:22:08.508544+00:00', 8, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Harshita Sanwal') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('9e9536ec-0e02-4ee7-93fd-8d182675630b', '2025–2026', NULL, true, 'Class IX', '2026-09-04T07:22:08.508544+00:00', 9, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Surbhi Rai') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('8ee162f0-9e2a-451b-b22a-fdd2d5cc6cd9', '2025–2026', NULL, true, 'Class XI', '2026-09-04T07:22:08.508544+00:00', 11, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Mr. Chakit Satya') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('8d2ef41d-9fde-4434-a76b-cd9dc4dbe6c0', '2025–2026', NULL, true, 'Class XII', '2026-09-04T07:22:08.508544+00:00', 12, '2026-09-04T07:22:08.508544+00:00', NULL, 'Academic Coordinator', 'Ms. Sanju Madan') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."academic_coordinators" ("id", "session", "image_url", "is_active", "class_name", "created_at", "sort_order", "updated_at", "description", "designation", "coordinator_name") VALUES ('bb8460af-b600-485d-8e75-becd40ed7b07', '2025–2026', NULL, false, 'Class X', '2026-09-04T07:22:08.508544+00:00', 10, '2026-10-05T17:56:01.925+00:00', NULL, 'Academic Coordinator', 'Mohd. Tayyab') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."gallery_preview_items" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "size" text,
+  "title" text,
+  "category" text,
+  "link_url" text,
+  "icon_name" text,
+  "image_url" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text
+);
+
+-- Data for gallery_preview_items (4 rows)
+INSERT INTO "public"."gallery_preview_items" ("id", "size", "title", "category", "link_url", "icon_name", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('67721261-024f-41fc-a3ce-cfa601c90100', 'small', 'Annual Day', 'Culture', '/gallery', 'Music', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/gallery-preview/67721261-024f-41fc-a3ce-cfa601c90100-1791728269471.png', true, '2026-09-04T13:05:38.021718+00:00', 2, '2026-10-11T14:18:18.001+00:00', 'Celebrating talent and creativity.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_preview_items" ("id", "size", "title", "category", "link_url", "icon_name", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('af5d37e0-01a9-40f9-9e3f-751b0351d000', 'large', 'Sports Day', 'Sports', '/gallery', 'Trophy', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/gallery-preview/af5d37e0-01a9-40f9-9e3f-751b0351d000-1791806255951.jpeg', true, '2026-09-04T13:05:38.021718+00:00', 1, '2026-10-12T11:57:40.744+00:00', 'Energy, teamwork and sporting spirit.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_preview_items" ("id", "size", "title", "category", "link_url", "icon_name", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('c8c0b86a-9d33-4d09-afbd-fa7cc6ef2edf', 'small', 'Investiture', 'Leadership', '/gallery', 'Flag', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/gallery-preview/c8c0b86a-9d33-4d09-afbd-fa7cc6ef2edf-1791807058635.png', true, '2026-09-04T13:05:38.021718+00:00', 3, '2026-10-12T12:11:01.697+00:00', 'Leadership, responsibility and confidence.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."gallery_preview_items" ("id", "size", "title", "category", "link_url", "icon_name", "image_url", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('89360207-5837-4fdd-84e3-526b887d9d0f', 'large', 'Apex Community', 'School Life', '/gallery', 'Users', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/gallery/gallery-preview/89360207-5837-4fdd-84e3-526b887d9d0f-1791807421858.png', true, '2026-09-04T13:05:38.021718+00:00', 4, '2026-10-12T12:17:06.636+00:00', 'The people and moments that make Apex.') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."virtual_tour_settings" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "cbse_code" text,
+  "is_active" boolean DEFAULT true,
+  "cbse_label" text,
+  "created_at" timestamptz DEFAULT now(),
+  "hero_label" text,
+  "updated_at" timestamptz DEFAULT now(),
+  "campus_label" text,
+  "campus_value" text,
+  "scroll_label" text,
+  "location_meta" text,
+  "scroll_anchor" text,
+  "youtube_title" text,
+  "location_label" text,
+  "hero_description" text,
+  "youtube_video_id" text,
+  "established_label" text,
+  "established_value" text,
+  "hero_title_line_1" text,
+  "hero_title_line_2" text,
+  "video_description" text,
+  "gallery_button_url" text,
+  "start_button_label" text,
+  "video_status_label" text,
+  "youtube_button_url" text,
+  "location_button_url" text,
+  "start_button_anchor" text,
+  "video_section_label" text,
+  "gallery_button_label" text,
+  "video_heading_line_1" text,
+  "video_heading_line_2" text,
+  "video_location_label" text,
+  "video_official_label" text,
+  "youtube_button_label" text,
+  "location_button_label" text,
+  "location_address_line_1" text,
+  "location_address_line_2" text,
+  "highlights_section_label" text,
+  "highlights_heading_line_1" text,
+  "highlights_heading_line_2" text
+);
+
+-- Data for virtual_tour_settings (1 rows)
+INSERT INTO "public"."virtual_tour_settings" ("id", "cbse_code", "is_active", "cbse_label", "created_at", "hero_label", "updated_at", "campus_label", "campus_value", "scroll_label", "location_meta", "scroll_anchor", "youtube_title", "location_label", "hero_description", "youtube_video_id", "established_label", "established_value", "hero_title_line_1", "hero_title_line_2", "video_description", "gallery_button_url", "start_button_label", "video_status_label", "youtube_button_url", "location_button_url", "start_button_anchor", "video_section_label", "gallery_button_label", "video_heading_line_1", "video_heading_line_2", "video_location_label", "video_official_label", "youtube_button_label", "location_button_label", "location_address_line_1", "location_address_line_2", "highlights_section_label", "highlights_heading_line_1", "highlights_heading_line_2") VALUES ('a6b4fb5b-6613-4dc1-bff5-6cf74c096f2d', '2730184', true, 'CBSE Code', '2026-09-04T14:46:12.485342+00:00', 'Apex Virtual Tour', '2026-09-04T14:46:12.485342+00:00', 'Burari Campus', 'Delhi', 'Scroll to explore', 'Delhi – 110084 · 09990061747', '#tour-video', 'Inside Apex Public School | Excellence in Education & Growth', 'Visit Apex', 'Take a closer look at the school, its people and the environment in which the Apex community learns and grows.', 'WeuEZrBm3xM', 'Established', '1985', 'Step inside', 'Apex Public School.', 'Welcome to Apex Public School. Experience the campus, learning environment and wider school community through the official school overview.', '/gallery', 'Start the tour', 'Official school overview', 'https://www.youtube.com/', '/contact', '#tour-video', 'Inside Apex', 'View gallery', 'Excellence in', 'education & growth.', 'Apex Public School · Delhi', 'Official Apex media', 'Open on YouTube', 'Contact the school', 'Apex Road, B-Block,', 'Sant Nagar, Burari.', 'More than a tour', 'See the places', 'behind the experience.') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."admission_applications" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "is_published" boolean DEFAULT true,
+  "status" text DEFAULT 'draft',
+  "blog_id" uuid,
+  "declaration_accepted" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "public"."academics_home_settings" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "closing_label" text,
+  "faculty_label" text,
+  "faculty_title" text,
+  "section_label" text,
+  "heading_line_1" text,
+  "heading_line_2" text,
+  "resource_label" text,
+  "syllabus_title" text,
+  "datesheet_title" text,
+  "stream_button_url" text,
+  "closing_button_url" text,
+  "explore_button_url" text,
+  "faculty_button_url" text,
+  "stream_button_label" text,
+  "syllabus_button_url" text,
+  "closing_button_label" text,
+  "datesheet_button_url" text,
+  "explore_button_label" text,
+  "faculty_button_label" text,
+  "syllabus_button_label" text,
+  "closing_heading_line_1" text,
+  "closing_heading_line_2" text,
+  "datesheet_button_label" text,
+  "senior_secondary_label" text,
+  "senior_secondary_image_url" text,
+  "senior_secondary_description" text,
+  "senior_secondary_heading_line_1" text,
+  "senior_secondary_heading_line_2" text
+);
+
+-- Data for academics_home_settings (1 rows)
+INSERT INTO "public"."academics_home_settings" ("id", "is_active", "created_at", "updated_at", "description", "closing_label", "faculty_label", "faculty_title", "section_label", "heading_line_1", "heading_line_2", "resource_label", "syllabus_title", "datesheet_title", "stream_button_url", "closing_button_url", "explore_button_url", "faculty_button_url", "stream_button_label", "syllabus_button_url", "closing_button_label", "datesheet_button_url", "explore_button_label", "faculty_button_label", "syllabus_button_label", "closing_heading_line_1", "closing_heading_line_2", "datesheet_button_label", "senior_secondary_label", "senior_secondary_image_url", "senior_secondary_description", "senior_secondary_heading_line_1", "senior_secondary_heading_line_2") VALUES ('60aacbb5-83d5-4002-b984-d94cbbdaab92', true, '2026-09-04T13:23:03.743467+00:00', '2026-10-12T13:23:12.623+00:00', 'From the early years to senior secondary education, Apex supports students through changing interests, deeper learning and new academic possibilities.', 'Education beyond the syllabus', 'People', 'Our Faculty', 'Learning at Apex', 'Learning grows', 'with every stage.', 'Resource', 'Syllabus', 'Datesheet', '/academics/senior-secondary', '/academics', '/academics', '/faculty', 'Explore', '/academics/syllabus', 'Academic life', '/academics/datesheet', 'Explore academics', 'Meet the faculty', 'View syllabus', 'Strong academics matter.', 'So do curiosity, confidence, creativity and character.', 'View datesheet', 'Senior Secondary', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/academics/senior-secondary-home-1791811368986.jpeg', 'Senior secondary education opens the door to more focused study. Apex offers academic pathways in Science, Commerce and Humanities.', 'Choose a path', 'that feels like yours.') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."virtual_tour_highlights" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "number" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text
+);
+
+-- Data for virtual_tour_highlights (3 rows)
+INSERT INTO "public"."virtual_tour_highlights" ("id", "title", "number", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('781dbcbd-c47d-4fcc-8a50-a5c617bb4518', 'Campus', '01', true, '2026-09-04T14:46:28.536852+00:00', 1, '2026-09-04T14:46:28.536852+00:00', 'Explore the physical spaces where Apex students learn, collaborate and grow.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."virtual_tour_highlights" ("id", "title", "number", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('8a0be765-7d43-4ab6-95a8-ba14d7b0c21f', 'People', '02', true, '2026-09-04T14:46:28.536852+00:00', 2, '2026-09-04T14:46:28.536852+00:00', 'See the school community that brings the academic and co-curricular experience to life.') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."virtual_tour_highlights" ("id", "title", "number", "is_active", "created_at", "sort_order", "updated_at", "description") VALUES ('f378c4e9-74a9-4908-b96a-40213566de52', 'Experience', '03', true, '2026-09-04T14:46:28.536852+00:00', 3, '2026-09-04T14:46:28.536852+00:00', 'A closer look at the environment behind the Apex learning experience.') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."gallery_preview_settings" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "closing_label" text,
+  "section_label" text,
+  "heading_line_1" text,
+  "heading_line_2" text,
+  "closing_button_url" text,
+  "gallery_button_url" text,
+  "closing_button_label" text,
+  "gallery_button_label" text,
+  "closing_heading_line_1" text,
+  "closing_heading_line_2" text
+);
+
+-- Data for gallery_preview_settings (1 rows)
+INSERT INTO "public"."gallery_preview_settings" ("id", "is_active", "created_at", "updated_at", "description", "closing_label", "section_label", "heading_line_1", "heading_line_2", "closing_button_url", "gallery_button_url", "closing_button_label", "gallery_button_label", "closing_heading_line_1", "closing_heading_line_2") VALUES ('94e083d9-2049-474a-a0be-816398a2486c', true, '2026-09-04T13:05:24.618059+00:00', '2026-10-12T12:17:12.961+00:00', 'From sports and cultural celebrations to leadership and everyday school life, there is always something happening at Apex.', 'Explore Apex', 'Life at Apex', 'Moments that', 'become memories.', '/activities', '/gallery', 'Explore activities', 'View full gallery', 'Sports. Culture. Leadership.', 'School life in motion.') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."mandatory_public_disclosures" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT now(),
+  "sort_order" integer DEFAULT 0,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "storage_url" text,
+  "document_url" text
+);
+
+-- Data for mandatory_public_disclosures (21 rows)
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('1d3d5c00-123f-4e2d-8479-86a090469ebf', 'SOCIETIES/TRUST/COMPANY REGISTRATION/RENEWAL CERTIFICATE', true, '2026-10-01T09:41:05.787574+00:00', 4, '2026-10-10T15:20:14.638134+00:00', 'COPY OF SOCIETIES/TRUST/COMPANY  REGISTRATION/RENEWAL CERTIFICATE, AS APPLICABLE', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790847660304-adobe-scan-01-oct-2026-2-.pdf', 'https://apexpublicschool.in/wp-content/uploads/2025/09/Copy-of-Society.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('8339c0a5-1122-4cd0-b8bb-07797343b5fd', 'Mandatory public disclosure', true, '2026-10-10T15:18:23.732677+00:00', 2, '2026-10-10T15:20:57.597962+00:00', 'MANDATORY PUBLIC DISCLOSURE  2026-2027', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791645499500-mandatory_public_disclosure-revised_format.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/10/Mandatory_public_disclosure-Revised_format.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('0a9d66eb-3782-4991-9f5e-f0de53d49867', 'AFFILIATION/UPGRADATION LETTER', true, '2026-10-01T09:20:00.305802+00:00', 3, '2026-10-10T15:21:18.775804+00:00', 'COPY OF AFFILIATION/UPGRADATION LETTER AND RECENT  EXTENSION OF AFFILIATION', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790846393834-affiliation-grant-letter.pdf', 'https://apexpublicschool.in/wp-content/uploads/2025/09/Affiliation-certificate.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('c8a38641-0158-4834-89c6-ac038a2f4e50', 'LIST OF PRT 2026-27', true, '2026-10-07T18:59:29.338914+00:00', 24, '2026-10-10T15:18:59.739217+00:00', 'LIST OF PRT 2026-27', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791399567241-list-of-prt-2026-27.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/05/LIST-OF-PRT-2026-2027.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('4a0383d5-5226-470b-957d-fc9e3d66672d', 'LAST 5 YEARS CBSE BOARD RESULTS', true, '2026-10-12T12:21:37.076769+00:00', 28, '2026-10-12T12:21:35.72+00:00', 'LAST 5 YEARS CBSE BOARD RESULTS', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791807693437-last-5-years-cbse-board-results.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/10/LAST%205%20YEARS%20CBSE%20BOARD%20RESULTS.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('c94a09ba-b110-49b1-8bd3-6b9d6d0ec288', 'BUILDING SAFETY CERTIFICATE AS PER THE NATIONAL BUILDING CODE', true, '2026-10-01T09:28:17.770178+00:00', 7, '2026-10-10T15:20:04.64643+00:00', 'COPY OF VALID BUILDING SAFETY CERTIFICATE AS PER THE  NATIONAL BUILDING CODE', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790846891529-copy-of-latest-building-safety-certificate.pdf', 'https://apexpublicschool.in/wp-content/uploads/2025/09/Copy-of-Building-Safety-certificate.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('a29e9d73-ca0f-41f6-95a0-bc8e5c836ded', 'LIST OF TGT 2026-27', true, '2026-10-07T18:58:23.757066+00:00', 23, '2026-10-10T15:19:03.235335+00:00', 'LIST OF TGT 2026-27', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791399500169-list-of-tgt-2026-27.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/05/LIST-OF-TGT-2026-2027.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('90d12c27-73d4-4e23-99e7-6e4e460ab5e9', 'LAST THREE-YEAR RESULT OF THE BOARD EXAMINATION', true, '2026-10-01T10:08:06.657467+00:00', 20, '2026-10-10T15:19:13.541335+00:00', 'LAST THREE-YEAR RESULT OF THE BOARD EXAMINATION', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790849280784-adobe-scan-01-oct-2026-1-.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/05/CBSE-BOARD-LAST-5-YEARS-RESULT-CLASS-X-XII.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('e4dea883-e067-47f5-bea0-98dd9a8da27c', 'List of pta members', true, '2026-10-07T18:58:00.921932+00:00', 19, '2026-10-10T15:19:21.493109+00:00', 'LIST OF PARENTS TEACHERS ASSOCIATION (PTA) MEMBERS', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791538936728-pta-list-2026-27.pdf', 'https://apexpublicschool.in/wp-content/uploads/2025/09/List-of-Parent-Teacher-Association.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('6341497b-9ec6-40ed-ba07-51374786189c', 'Annual Calendar of Academics 2026-2027', true, '2026-10-01T09:27:35.607549+00:00', 17, '2026-10-10T15:19:33.419747+00:00', 'Annual Calendar of Academics 2026-2027', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790846847915-adobe-scan-21-apr-2026-1-.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/05/Adobe-Scan-21-Apr-2026-1.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('438eb6fe-aadb-423d-8f93-20f9320631f1', 'Fee structure', true, '2026-10-01T09:36:43.74601+00:00', 16, '2026-10-10T15:19:38.842007+00:00', 'FEE STRUCTURE OF THE SCHOOL', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790847397226-adobe-scan-01-oct-2026.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/05/FEE-STRUCTURE-2026-2027.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('cd2d6d3b-807c-49a1-9cbe-4e9efbebf65b', 'Self-Certification-Digitally-signed-2026', true, '2026-10-01T09:30:23.536396+00:00', 12, '2026-10-10T15:19:55.021372+00:00', 'COPY OF THE DEO CERTIFICATE SUBMITTED BY THE SCHOOL  FOR AFFILIATION/UPGRADATION/EXTENSION OF  AFFILIATIONOR SELF CERTIFICATION BY SCHOOL', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790847019194-self-certification-digitally-signed-2026.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/05/Self-Certification-Digitally-signed-2026.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('84a4a05b-2a0d-4ebb-b57a-00e58d504ccb', 'FIRE SAFETY CERTIFICATE ISSUED BY THE COMPETENT AUTHORITY', true, '2026-10-01T09:23:32.104588+00:00', 8, '2026-10-10T15:20:00.273169+00:00', 'COPY OF VALID FIRE SAFETY CERTIFICATE ISSUED BY THE  COMPETENT AUTHORITY', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790846603637-copy-of-fire-safety-certificate.pdf', 'https://apexpublicschool.in/wp-content/uploads/2025/09/Copy-of-Fire-Safety-certificate.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('512c0c89-09a8-40a5-8d57-85384d35506e', 'RECOGNITION CERTIFICATE UNDER RTE ACT, 2009', true, '2026-10-01T09:22:41.554823+00:00', 6, '2026-10-10T15:20:08.776211+00:00', 'COPY OF RECOGNITION CERTIFICATE UNDER RTE ACT,  2009, AND IT’S RENEWAL IF APPLICABLE', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790846554470-copy-of-recognition-certificate.pdf', 'https://apexpublicschool.in/wp-content/uploads/2025/09/Copy-of-Recognition-Certificate.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('8f79e00d-5b4d-41e5-a79a-e5ebe2d73a8e', 'SCHOOL HEALTH CERTIFICATE', true, '2026-10-07T18:58:46.272764+00:00', 26, '2026-10-10T15:18:51.669667+00:00', 'SCHOOL HEALTH CERTIFICATE', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791399523569-school-health-certificate.pdf', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791399523569-school-health-certificate.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('b2a4d7f5-0a09-4cda-97b7-47b156a4c786', 'Land Certificate', true, '2026-10-01T09:29:57.020723+00:00', 25, '2026-10-10T15:18:55.435077+00:00', 'Land Certificate', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790846991480-land-certificate.pdf', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1790846991480-land-certificate.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('a3082070-77a3-4263-9178-8d0a14f3ca48', 'SMC LIST 2026-27', true, '2026-10-07T18:57:30.089974+00:00', 18, '2026-10-10T15:19:27.255155+00:00', 'LIST OF SCHOOL MANAGEMENT COMMITTEE (SMC)', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791399446434-smc-list-2026-27.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/05/GOVERNING-BODY-OF-JEANNE-CHRISTIAN-EDUCATIONAL-SOCIETY.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('7633c50c-0b2f-48fe-af12-103f00972435', 'COPIES OF VALID DRINKING WATER, HEALTH AND SANITATION CERTIFICATES AND WATER TESTING REPORT', true, '2026-10-10T12:53:50.798827+00:00', 14, '2026-10-10T15:19:50.63799+00:00', 'COPY OF VALID DRINKING WATER, HEALTH AND SANITATION CERTIFICATES AND WATER TESTING REPORT', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791636827811-validdrinkingwaterhealthsanitation.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/10/VALIDDRINKINGWATERHEALTHSANITATION.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('a84f5e24-29f0-4991-8870-cb709d13322d', 'COPY OF NO OBJECTION CERTIFICATE (NOC) ISSUED, IF  APPLICABLE, BY THE STATE GOVT./UT', true, '2026-10-09T09:28:31.592082+00:00', 5, '2026-10-10T15:20:11.850144+00:00', 'COPY OF NO OBJECTION CERTIFICATE (NOC) ISSUED, IF  APPLICABLE, BY THE STATE GOVT./UT', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791538099932-copy-of-recognition-certificate.pdf', 'https://apexpublicschool.in/wp-content/uploads/2025/09/Copy-of-NOC-NO-OBJECTION-CERTIFICATE.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('e21daa0c-6754-4a26-94cb-254bd9e59826', 'LIST OF PGT 2026-27', true, '2026-10-07T19:00:08.09088+00:00', 22, '2026-10-10T15:19:08.946898+00:00', 'LIST OF PGT 2026-27', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791399605520-list-of-pgt-2026-27.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/05/LIST-OF-PGT-2026-2027.pdf') ON CONFLICT DO NOTHING;
+INSERT INTO "public"."mandatory_public_disclosures" ("id", "title", "is_active", "created_at", "sort_order", "updated_at", "description", "storage_url", "document_url") VALUES ('2f793b1b-129c-4104-982f-2f6dc72d4467', 'WATER TEST REPORT', true, '2026-10-10T12:08:21.389142+00:00', 15, '2026-10-10T15:19:46.527902+00:00', 'WATER TEST REPORT', 'https://ngqzmzlpjpbitxetqltj.supabase.co/storage/v1/object/public/academic-resources/mandatory-disclosure/1791634099783-water-test-report.pdf', 'https://apexpublicschool.in/wp-content/uploads/2026/10/WATER%20TEST%20REPORT.pdf') ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS "public"."admission_registration_settings" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "title" text,
+  "is_open" boolean DEFAULT true,
+  "session" text,
+  "updated_at" timestamptz DEFAULT now(),
+  "description" text,
+  "instructions" text,
+  "open_classes" text[],
+  "class_xi_enabled" boolean DEFAULT true,
+  "class_xi_streams" text[],
+  "application_success_message" text
+);
+
+-- Data for admission_registration_settings (1 rows)
+INSERT INTO "public"."admission_registration_settings" ("id", "title", "is_open", "session", "updated_at", "description", "instructions", "open_classes", "class_xi_enabled", "class_xi_streams", "application_success_message") VALUES ('cf73b283-904a-466f-b2a4-5837da194d19', 'Online Registration', true, '2026–2027', '2026-09-04T08:51:02.858+00:00', 'Register your child for admission to Apex Public School.', 'Please enter the information carefully and upload the required documents.', ARRAY['Class I', 'Class II', 'Class III', 'Class IV', 'Class V', 'Class VI', 'Class VII', 'Class VIII', 'Class IX']::text[], true, ARRAY['Commerce', 'Humanities', 'Science']::text[], 'Your application has been submitted successfully. The school will contact you regarding the next steps.') ON CONFLICT DO NOTHING;
+
+-- ---------------------------------------------------------------------
+-- 3. ROW LEVEL SECURITY (RLS) POLICIES
+-- ---------------------------------------------------------------------
+ALTER TABLE "public"."homepage_sections" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+ALTER TABLE "public"."events" ADD COLUMN IF NOT EXISTS "is_published" boolean DEFAULT true;
+ALTER TABLE "public"."faculty" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+ALTER TABLE "public"."activities" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+ALTER TABLE "public"."activities" ADD COLUMN IF NOT EXISTS "is_published" boolean DEFAULT true;
+ALTER TABLE "public"."achievements" ADD COLUMN IF NOT EXISTS "is_published" boolean DEFAULT true;
+ALTER TABLE "public"."academic_resources" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+ALTER TABLE "public"."pages" ADD COLUMN IF NOT EXISTS "is_published" boolean DEFAULT true;
+ALTER TABLE "public"."documents" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+ALTER TABLE "public"."accolade_images" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+ALTER TABLE "public"."admission_applications" ADD COLUMN IF NOT EXISTS "declaration_accepted" boolean DEFAULT true;
+ALTER TABLE "public"."blog_posts" ADD COLUMN IF NOT EXISTS "status" text DEFAULT 'draft';
+ALTER TABLE "public"."blog_posts" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;
+ALTER TABLE "public"."blog_images" ADD COLUMN IF NOT EXISTS "blog_id" uuid;
+ALTER TABLE "public"."cms_blogs" ADD COLUMN IF NOT EXISTS "status" text DEFAULT 'draft';
+ALTER TABLE "public"."blogs" ADD COLUMN IF NOT EXISTS "status" text DEFAULT 'draft';
+
+ALTER TABLE "public"."site_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read site settings" ON "public"."site_settings"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_public = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."navigation_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read navigation" ON "public"."navigation_items"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read hero slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."homepage_sections" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read homepage sections" ON "public"."homepage_sections"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."campus_facilities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read campus facilities" ON "public"."campus_facilities"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read notices" ON "public"."notices"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_published = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read events" ON "public"."events"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_published = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_albums" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read gallery albums" ON "public"."gallery_albums"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_published = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read gallery images" ON "public"."gallery_images"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_published = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read faculty" ON "public"."faculty"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."activities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read activities" ON "public"."activities"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_published = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."achievements" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read achievements" ON "public"."achievements"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_published = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_stages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read academic stages" ON "public"."academic_stages"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_streams" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read academic streams" ON "public"."academic_streams"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_resources" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read academic resources" ON "public"."academic_resources"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read admission settings" ON "public"."admission_settings"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read contact settings" ON "public"."contact_settings"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read pages" ON "public"."pages"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_published = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public read documents" ON "public"."documents"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admin_profiles" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can read own profile" ON "public"."admin_profiles"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING ((id = auth.uid()))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."site_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage site settings" ON "public"."site_settings"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."homepage_sections" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage homepage sections" ON "public"."homepage_sections"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage events" ON "public"."events"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage faculty" ON "public"."faculty"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."activities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage activities" ON "public"."activities"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_applications" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete admission applications" ON "public"."admission_applications"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active hero slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."achievements" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage achievements" ON "public"."achievements"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_streams" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage academic streams" ON "public"."academic_streams"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_resources" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage academic resources" ON "public"."academic_resources"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage admission settings" ON "public"."admission_settings"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage contact settings" ON "public"."contact_settings"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage pages" ON "public"."pages"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage documents" ON "public"."documents"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_messages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage contact messages" ON "public"."contact_messages"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage hero slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."navigation_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active navigation" ON "public"."navigation_items"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."navigation_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage navigation" ON "public"."navigation_items"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_content" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active about content" ON "public"."about_content"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_content" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage about content" ON "public"."about_content"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage notices" ON "public"."notices"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active admissions" ON "public"."admission_settings"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage about pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view hero slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert hero slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view hero_slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage admissions" ON "public"."admission_settings"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_stages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage academic stages" ON "public"."academic_stages"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."campus_facilities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active campus facilities" ON "public"."campus_facilities"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."campus_facilities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage campus facilities" ON "public"."campus_facilities"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_albums" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active gallery albums" ON "public"."gallery_albums"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_albums" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage gallery albums" ON "public"."gallery_albums"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active gallery images" ON "public"."gallery_images"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage gallery images" ON "public"."gallery_images"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert hero_slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update hero_slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active faculty" ON "public"."faculty_members"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view all faculty" ON "public"."faculty_members"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert faculty" ON "public"."faculty_members"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update faculty" ON "public"."faculty_members"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete faculty" ON "public"."faculty_members"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active about pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view all about pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert about pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update about pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete about pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."accolade_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active accolade images" ON "public"."accolade_images"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."accolade_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view all accolade images" ON "public"."accolade_images"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."accolade_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert accolade images" ON "public"."accolade_images"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."accolade_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update accolade images" ON "public"."accolade_images"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."accolade_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete accolade images" ON "public"."accolade_images"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active academic documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view all academic documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert academic documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update academic documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete academic documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active result banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view all result banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert result banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update result banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete result banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active academic coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view all academic coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert academic coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update academic coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete academic coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_applications" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update admission applications" ON "public"."admission_applications"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active admission criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view all admission criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert admission criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update admission criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete admission criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_registration_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view registration settings" ON "public"."admission_registration_settings"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_registration_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update registration settings" ON "public"."admission_registration_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_registration_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert registration settings" ON "public"."admission_registration_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_applications" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Anyone can submit admission application" ON "public"."admission_applications"
+    AS PERMISSIVE FOR INSERT
+    TO anon, authenticated
+    WITH CHECK ((declaration_accepted = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_applications" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view admission applications" ON "public"."admission_applications"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active admission notices" ON "public"."admission_notices"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can manage admission notices" ON "public"."admission_notices"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."sdg_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active SDG items" ON "public"."sdg_items"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."sdg_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can manage SDG items" ON "public"."sdg_items"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update hero slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."activities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active activities" ON "public"."activities"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."activities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admin full access activities" ON "public"."activities"
+    AS PERMISSIVE FOR ALL
+    TO public
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."kaushal_bodh" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active kaushal bodh" ON "public"."kaushal_bodh"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."kaushal_bodh" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admin full access kaushal bodh" ON "public"."kaushal_bodh"
+    AS PERMISSIVE FOR ALL
+    TO public
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view contact settings" ON "public"."contact_settings"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admin full access contact settings" ON "public"."contact_settings"
+    AS PERMISSIVE FOR ALL
+    TO public
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."news_events_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view news events settings" ON "public"."news_events_settings"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."news_events_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admin full access news events settings" ON "public"."news_events_settings"
+    AS PERMISSIVE FOR ALL
+    TO public
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_resources" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active academic resources" ON "public"."academic_resources"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete hero slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."hero_slides" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete hero_slides" ON "public"."hero_slides"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."site_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view site_settings" ON "public"."site_settings"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."site_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert site_settings" ON "public"."site_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."site_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update site_settings" ON "public"."site_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."site_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete site_settings" ON "public"."site_settings"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_content" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view about_content" ON "public"."about_content"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_content" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert about_content" ON "public"."about_content"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active gallery preview settings" ON "public"."gallery_preview_settings"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active gallery preview items" ON "public"."gallery_preview_items"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage gallery preview settings" ON "public"."gallery_preview_settings"
+    AS PERMISSIVE FOR ALL
+    TO public
+    USING ((auth.role() = 'authenticated'::text))
+    WITH CHECK ((auth.role() = 'authenticated'::text))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage gallery preview items" ON "public"."gallery_preview_items"
+    AS PERMISSIVE FOR ALL
+    TO public
+    USING ((auth.role() = 'authenticated'::text))
+    WITH CHECK ((auth.role() = 'authenticated'::text))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academics_home_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active academics homepage settings" ON "public"."academics_home_settings"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academics_home_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage academics homepage settings" ON "public"."academics_home_settings"
+    AS PERMISSIVE FOR ALL
+    TO public
+    USING ((auth.role() = 'authenticated'::text))
+    WITH CHECK ((auth.role() = 'authenticated'::text))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active virtual tour settings" ON "public"."virtual_tour_settings"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage virtual tour settings" ON "public"."virtual_tour_settings"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_highlights" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active virtual tour highlights" ON "public"."virtual_tour_highlights"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_highlights" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage virtual tour highlights" ON "public"."virtual_tour_highlights"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_stages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active academic stages" ON "public"."academic_stages"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_streams" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active academic streams" ON "public"."academic_streams"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_content" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update about_content" ON "public"."about_content"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_content" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete about_content" ON "public"."about_content"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view about_pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert about_pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update about_pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."about_pages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete about_pages" ON "public"."about_pages"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view notices" ON "public"."notices"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert notices" ON "public"."notices"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update notices" ON "public"."notices"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete notices" ON "public"."notices"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view admission_settings" ON "public"."admission_settings"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert admission_settings" ON "public"."admission_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update admission_settings" ON "public"."admission_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete admission_settings" ON "public"."admission_settings"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_stages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view academic_stages" ON "public"."academic_stages"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_stages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert academic_stages" ON "public"."academic_stages"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_stages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update academic_stages" ON "public"."academic_stages"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_stages" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete academic_stages" ON "public"."academic_stages"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_streams" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view academic_streams" ON "public"."academic_streams"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_streams" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert academic_streams" ON "public"."academic_streams"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_streams" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update academic_streams" ON "public"."academic_streams"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_streams" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete academic_streams" ON "public"."academic_streams"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_resources" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view academic_resources" ON "public"."academic_resources"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_resources" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert academic_resources" ON "public"."academic_resources"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_resources" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update academic_resources" ON "public"."academic_resources"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_resources" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete academic_resources" ON "public"."academic_resources"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."campus_facilities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view campus_facilities" ON "public"."campus_facilities"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."campus_facilities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert campus_facilities" ON "public"."campus_facilities"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."campus_facilities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update campus_facilities" ON "public"."campus_facilities"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."campus_facilities" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete campus_facilities" ON "public"."campus_facilities"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_albums" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view gallery_albums" ON "public"."gallery_albums"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_albums" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert gallery_albums" ON "public"."gallery_albums"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_albums" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update gallery_albums" ON "public"."gallery_albums"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_albums" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete gallery_albums" ON "public"."gallery_albums"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view gallery_images" ON "public"."gallery_images"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert gallery_images" ON "public"."gallery_images"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update gallery_images" ON "public"."gallery_images"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete gallery_images" ON "public"."gallery_images"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view faculty_members" ON "public"."faculty_members"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert faculty_members" ON "public"."faculty_members"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update faculty_members" ON "public"."faculty_members"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."faculty_members" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete faculty_members" ON "public"."faculty_members"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."navigation_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view navigation_items" ON "public"."navigation_items"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."navigation_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert navigation_items" ON "public"."navigation_items"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."navigation_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update navigation_items" ON "public"."navigation_items"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."navigation_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete navigation_items" ON "public"."navigation_items"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view academic_documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert academic_documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update academic_documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_documents" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete academic_documents" ON "public"."academic_documents"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view academic_coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert academic_coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update academic_coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academic_coordinators" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete academic_coordinators" ON "public"."academic_coordinators"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view admission_criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert admission_criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update admission_criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_criteria" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete admission_criteria" ON "public"."admission_criteria"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_registration_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view admission_registration_settings" ON "public"."admission_registration_settings"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_registration_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert admission_registration_settings" ON "public"."admission_registration_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_registration_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update admission_registration_settings" ON "public"."admission_registration_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_registration_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete admission_registration_settings" ON "public"."admission_registration_settings"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view cbse_result_banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert cbse_result_banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update cbse_result_banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cbse_result_banners" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete cbse_result_banners" ON "public"."cbse_result_banners"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view contact_settings" ON "public"."contact_settings"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert contact_settings" ON "public"."contact_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update contact_settings" ON "public"."contact_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."contact_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete contact_settings" ON "public"."contact_settings"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."news_events_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view news_events_settings" ON "public"."news_events_settings"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."news_events_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert news_events_settings" ON "public"."news_events_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."news_events_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update news_events_settings" ON "public"."news_events_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."news_events_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete news_events_settings" ON "public"."news_events_settings"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."sdg_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view sdg_items" ON "public"."sdg_items"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."sdg_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert sdg_items" ON "public"."sdg_items"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."sdg_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update sdg_items" ON "public"."sdg_items"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."sdg_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete sdg_items" ON "public"."sdg_items"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."kaushal_bodh" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view kaushal_bodh" ON "public"."kaushal_bodh"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."kaushal_bodh" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert kaushal_bodh" ON "public"."kaushal_bodh"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."kaushal_bodh" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update kaushal_bodh" ON "public"."kaushal_bodh"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."kaushal_bodh" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete kaushal_bodh" ON "public"."kaushal_bodh"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academics_home_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view academics_home_settings" ON "public"."academics_home_settings"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academics_home_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert academics_home_settings" ON "public"."academics_home_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academics_home_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update academics_home_settings" ON "public"."academics_home_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."academics_home_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete academics_home_settings" ON "public"."academics_home_settings"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view gallery_preview_settings" ON "public"."gallery_preview_settings"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert gallery_preview_settings" ON "public"."gallery_preview_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update gallery_preview_settings" ON "public"."gallery_preview_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete gallery_preview_settings" ON "public"."gallery_preview_settings"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view gallery_preview_items" ON "public"."gallery_preview_items"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert gallery_preview_items" ON "public"."gallery_preview_items"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update gallery_preview_items" ON "public"."gallery_preview_items"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."gallery_preview_items" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete gallery_preview_items" ON "public"."gallery_preview_items"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view virtual_tour_settings" ON "public"."virtual_tour_settings"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert virtual_tour_settings" ON "public"."virtual_tour_settings"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update virtual_tour_settings" ON "public"."virtual_tour_settings"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_settings" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete virtual_tour_settings" ON "public"."virtual_tour_settings"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_highlights" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view virtual_tour_highlights" ON "public"."virtual_tour_highlights"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_highlights" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can insert virtual_tour_highlights" ON "public"."virtual_tour_highlights"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_highlights" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can update virtual_tour_highlights" ON "public"."virtual_tour_highlights"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (is_admin())
+    WITH CHECK (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."virtual_tour_highlights" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can delete virtual_tour_highlights" ON "public"."virtual_tour_highlights"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admin_users" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can view admin users" ON "public"."admin_users"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (is_admin())
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."blogs" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can read blogs" ON "public"."blogs"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can read active notices" ON "public"."notices"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can read active admission notices" ON "public"."admission_notices"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated admins can read admission notices" ON "public"."admission_notices"
+    AS PERMISSIVE FOR SELECT
+    TO authenticated
+    USING (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated admins can insert admission notices" ON "public"."admission_notices"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated admins can update admission notices" ON "public"."admission_notices"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."admission_notices" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated admins can delete admission notices" ON "public"."admission_notices"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."mandatory_public_disclosures" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can insert disclosures" ON "public"."mandatory_public_disclosures"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."mandatory_public_disclosures" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can update disclosures" ON "public"."mandatory_public_disclosures"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."mandatory_public_disclosures" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can delete disclosures" ON "public"."mandatory_public_disclosures"
+    AS PERMISSIVE FOR DELETE
+    TO authenticated
+    USING (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."mandatory_public_disclosures" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view active disclosures" ON "public"."mandatory_public_disclosures"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((is_active = true))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."website_theme" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can update website theme" ON "public"."website_theme"
+    AS PERMISSIVE FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."website_theme" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can insert website theme" ON "public"."website_theme"
+    AS PERMISSIVE FOR INSERT
+    TO authenticated
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."website_theme" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can read website theme" ON "public"."website_theme"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."blog_posts" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can read published blogs" ON "public"."blog_posts"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING (((status = 'published'::text) AND (is_active = true)))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."blog_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can read images of published blogs" ON "public"."blog_images"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((EXISTS ( SELECT 1
+   FROM blog_posts
+  WHERE ((blog_posts.id = blog_images.blog_id) AND (blog_posts.status = 'published'::text) AND (blog_posts.is_active = true)))))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."blog_posts" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage blogs" ON "public"."blog_posts"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING ((EXISTS ( SELECT 1
+   FROM admin_users
+  WHERE ((admin_users.id = auth.uid()) AND (admin_users.is_active = true) AND (admin_users.role = ANY (ARRAY['admin'::text, 'super_admin'::text]))))))
+    WITH CHECK ((EXISTS ( SELECT 1
+   FROM admin_users
+  WHERE ((admin_users.id = auth.uid()) AND (admin_users.is_active = true) AND (admin_users.role = ANY (ARRAY['admin'::text, 'super_admin'::text]))))))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."blog_images" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Admins can manage blog images" ON "public"."blog_images"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING ((EXISTS ( SELECT 1
+   FROM admin_users
+  WHERE ((admin_users.id = auth.uid()) AND (admin_users.is_active = true) AND (admin_users.role = ANY (ARRAY['admin'::text, 'super_admin'::text]))))))
+    WITH CHECK ((EXISTS ( SELECT 1
+   FROM admin_users
+  WHERE ((admin_users.id = auth.uid()) AND (admin_users.is_active = true) AND (admin_users.role = ANY (ARRAY['admin'::text, 'super_admin'::text]))))))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cms_blogs" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can view published blogs" ON "public"."cms_blogs"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((status = 'published'::text))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cms_blogs" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can manage blogs" ON "public"."cms_blogs"
+    AS PERMISSIVE FOR ALL
+    TO authenticated
+    USING (true)
+    WITH CHECK (true)
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."blog_posts" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can read published blog posts" ON "public"."blog_posts"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((status = 'published'::text))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."cms_blogs" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can read published blogs" ON "public"."cms_blogs"
+    AS PERMISSIVE FOR SELECT
+    TO anon, authenticated
+    USING ((status = 'published'::text))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+ALTER TABLE "public"."blogs" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "Public can read published blogs" ON "public"."blogs"
+    AS PERMISSIVE FOR SELECT
+    TO public
+    USING ((status = 'published'::text))
+  ;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+

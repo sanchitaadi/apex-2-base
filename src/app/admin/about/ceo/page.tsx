@@ -285,7 +285,7 @@ export default function AdminCEOPage() {
         await supabase.storage
           .from("about")
           .upload(path, file, {
-            cacheControl: "3600",
+            cacheControl: "31536000",
             upsert: false,
           });
 

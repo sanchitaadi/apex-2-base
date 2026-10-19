@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 
 const BUCKET = "academic-resources";
 const UPLOAD_PREFIX = "/wp-content/uploads/";
+const LEGACY_SUPABASE_HOST = "gkuuvmfuilrbvlwzburj.supabase.co";
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -50,6 +51,43 @@ function getLegacyUrlCandidates(
   ];
 }
 
+function getValidatedStorageUrl(storageUrl: string): URL | null {
+  const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!configuredUrl) {
+    return null;
+  }
+
+  try {
+    const configuredSupabaseUrl = new URL(configuredUrl);
+    const parsedStorageUrl = new URL(storageUrl);
+
+    const allowedHosts = new Set([
+      LEGACY_SUPABASE_HOST,
+      configuredSupabaseUrl.hostname,
+    ]);
+
+    if (
+      parsedStorageUrl.protocol !== "https:" ||
+      !allowedHosts.has(parsedStorageUrl.hostname) ||
+      parsedStorageUrl.username ||
+      parsedStorageUrl.password ||
+      !parsedStorageUrl.pathname.startsWith(
+        `/storage/v1/object/public/${BUCKET}/`
+      )
+    ) {
+      return null;
+    }
+
+    parsedStorageUrl.protocol = configuredSupabaseUrl.protocol;
+    parsedStorageUrl.host = configuredSupabaseUrl.host;
+
+    return parsedStorageUrl;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(
   _request: NextRequest,
   {
@@ -69,10 +107,9 @@ export async function GET(
       return new NextResponse("Not Found", { status: 404 });
     }
 
-    const legacyUrls = getLegacyUrlCandidates(year, month, filename);
     const supabase = getSupabaseAdmin();
+    const legacyUrls = getLegacyUrlCandidates(year, month, filename);
 
-    // Find the document dynamically. No hardcoded filename map.
     const { data: document, error } = await supabase
       .from("mandatory_public_disclosures")
       .select("document_url, storage_url")
@@ -89,18 +126,12 @@ export async function GET(
     }
 
     if (!document) {
-      return new NextResponse("PDF not found", {
-        status: 404,
-      });
+      return new NextResponse("PDF not found", { status: 404 });
     }
 
-    // New records use storage_url. The fallback supports older records
-    // whose document_url still directly contains their Supabase URL.
     const storageUrl =
       document.storage_url ||
-      (document.document_url?.includes(
-        "/storage/v1/object/public/"
-      )
+      (document.document_url?.includes("/storage/v1/object/public/")
         ? document.document_url
         : null);
 
@@ -110,16 +141,9 @@ export async function GET(
       });
     }
 
-    const parsedStorageUrl = new URL(storageUrl);
+    const parsedStorageUrl = getValidatedStorageUrl(storageUrl);
 
-    // Only serve files from this project's public Supabase Storage.
-    if (
-      parsedStorageUrl.protocol !== "https:" ||
-      parsedStorageUrl.hostname !== "gkuuvmfuilrbvlwzburj.supabase.co" ||
-      !parsedStorageUrl.pathname.startsWith(
-        `/storage/v1/object/public/${BUCKET}/`
-      )
-    ) {
+    if (!parsedStorageUrl) {
       return new NextResponse("Invalid PDF storage URL", {
         status: 500,
       });

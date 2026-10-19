@@ -232,7 +232,7 @@ export default function OnlineRegistrationPage() {
         file,
         {
           upsert: false,
-          cacheControl: "3600",
+          cacheControl: "31536000",
         }
       );
 

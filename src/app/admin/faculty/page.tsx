@@ -143,7 +143,7 @@ export default function FacultyAdminPage() {
       const { error: uploadError } = await supabase.storage
         .from("faculty")
         .upload(path, file, {
-          cacheControl: "3600",
+          cacheControl: "31536000",
           upsert: false,
           contentType: file.type,
         });

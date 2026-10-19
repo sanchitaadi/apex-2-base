@@ -481,7 +481,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
 
               {
 
-                cacheControl: "3600",
+                cacheControl: "31536000",
 
                 upsert: false,
 
@@ -843,7 +843,7 @@ export default function MandatoryPublicDisclosureAdminPage() {
 
               {
 
-                cacheControl: "3600",
+                cacheControl: "31536000",
 
                 upsert: false,
 

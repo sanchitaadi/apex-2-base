@@ -419,7 +419,7 @@ export default function GalleryAdminPage() {
               {
                 upsert: false,
                 cacheControl:
-                  "3600",
+                  "31536000",
               }
             );
 

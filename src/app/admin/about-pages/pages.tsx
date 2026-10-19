@@ -165,7 +165,7 @@ export default function AboutPagesAdmin() {
           .from("about-pages")
           .upload(path, file, {
             upsert: false,
-            cacheControl: "3600",
+            cacheControl: "31536000",
           });
 
       if (uploadError) {

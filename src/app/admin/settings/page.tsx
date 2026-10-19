@@ -235,7 +235,7 @@ export default function AdminSettingsPage() {
       } = await supabase.storage
         .from("site-assets")
         .upload(filePath, file, {
-          cacheControl: "3600",
+          cacheControl: "31536000",
           upsert: false,
           contentType: file.type,
         });

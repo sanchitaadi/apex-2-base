@@ -174,7 +174,7 @@ export default function CampusAdminPage() {
           .from("campus")
           .upload(path, file, {
             upsert: false,
-            cacheControl: "3600",
+            cacheControl: "31536000",
           });
 
       if (uploadError) {

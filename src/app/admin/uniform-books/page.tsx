@@ -266,7 +266,7 @@ export default function UniformBooksAdminPage() {
               newStoragePath,
               file,
               {
-                cacheControl: "3600",
+                cacheControl: "31536000",
                 upsert: false,
                 contentType:
                   "application/pdf",
@@ -435,7 +435,7 @@ export default function UniformBooksAdminPage() {
               uploadedPath,
               file,
               {
-                cacheControl: "3600",
+                cacheControl: "31536000",
                 upsert: false,
                 contentType:
                   "application/pdf",

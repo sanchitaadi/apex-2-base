@@ -235,7 +235,7 @@ export default function NoticesAdminPage() {
         .from(NOTICE_BUCKET)
         .upload(path, file, {
           upsert: false,
-          cacheControl: "3600",
+          cacheControl: "31536000",
           contentType: isImage ? file.type : "application/pdf",
         });
 
