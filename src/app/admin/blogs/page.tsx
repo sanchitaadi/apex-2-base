@@ -217,8 +217,10 @@ export default function AdminBlogsPage() {
         });
 
     if (loadError) {
-      console.error(loadError);
-      setError(loadError.message);
+      const details = (loadError as any)?.details ? ` (${(loadError as any).details})` : "";
+      const full = `${loadError.message}${details}`;
+      console.error("Load blogs error:", full, loadError);
+      setError(full);
       setBlogs([]);
     } else {
       setBlogs((data || []) as BlogPost[]);

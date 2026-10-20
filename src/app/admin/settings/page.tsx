@@ -128,19 +128,18 @@ export default function AdminSettingsPage() {
           setSettings(DEFAULT_SETTINGS);
         }
       } catch (err: unknown) {
-        console.error(
-          "Failed to load site settings:",
-          err
-        );
+        const errorObj = err as any;
+        const errorMsg =
+          errorObj?.message ||
+          (err instanceof Error ? err.message : null) ||
+          (typeof err === "string" ? err : "Could not load website settings.");
+        const errorDetails = errorObj?.details ? ` (${errorObj.details})` : "";
+        const fullMessage = `${errorMsg}${errorDetails}`;
+
+        console.error("Failed to load site settings:", fullMessage, err);
 
         if (!active) return;
-
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Could not load website settings.";
-
-        setError(message);
+        setError(fullMessage);
       } finally {
         if (active) {
           setLoading(false);
@@ -327,16 +326,25 @@ export default function AdminSettingsPage() {
           new Date().toISOString(),
       };
 
-      const {
-        error: saveError,
-      } = await supabase
+      // Update existing global settings (safe, works with or without unique constraint)
+      const { data: updated, error: updateError } = await supabase
         .from("site_settings")
-        .upsert(payload, {
-          onConflict: "setting_key",
-        });
+        .update(payload)
+        .eq("setting_key", "global")
+        .select("id");
 
-      if (saveError) {
-        throw saveError;
+      if (updateError) {
+        throw updateError;
+      }
+
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from("site_settings")
+          .insert(payload);
+
+        if (insertError) {
+          throw insertError;
+        }
       }
 
       setSaved(true);
@@ -345,17 +353,17 @@ export default function AdminSettingsPage() {
         setSaved(false);
       }, 3000);
     } catch (err: unknown) {
-      console.error(
-        "Save settings failed:",
-        err
-      );
+      const errorObj = err as any;
+      const errorMsg =
+        errorObj?.message ||
+        (err instanceof Error ? err.message : null) ||
+        (typeof err === "string" ? err : "Could not save website settings.");
+      const errorDetails = errorObj?.details ? ` (${errorObj.details})` : "";
+      const errorHint = errorObj?.hint ? ` Hint: ${errorObj.hint}` : "";
+      const fullMessage = `${errorMsg}${errorDetails}${errorHint}`;
 
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Could not save website settings.";
-
-      setError(message);
+      console.error("Save settings failed:", fullMessage, err);
+      setError(fullMessage);
     } finally {
       setSaving(false);
     }

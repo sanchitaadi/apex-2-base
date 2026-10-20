@@ -399,11 +399,22 @@ export default function AdminHeadAcademicCoordinatorPage() {
       updated_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase
+    // Resilient save: update existing slug first, insert if not found
+    let error: any = null;
+    const { data: updated, error: updateError } = await supabase
       .from("about_pages")
-      .upsert(payload, {
-        onConflict: "slug",
-      });
+      .update(payload)
+      .eq("slug", "head-academic-coordinator")
+      .select("id");
+
+    if (updateError) {
+      error = updateError;
+    } else if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabase
+        .from("about_pages")
+        .insert(payload);
+      error = insertError;
+    }
 
     if (error) {
       console.error(error);
