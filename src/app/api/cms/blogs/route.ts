@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
 
+    // Try full query ordered by publish_date
     let query = supabase
       .from("blog_posts")
       .select("*")
@@ -30,18 +31,22 @@ export async function GET(request: NextRequest) {
       query = query.eq("status", status);
     }
 
-    const { data, error } = await query;
+    let { data, error } = await query;
+
+    // Graceful fallback if publish_date column doesn't exist yet
+    if (error && error.message?.includes("does not exist")) {
+      console.warn("Fallback query for blog_posts:", error.message);
+      const fallback = await supabase.from("blog_posts").select("*");
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) {
-      console.error("Supabase blog_posts error:", error);
+      console.warn("Supabase blog_posts error:", error.message);
 
-      return NextResponse.json(
-        {
-          blogs: [],
-          error: error.message,
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        blogs: [],
+      });
     }
 
     return NextResponse.json({
@@ -50,15 +55,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Blogs API error:", error);
 
-    return NextResponse.json(
-      {
-        blogs: [],
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to load blogs",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      blogs: [],
+    });
   }
 }

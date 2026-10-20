@@ -205,7 +205,7 @@ export default function AdminBlogsPage() {
     setLoading(true);
     setError("");
 
-    const { data, error: loadError } =
+    let { data, error: loadError } =
       await supabase
         .from("blog_posts")
         .select("*")
@@ -215,6 +215,15 @@ export default function AdminBlogsPage() {
         .order("publish_date", {
           ascending: false,
         });
+
+    // Fallback if sorting columns do not exist yet in database
+    if (loadError && loadError.message?.includes("does not exist")) {
+      const fallback = await supabase.from("blog_posts").select("*");
+      if (!fallback.error) {
+        data = fallback.data;
+        loadError = null;
+      }
+    }
 
     if (loadError) {
       const details = (loadError as any)?.details ? ` (${(loadError as any).details})` : "";
