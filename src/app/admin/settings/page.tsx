@@ -1,5 +1,7 @@
 "use client";
 
+import { compressImage } from "@/lib/image-compression";
+
 import {
   ChangeEvent,
   FormEvent,
@@ -177,9 +179,9 @@ export default function AdminSettingsPage() {
   async function handleLogoUpload(
     event: ChangeEvent<HTMLInputElement>
   ) {
-    const file = event.target.files?.[0];
-
+    let file = event.target.files?.[0];
     if (!file) return;
+    try { file = await compressImage(file, { maxWidth: 800, maxHeight: 800 }); } catch (e) { console.warn('Compression skipped:', e); }
 
     setError("");
     setSaved(false);

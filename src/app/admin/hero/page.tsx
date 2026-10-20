@@ -1,5 +1,7 @@
 "use client";
 
+import { compressImage } from "@/lib/image-compression";
+
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import {

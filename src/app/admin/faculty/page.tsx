@@ -1,5 +1,7 @@
 "use client";
 
+import { compressImage } from "@/lib/image-compression";
+
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -173,9 +175,9 @@ export default function FacultyAdminPage() {
   }
 
   async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-
+    let file = event.target.files?.[0];
     if (!file) return;
+    try { file = await compressImage(file, { maxWidth: 800, maxHeight: 800 }); } catch (e) { console.warn('Compression skipped:', e); }
 
     const validTypes = [
       "image/jpeg",
