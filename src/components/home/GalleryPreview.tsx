@@ -19,6 +19,7 @@ import {
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/browser";
+import { resolveStorageUrl } from "@/lib/storage-url";
 
 type GalleryPreviewSettings = {
   id: string;
@@ -471,7 +472,7 @@ export default function GalleryPreview() {
                       "
                       style={{
                         backgroundImage: item.image_url
-                          ? `url("${item.image_url}")`
+                          ? `url("${resolveStorageUrl(item.image_url)}")`
                           : undefined,
                       }}
                     />

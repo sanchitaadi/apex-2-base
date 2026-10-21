@@ -1,20 +1,22 @@
 /**
- * Normalizes any Supabase storage URL so it always resolves against the active project's Supabase URL.
+ * Normalizes any Supabase storage URL so it resolves through the Next.js edge caching proxy
+ * at `/storage/[...path]`.
  * 
- * If a URL contains an old project ref (e.g. gkuuvmfuilrbvlwzburj.supabase.co), this ensures
- * it points to whatever NEXT_PUBLIC_SUPABASE_URL is currently configured in your .env.local.
+ * This ensures that background images, inline images, and direct links bypass Supabase's
+ * 5 GB Cached Egress limit and use Vercel's 100 GB global CDN cache with 1-year immutable caching.
  */
 export function resolveStorageUrl(url: string | null | undefined): string {
   if (!url) return "";
   
-  const currentSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, "");
-  if (!currentSupabaseUrl) return url;
+  if (url.startsWith("/storage/")) {
+    return url;
+  }
 
   // Match any Supabase storage public path: /storage/v1/object/public/...
   const publicStorageIndex = url.indexOf("/storage/v1/object/public/");
   if (publicStorageIndex !== -1) {
-    const relativePath = url.substring(publicStorageIndex);
-    return `${currentSupabaseUrl}${relativePath}`;
+    const relativePath = url.substring(publicStorageIndex + "/storage/v1/object/public/".length);
+    return `/storage/${relativePath}`;
   }
 
   return url;

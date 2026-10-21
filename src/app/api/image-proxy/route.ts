@@ -1,4 +1,6 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get("url");
@@ -23,7 +25,7 @@ export async function GET(request: NextRequest) {
         Referer: "https://apexpublicschool.in/",
         Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
       },
-      cache: "no-store",
+      next: { revalidate: 31536000 },
     });
 
     if (!response.ok) {
@@ -40,7 +42,11 @@ export async function GET(request: NextRequest) {
         "Content-Type":
           response.headers.get("content-type") || "image/jpeg",
         "Cache-Control":
-          "public, max-age=86400, stale-while-revalidate=604800",
+          "public, max-age=31536000, immutable",
+        "CDN-Cache-Control":
+          "public, max-age=31536000",
+        "Vercel-CDN-Cache-Control":
+          "public, max-age=31536000",
       },
     });
   } catch (error) {
