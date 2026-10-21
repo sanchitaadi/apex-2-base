@@ -1,5 +1,7 @@
 "use client";
 
+import { compressImage } from "@/lib/image-compression";
+
 import { useEffect, useState } from "react";
 import {
   Save,
@@ -245,9 +247,9 @@ export default function GalleryPreviewAdminPage() {
     event: React.ChangeEvent<HTMLInputElement>,
     item: Item
   ) {
-    const file = event.target.files?.[0];
-
+    let file = event.target.files?.[0];
     if (!file) return;
+    try { file = await compressImage(file, { maxWidth: 1920, maxHeight: 1200 }); } catch (e) { console.warn('Compression skipped:', e); }
 
     if (!file.type.startsWith("image/")) {
       setMessage("Please select an image file.");
@@ -272,6 +274,7 @@ export default function GalleryPreviewAdminPage() {
         .upload(path, file, {
           upsert: true,
           contentType: file.type,
+          cacheControl: "31536000",
         });
 
       if (uploadError) {

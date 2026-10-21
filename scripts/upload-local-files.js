@@ -1,26 +1,13 @@
 /**
  * BULK STORAGE UPLOADER FOR APEX PUBLIC SCHOOL
  * 
- * Usage:
- * Put your files or folders into a folder called `local_uploads/` in the project root:
- * local_uploads/
- *   ├── hero/
- *   │     └── photo1.png
- *   ├── faculty/
- *   │     └── teacher1.jpg
- *   ├── site-assets/
- *   │     └── branding/logo.webp
- *   └── ...
- * 
- * Then run:
- *   node scripts/upload-local-files.js
- * 
- * It will automatically upload all files to the corresponding buckets in your new Supabase project
- * with 1-year cache headers and verify their public accessibility.
+ * Automatically compresses high-resolution photos with Sharp before uploading
+ * to guarantee storage and bandwidth quotas are never exceeded.
  */
 
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 const { createClient } = require('@supabase/supabase-js');
 
 const env = fs.readFileSync('.env.local', 'utf8');
@@ -63,6 +50,8 @@ const MIME_MAP = {
   '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 };
 
+const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+
 async function main() {
   const uploadDir = path.join(process.cwd(), 'local_uploads');
   if (!fs.existsSync(uploadDir)) {
@@ -84,7 +73,6 @@ async function main() {
 
   let successCount = 0;
   for (const f of files) {
-    // Expected path format: <bucket_name>/<path_inside_bucket>
     const parts = f.relPath.split('/');
     if (parts.length < 2) {
       console.warn(`Skipping ${f.relPath}: File must be inside a bucket subfolder (e.g. local_uploads/hero/image.png)`);
@@ -94,8 +82,38 @@ async function main() {
     const bucket = parts[0];
     const objectPath = parts.slice(1).join('/');
     const ext = path.extname(f.fullPath).toLowerCase();
-    const contentType = MIME_MAP[ext] || 'application/octet-stream';
-    const fileBuffer = fs.readFileSync(f.fullPath);
+    let contentType = MIME_MAP[ext] || 'application/octet-stream';
+    let fileBuffer = fs.readFileSync(f.fullPath);
+
+    // Auto-compress large images before uploading
+    if (IMAGE_EXTS.has(ext) && fileBuffer.length > 250 * 1024) {
+      try {
+        const originalKB = Math.round(fileBuffer.length / 1024);
+        let sharpInst = sharp(fileBuffer).resize({
+          width: 1920,
+          height: 1920,
+          fit: 'inside',
+          withoutEnlargement: true,
+        });
+
+        let compressed;
+        if (ext === '.png') {
+          compressed = await sharpInst.png({ quality: 80, compressionLevel: 9 }).toBuffer();
+        } else if (ext === '.webp') {
+          compressed = await sharpInst.webp({ quality: 80 }).toBuffer();
+        } else {
+          compressed = await sharpInst.jpeg({ quality: 80, mozjpeg: true }).toBuffer();
+        }
+
+        if (compressed.length < fileBuffer.length) {
+          const newKB = Math.round(compressed.length / 1024);
+          console.log(`  ⚡ Auto-compressed image: ${originalKB} KB -> ${newKB} KB (-${Math.round((1 - newKB/originalKB)*100)}%)`);
+          fileBuffer = compressed;
+        }
+      } catch (compErr) {
+        console.warn(`  ⚠️ Compression skipped for ${f.relPath}:`, compErr.message);
+      }
+    }
 
     console.log(`Uploading to [${bucket}] -> ${objectPath}...`);
     const { error } = await supabase.storage

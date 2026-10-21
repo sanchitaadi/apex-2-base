@@ -1,5 +1,7 @@
 "use client";
 
+import { compressImage } from "@/lib/image-compression";
+
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,

@@ -1,5 +1,7 @@
 "use client";
 
+import { compressImage } from "@/lib/image-compression";
+
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowDown,
@@ -224,11 +226,12 @@ export default function CBSEResultsAdminPage() {
       return;
     }
 
-    const file =
+    let file =
       fileRef.current?.files?.[0] ||
       null;
 
     if (file) {
+        try { file = await compressImage(file, { maxWidth: 1920, maxHeight: 1080 }); } catch (e) { console.warn("Compression skipped:", e); }
       const isImage =
         file.type.startsWith("image/");
 
