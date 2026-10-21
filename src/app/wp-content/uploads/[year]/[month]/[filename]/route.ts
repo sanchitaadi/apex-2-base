@@ -150,7 +150,7 @@ export async function GET(
     }
 
     const pdfResponse = await fetch(parsedStorageUrl.toString(), {
-      cache: "no-store",
+      next: { revalidate: 604800 },
     });
 
     if (!pdfResponse.ok) {
@@ -182,7 +182,7 @@ export async function GET(
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${filename.replace(/["\\]/g, "_")}"`,
-        "Cache-Control": "public, max-age=3600, s-maxage=86400",
+        "Cache-Control": "public, max-age=31536000, immutable",
         "X-Content-Type-Options": "nosniff",
       },
     });
