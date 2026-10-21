@@ -6,6 +6,7 @@ import GlobalMotion from "@/components/shared/GlobalMotion";
 import SiteLoader from "@/components/layout/SiteLoader";
 import SiteChrome from "@/components/layout/SiteChrome";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "Apex Public School",
@@ -34,7 +35,7 @@ export default function RootLayout({
           </SiteChrome>
 
           <FloatingActions />
-          
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>
